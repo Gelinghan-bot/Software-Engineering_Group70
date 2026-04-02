@@ -106,6 +106,12 @@ public class AuthService {
         return sessionManager.createSession(user);
     }
 
+    public User getUserByToken(String token) {
+        SessionContext ctx = sessionManager.requireSession(token);
+        return userRepository.findByUserId(ctx.getUserId())
+            .orElseThrow(() -> new AppException("User not found."));
+    }
+
     private void ensureAccountNotExist(String accountId) {
         if (userRepository.findByAccountId(accountId).isPresent()) {
             throw new AppException("Account ID already exists.");
