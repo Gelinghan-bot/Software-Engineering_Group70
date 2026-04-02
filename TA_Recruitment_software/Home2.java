@@ -118,7 +118,7 @@ public class Home2 extends JFrame {
         for (String link : links) {
             Map<String, Runnable> subItems = new LinkedHashMap<>();
             if (link.equals("JOBS")) {
-                subItems.put("View Job Listings", () -> TA_Recruitment_software.ta_jobs.TAJobsUI.showAvailableJobs(this, context, currentToken));
+                subItems.put("Job Details", () -> TA_Recruitment_software.ta_jobs.TAJobsUI.showAvailableJobs(this, context, currentToken));
                 subItems.put("Post a Job (MO)", () -> TA_Recruitment_software.mo_publish.MoPublishUI.showPublishDialog(this, context, currentToken));
                 subItems.put("Manage My Positions (MO)", () -> TA_Recruitment_software.mo_publish.MoPublishUI.showMyPositionsDialog(this, context, currentToken));
                 subItems.put("Review Applications (MO)", () -> TA_Recruitment_software.mo_review.MoReviewUI.showReviewDialog(this, context, currentToken));
