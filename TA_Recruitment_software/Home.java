@@ -1,97 +1,98 @@
 package TA_Recruitment_software;
 
-import javax.swing.*;
-import java.awt.*;
+import TA_Recruitment_software.admin_system.foundation.AppException;
+import TA_Recruitment_software.admin_system.model.Position;
+import TA_Recruitment_software.admin_system.model.Role;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Image;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import javax.swing.table.DefaultTableModel;
 
 public class Home extends JFrame {
+    private final RecruitmentSystemContext context;
+
+    private String moToken;
+
+    private final JLabel sessionLabel = new JLabel("Not logged in");
+
+    private final JTextField accountField = new JTextField(14);
+    private final JPasswordField passwordField = new JPasswordField(14);
+
+    private final JTextField courseField = new JTextField(20);
+    private final JTextField deadlineField = new JTextField(20);
+    private final JTextField workingHoursField = new JTextField(20);
+    private final JTextArea jobDescriptionArea = new JTextArea(3, 20);
+    private final JTextArea requirementsArea = new JTextArea(3, 20);
+
+    private final JTextField newDeadlineField = new JTextField(12);
+
+    private final JButton publishButton = new JButton("Publish Position");
+    private final JButton refreshButton = new JButton("Refresh My Positions");
+    private final JButton updateDeadlineButton = new JButton("Update Deadline");
+    private final JButton closePositionButton = new JButton("Close Position");
+
+    private final DefaultTableModel positionTableModel = new DefaultTableModel(
+        new Object[] {"Position ID", "Course", "Deadline", "Hours", "Status"},
+        0
+    ) {
+        @Override
+        public boolean isCellEditable(int row, int column) {
+            return false;
+        }
+    };
+
+    private final JTable positionTable = new JTable(positionTableModel);
 
     public Home() {
-        setTitle("JobHere - Home");
-        setSize(1200, 800);
+        this.context = new RecruitmentSystemContext();
+
+        setTitle("JobHere - MO Publish Module");
+        setSize(1200, 820);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
-        setLayout(new BorderLayout());
 
-        // Top Navigation Bar
         JPanel headerPanel = createHeaderPanel();
         add(headerPanel, BorderLayout.NORTH);
 
-        // Main Background Panel
-        BackgroundPanel bgPanel = new BackgroundPanel("HomeBackGround.png"); 
-        bgPanel.setLayout(new GridBagLayout());
-        
-        JPanel contentPanel = new JPanel();
-        contentPanel.setOpaque(false);
-        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        BackgroundPanel backgroundPanel = new BackgroundPanel("TA_Recruitment_software/HomeBackGround.png");
+        backgroundPanel.setLayout(new GridBagLayout());
+        backgroundPanel.add(createBodyPanel());
+        add(backgroundPanel, BorderLayout.CENTER);
 
-        // Subtitle text
-        JLabel subtitleLabel = new JLabel("BUPT International School");
-        subtitleLabel.setFont(new Font("Arial", Font.BOLD, 22));
-        subtitleLabel.setForeground(Color.WHITE);
-        subtitleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
-        // Main title text
-        JLabel titleLabel = new JLabel("FIND OUR Teaching Assistants JOBS");
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 48));
-        titleLabel.setForeground(Color.WHITE);
-        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        // Search Bar Panel
-        JPanel searchPanel = new JPanel();
-        searchPanel.setOpaque(false);
-        searchPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 10));
-
-        String[] grades = {"All Grades"};
-        JComboBox<String> gradeCombo = new JComboBox<>(grades);
-        gradeCombo.setPreferredSize(new Dimension(180, 45));
-        gradeCombo.setBackground(Color.WHITE);
-
-        String[] majors = {"All majors"};
-        JComboBox<String> majorCombo = new JComboBox<>(majors);
-        majorCombo.setPreferredSize(new Dimension(180, 45));
-        majorCombo.setBackground(Color.WHITE);
-
-        String[] categories = {"Category"};
-        JComboBox<String> categoryCombo = new JComboBox<>(categories);
-        categoryCombo.setPreferredSize(new Dimension(180, 45));
-        categoryCombo.setBackground(Color.WHITE);
-
-        JButton searchBtn = new JButton("SEARCH");
-        searchBtn.setBackground(new Color(39, 174, 96));
-        searchBtn.setForeground(Color.WHITE);
-        searchBtn.setFocusPainted(false);
-        searchBtn.setBorderPainted(false);
-        searchBtn.setFont(new Font("Arial", Font.BOLD, 14));
-        searchBtn.setPreferredSize(new Dimension(130, 45));
-
-        searchPanel.add(gradeCombo);
-        searchPanel.add(majorCombo);
-        searchPanel.add(categoryCombo);
-        searchPanel.add(searchBtn);
-
-        // Add to content panel
-        contentPanel.add(subtitleLabel);
-        contentPanel.add(Box.createVerticalStrut(10));
-        contentPanel.add(titleLabel);
-        contentPanel.add(Box.createVerticalStrut(30));
-        contentPanel.add(searchPanel);
-
-        bgPanel.add(contentPanel);
-        
-        add(bgPanel, BorderLayout.CENTER);
+        bindActions();
+        setModuleControlsEnabled(false);
     }
 
     private JPanel createHeaderPanel() {
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(Color.WHITE);
         headerPanel.setPreferredSize(new Dimension(1200, 75));
-        headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 50, 10, 50));
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 30, 10, 30));
 
-        // Logo
-        JPanel logoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 15));
+        JPanel logoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 12));
         logoPanel.setBackground(Color.WHITE);
         JLabel logoJob = new JLabel("Job");
         logoJob.setFont(new Font("Arial", Font.BOLD, 28));
@@ -102,307 +103,298 @@ public class Home extends JFrame {
         logoPanel.add(logoJob);
         logoPanel.add(logoHere);
 
-        // Navigation Links
         JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 25, 20));
         navPanel.setBackground(Color.WHITE);
-        String[] links = {"HOME", "JOBS", "FORUM", "CONTACT", "ADMIN", "PERSONAL",};
-        for (String link : links) {
-            String[] subItems = null;
-            // 为 JOBS 和 PAGES 增加二级菜单作为示例
-            if (link.equals("JOBS")) {
-                subItems = new String[]{"Job Details","AI-Job recommendations","Post a Job"};
-            } else if (link.equals("CONTACT")) {
-                subItems = new String[]{"Contact with MO", "Contact with us"};
-            }else if (link.equals("PERSONAL")) {
-                subItems = new String[]{"My resume", "Application record","Recommendation Records","Settings","EXIT"};
-            }
-            NavLabel linkLabel = new NavLabel(link, subItems);
-            navPanel.add(linkLabel);
-        }
+        navPanel.add(navLabel("MO PUBLISH HOME"));
+        navPanel.add(navLabel("POST POSITION"));
+        navPanel.add(navLabel("MY POSITIONS"));
 
-        // Buttons
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
-        buttonPanel.setBackground(Color.WHITE);
-        
-        SlideButton registerBtn = new SlideButton(
-            "Register",
-            new Color(224, 224, 224), // normal bg
-            new Color(39, 174, 96),   // hover bg (green)
-            new Color(51, 51, 51),    // normal text
-            Color.WHITE               // hover text
-        );
-        registerBtn.setPreferredSize(new Dimension(120, 40));
-        registerBtn.setFont(new Font("Arial", Font.BOLD, 16));
+        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 18));
+        rightPanel.setBackground(Color.WHITE);
+        JLabel roleBadge = new JLabel("Role: Module Organizer");
+        roleBadge.setOpaque(true);
+        roleBadge.setBackground(new Color(233, 247, 239));
+        roleBadge.setForeground(new Color(24, 123, 72));
+        roleBadge.setBorder(BorderFactory.createEmptyBorder(6, 10, 6, 10));
 
-        JButton loginBtn = new JButton("Login");
-        loginBtn.setBackground(new Color(39, 174, 96));
-        loginBtn.setForeground(Color.WHITE);
-        loginBtn.setFocusPainted(false);
-        loginBtn.setBorderPainted(false);
-        loginBtn.setPreferredSize(new Dimension(95, 40));
-        loginBtn.setFont(new Font("Arial", Font.BOLD, 16));
+        sessionLabel.setFont(new Font("Arial", Font.BOLD, 13));
+        sessionLabel.setForeground(new Color(65, 65, 65));
 
-        buttonPanel.add(registerBtn);
-        buttonPanel.add(loginBtn);
+        rightPanel.add(roleBadge);
+        rightPanel.add(sessionLabel);
 
         headerPanel.add(logoPanel, BorderLayout.WEST);
         headerPanel.add(navPanel, BorderLayout.CENTER);
-        headerPanel.add(buttonPanel, BorderLayout.EAST);
-
+        headerPanel.add(rightPanel, BorderLayout.EAST);
         return headerPanel;
     }
 
-    // Custom panel to draw background image
-    class BackgroundPanel extends JPanel {
+    private JLabel navLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setFont(new Font("Arial", Font.BOLD, 15));
+        label.setForeground(new Color(51, 51, 51));
+        return label;
+    }
+
+    private JPanel createBodyPanel() {
+        JPanel wrapper = new JPanel();
+        wrapper.setOpaque(false);
+        wrapper.setLayout(new BoxLayout(wrapper, BoxLayout.Y_AXIS));
+        wrapper.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
+
+        wrapper.add(createLoginCard());
+        wrapper.add(Box.createVerticalStrut(15));
+        wrapper.add(createPublishCard());
+        wrapper.add(Box.createVerticalStrut(15));
+        wrapper.add(createPositionTableCard());
+
+        return wrapper;
+    }
+
+    private JPanel createLoginCard() {
+        JPanel card = baseCard();
+        card.setLayout(new FlowLayout(FlowLayout.LEFT, 12, 15));
+
+        JLabel title = new JLabel("MO Login (approved account required)");
+        title.setFont(new Font("Arial", Font.BOLD, 16));
+        title.setForeground(new Color(39, 174, 96));
+
+        JButton loginButton = new JButton("MO Login");
+        loginButton.setBackground(new Color(39, 174, 96));
+        loginButton.setForeground(Color.WHITE);
+        loginButton.setFocusPainted(false);
+
+        loginButton.addActionListener(e -> doLogin());
+
+        card.add(title);
+        card.add(new JLabel("Account:"));
+        card.add(accountField);
+        card.add(new JLabel("Password:"));
+        card.add(passwordField);
+        card.add(loginButton);
+        return card;
+    }
+
+    private JPanel createPublishCard() {
+        JPanel card = baseCard();
+        card.setLayout(new BorderLayout(10, 10));
+
+        JLabel title = new JLabel("MO Publish Module");
+        title.setFont(new Font("Arial", Font.BOLD, 17));
+        title.setForeground(new Color(39, 174, 96));
+        card.add(title, BorderLayout.NORTH);
+
+        JPanel formPanel = new JPanel(new GridLayout(5, 2, 8, 8));
+        formPanel.setOpaque(false);
+        formPanel.add(new JLabel("Course Name:"));
+        formPanel.add(courseField);
+        formPanel.add(new JLabel("Deadline (YYYY-MM-DD):"));
+        formPanel.add(deadlineField);
+        formPanel.add(new JLabel("Working Hours:"));
+        formPanel.add(workingHoursField);
+        formPanel.add(new JLabel("Job Description:"));
+        formPanel.add(new JScrollPane(jobDescriptionArea));
+        formPanel.add(new JLabel("Requirements:"));
+        formPanel.add(new JScrollPane(requirementsArea));
+
+        card.add(formPanel, BorderLayout.CENTER);
+
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 2));
+        actions.setOpaque(false);
+        actions.add(publishButton);
+        actions.add(refreshButton);
+        actions.add(new JLabel("New deadline:"));
+        actions.add(newDeadlineField);
+        actions.add(updateDeadlineButton);
+        actions.add(closePositionButton);
+
+        card.add(actions, BorderLayout.SOUTH);
+        return card;
+    }
+
+    private JPanel createPositionTableCard() {
+        JPanel card = baseCard();
+        card.setLayout(new BorderLayout(10, 8));
+
+        JLabel title = new JLabel("My Published Positions (select one row for deadline update/close)");
+        title.setFont(new Font("Arial", Font.BOLD, 15));
+        title.setForeground(new Color(39, 174, 96));
+        card.add(title, BorderLayout.NORTH);
+
+        positionTable.setRowHeight(24);
+        JScrollPane scrollPane = new JScrollPane(positionTable);
+        scrollPane.setPreferredSize(new Dimension(1060, 270));
+        card.add(scrollPane, BorderLayout.CENTER);
+        return card;
+    }
+
+    private JPanel baseCard() {
+        JPanel card = new JPanel();
+        card.setBackground(new Color(255, 255, 255, 230));
+        card.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(225, 225, 225)),
+            BorderFactory.createEmptyBorder(12, 12, 12, 12)
+        ));
+        return card;
+    }
+
+    private void bindActions() {
+        publishButton.addActionListener(e -> publishPosition());
+        refreshButton.addActionListener(e -> refreshMyPositions());
+        updateDeadlineButton.addActionListener(e -> updateDeadline());
+        closePositionButton.addActionListener(e -> closePosition());
+    }
+
+    private void doLogin() {
+        try {
+            String token = context.getAuthService().login(accountField.getText(), new String(passwordField.getPassword()));
+            context.getSessionManager().requireRole(token, Role.MO);
+            this.moToken = token;
+            setModuleControlsEnabled(true);
+            sessionLabel.setText("Logged in as MO");
+            refreshMyPositions();
+            JOptionPane.showMessageDialog(this, "MO login successful.", "Success", JOptionPane.INFORMATION_MESSAGE);
+        } catch (AppException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Login failed", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void publishPosition() {
+        if (!requireLogin()) {
+            return;
+        }
+        try {
+            Position position = context.getMoPublishService().publishPosition(
+                moToken,
+                courseField.getText(),
+                jobDescriptionArea.getText(),
+                requirementsArea.getText(),
+                deadlineField.getText(),
+                workingHoursField.getText()
+            );
+            refreshMyPositions();
+            JOptionPane.showMessageDialog(
+                this,
+                "Published successfully. Position ID: " + position.getPositionId(),
+                "Success",
+                JOptionPane.INFORMATION_MESSAGE
+            );
+        } catch (AppException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Publish failed", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void refreshMyPositions() {
+        if (!requireLogin()) {
+            return;
+        }
+        try {
+            List<Position> positions = context.getMoPublishService().listMyPositions(moToken);
+            positionTableModel.setRowCount(0);
+            for (Position position : positions) {
+                positionTableModel.addRow(new Object[] {
+                    position.getPositionId(),
+                    position.getCourseName(),
+                    position.getDeadline(),
+                    position.getWorkingHours(),
+                    position.getStatus().name()
+                });
+            }
+        } catch (AppException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Refresh failed", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void updateDeadline() {
+        if (!requireLogin()) {
+            return;
+        }
+        String selectedPositionId = selectedPositionId();
+        if (selectedPositionId == null) {
+            JOptionPane.showMessageDialog(this, "Please select a position row first.", "No selection", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        try {
+            context.getMoPublishService().updateDeadline(moToken, selectedPositionId, newDeadlineField.getText());
+            refreshMyPositions();
+            JOptionPane.showMessageDialog(this, "Deadline updated.", "Success", JOptionPane.INFORMATION_MESSAGE);
+        } catch (AppException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Update failed", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void closePosition() {
+        if (!requireLogin()) {
+            return;
+        }
+        String selectedPositionId = selectedPositionId();
+        if (selectedPositionId == null) {
+            JOptionPane.showMessageDialog(this, "Please select a position row first.", "No selection", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        try {
+            context.getMoPublishService().closePosition(moToken, selectedPositionId);
+            refreshMyPositions();
+            JOptionPane.showMessageDialog(this, "Position closed.", "Success", JOptionPane.INFORMATION_MESSAGE);
+        } catch (AppException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Close failed", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private String selectedPositionId() {
+        int row = positionTable.getSelectedRow();
+        if (row < 0) {
+            return null;
+        }
+        Object value = positionTableModel.getValueAt(row, 0);
+        return value == null ? null : value.toString();
+    }
+
+    private boolean requireLogin() {
+        if (moToken == null || moToken.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please login as MO first.", "No session", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        return true;
+    }
+
+    private void setModuleControlsEnabled(boolean enabled) {
+        courseField.setEnabled(enabled);
+        deadlineField.setEnabled(enabled);
+        workingHoursField.setEnabled(enabled);
+        jobDescriptionArea.setEnabled(enabled);
+        requirementsArea.setEnabled(enabled);
+        newDeadlineField.setEnabled(enabled);
+        publishButton.setEnabled(enabled);
+        refreshButton.setEnabled(enabled);
+        updateDeadlineButton.setEnabled(enabled);
+        closePositionButton.setEnabled(enabled);
+    }
+
+    private static class BackgroundPanel extends JPanel {
         private Image backgroundImage;
 
-        public BackgroundPanel(String imagePath) {
+        private BackgroundPanel(String imagePath) {
             try {
                 backgroundImage = ImageIO.read(new File(imagePath));
             } catch (IOException e) {
-                // If image not found, we use a fallback gradient or solid color
                 setBackground(new Color(113, 203, 202));
             }
         }
 
         @Override
-        protected void paintComponent(Graphics g) {
+        protected void paintComponent(java.awt.Graphics g) {
             super.paintComponent(g);
             if (backgroundImage != null) {
-                g.drawImage(backgroundImage, 0, 0, this.getWidth(), this.getHeight(), this);
+                g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
             } else {
-                // Draw a fallback semi-transparent color if image is not loaded
-                Graphics2D g2d = (Graphics2D) g;
-                g2d.setColor(new Color(113, 203, 202)); 
-                g2d.fillRect(0, 0, getWidth(), getHeight());
-            }
-        }
-    }
-
-    // Custom button for animated hover effect
-    class SlideButton extends JButton {
-        private Color normalBg;
-        private Color hoverBg;
-        private Color normalFg;
-        private Color hoverFg;
-        private int fillWidth = 0;
-        private Timer timer;
-        private boolean isHovering = false;
-
-        public SlideButton(String text, Color normalBg, Color hoverBg, Color normalFg, Color hoverFg) {
-            super(text);
-            this.normalBg = normalBg;
-            this.hoverBg = hoverBg;
-            this.normalFg = normalFg;
-            this.hoverFg = hoverFg;
-
-            setContentAreaFilled(false);
-            setFocusPainted(false);
-            setBorderPainted(false);
-            setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-            timer = new Timer(10, e -> {
-                if (isHovering) {
-                    if (fillWidth < getWidth()) {
-                        fillWidth += 8; // animation sliding speed
-                        if (fillWidth > getWidth()) fillWidth = getWidth();
-                        repaint();
-                    } else {
-                        timer.stop();
-                    }
-                } else {
-                    if (fillWidth > 0) {
-                        fillWidth -= 8;
-                        if (fillWidth < 0) fillWidth = 0;
-                        repaint();
-                    } else {
-                        timer.stop();
-                    }
-                }
-            });
-
-            addMouseListener(new java.awt.event.MouseAdapter() {
-                @Override
-                public void mouseEntered(java.awt.event.MouseEvent e) {
-                    isHovering = true;
-                    timer.start();
-                }
-
-                @Override
-                public void mouseExited(java.awt.event.MouseEvent e) {
-                    isHovering = false;
-                    timer.start();
-                }
-            });
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-
-            // Draw normal background
-            g2.setColor(normalBg);
-            g2.fillRect(0, 0, getWidth(), getHeight());
-
-            // Draw slide over background
-            g2.setColor(hoverBg);
-            g2.fillRect(0, 0, fillWidth, getHeight());
-
-            g2.setFont(getFont());
-            FontMetrics fm = g2.getFontMetrics();
-            int stringWidth = fm.stringWidth(getText());
-            int stringHeight = fm.getAscent();
-            int x = (getWidth() - stringWidth) / 2;
-            int y = (getHeight() - fm.getHeight()) / 2 + stringHeight;
-
-            // Draw normal text for the un-filled area
-            g2.setClip(fillWidth, 0, getWidth() - fillWidth, getHeight());
-            g2.setColor(normalFg);
-            g2.drawString(getText(), x, y);
-
-            // Draw hover text over the filled area
-            g2.setClip(0, 0, fillWidth, getHeight());
-            g2.setColor(hoverFg);
-            g2.drawString(getText(), x, y);
-
-            g2.dispose();
-        }
-    }
-
-    // Custom label for Navigation with Hover and Popup menu
-    class NavLabel extends JLabel {
-        private JPopupMenu popup;
-        private boolean isHovered = false;
-
-        public NavLabel(String text, String[] subItems) {
-            super(text);
-            setFont(new Font("Arial", Font.BOLD, 16));
-            setForeground(new Color(51, 51, 51));
-            setCursor(new Cursor(Cursor.HAND_CURSOR));
-            // Provide bottom padding to leave visual space for the small green bar
-            setBorder(BorderFactory.createEmptyBorder(5, 5, 12, 5)); 
-
-            if (subItems != null && subItems.length > 0) {
-                popup = new JPopupMenu();
-                popup.setBackground(Color.WHITE);
-                popup.setBorder(BorderFactory.createLineBorder(new Color(224, 224, 224)));
-                
-                for (String sub : subItems) {
-                    JMenuItem item = new JMenuItem(sub);
-                    item.setBackground(Color.WHITE);
-                    item.setFont(new Font("Arial", Font.PLAIN, 14));
-                    
-                    // 动态计算宽度：最少150，长文本则自适应扩展宽度，同时预留左右边距
-                    int prefWidth = item.getPreferredSize().width + 30;
-                    item.setPreferredSize(new Dimension(Math.max(150, prefWidth), 40));
-                    
-                    item.setCursor(new Cursor(Cursor.HAND_CURSOR));
-                    item.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
-
-                    // Hover effect for submenu items
-                    item.addMouseListener(new java.awt.event.MouseAdapter() {
-                        @Override
-                        public void mouseEntered(java.awt.event.MouseEvent e) {
-                            item.setForeground(new Color(39, 174, 96));
-                        }
-                        @Override
-                        public void mouseExited(java.awt.event.MouseEvent e) {
-                            item.setForeground(Color.BLACK);
-                            // 关键修复：当鼠标离开子菜单项时，立刻触发范围检测
-                            Timer timer = new Timer(150, evt -> checkMouseExit());
-                            timer.setRepeats(false);
-                            timer.start();
-                        }
-                    });
-                    popup.add(item);
-                }
-            }
-
-            addMouseListener(new java.awt.event.MouseAdapter() {
-                @Override
-                public void mouseEntered(java.awt.event.MouseEvent e) {
-                    isHovered = true;
-                    repaint();
-                    if (popup != null && !popup.isVisible()) {
-                        // show popup horizontally centered below the label
-                        popup.show(NavLabel.this, (getWidth() / 2) - 75, getHeight());
-                    }
-                }
-
-                @Override
-                public void mouseExited(java.awt.event.MouseEvent e) {
-                    // Delay hiding to allow mouse to move to popup
-                    Timer timer = new Timer(150, evt -> checkMouseExit());
-                    timer.setRepeats(false);
-                    timer.start();
-                }
-            });
-
-            if (popup != null) {
-                popup.addMouseListener(new java.awt.event.MouseAdapter() {
-                    @Override
-                    public void mouseExited(java.awt.event.MouseEvent e) {
-                        Timer timer = new Timer(150, evt -> checkMouseExit());
-                        timer.setRepeats(false);
-                        timer.start();
-                    }
-                });
-            }
-        }
-
-        private void checkMouseExit() {
-            try {
-                Point mousePos = MouseInfo.getPointerInfo().getLocation();
-                boolean inLabel = false;
-                boolean inPopup = false;
-
-                if (isShowing()) {
-                    Point labelLoc = getLocationOnScreen();
-                    Rectangle labelRect = new Rectangle(labelLoc, getSize());
-                    if (labelRect.contains(mousePos)) inLabel = true;
-                }
-
-                if (popup != null && popup.isShowing()) {
-                    Point popupLoc = popup.getLocationOnScreen();
-                    Rectangle popupRect = new Rectangle(popupLoc, popup.getSize());
-                    if (popupRect.contains(mousePos)) inPopup = true;
-                }
-
-                if (!inLabel && !inPopup) {
-                    isHovered = false;
-                    if (popup != null) popup.setVisible(false);
-                    repaint();
-                }
-            } catch (Exception ex) {
-                // Ignore exceptions if component is hidden
-            }
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            boolean active = isHovered || (popup != null && popup.isVisible());
-            setForeground(active ? new Color(39, 174, 96) : new Color(51, 51, 51));
-
-            super.paintComponent(g);
-
-            // Draw a small vertical green bar below the text when hovered
-            if (active) {
-                Graphics2D g2 = (Graphics2D) g;
-                g2.setColor(new Color(39, 174, 96));
-                int barW = 4;
-                int barH = 10;
-                int bx = (getWidth() - barW) / 2;
-                int by = getHeight() - barH;
-                g2.fillRect(bx, by, barW, barH);
+                g.setColor(new Color(113, 203, 202));
+                g.fillRect(0, 0, getWidth(), getHeight());
             }
         }
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            new Home().setVisible(true);
-        });
+        SwingUtilities.invokeLater(() -> new Home().setVisible(true));
     }
 }
