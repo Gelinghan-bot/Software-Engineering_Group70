@@ -27,3 +27,7 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+# 团队统一规则
+*.class
+TA_Recruitment_software/data/
