@@ -161,6 +161,8 @@ public class Home2 extends JFrame {
         registerBtn.addActionListener(e -> TA_Recruitment_software.auth.AuthUI.showRegisterDialog(this, context));
 
         JButton loginBtn = new JButton("Login");
+        loginBtn.setOpaque(true);
+        loginBtn.setContentAreaFilled(true);
         loginBtn.setBackground(new Color(39, 174, 96));
         loginBtn.setForeground(Color.WHITE);
         loginBtn.setFocusPainted(false);
