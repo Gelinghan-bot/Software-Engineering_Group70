@@ -31,3 +31,4 @@ bin/
 # 团队统一规则
 *.class
 TA_Recruitment_software/data/
+.idea/vcs.xml
