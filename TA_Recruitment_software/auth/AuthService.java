@@ -50,7 +50,7 @@ public class AuthService {
         ta.setPhone(phone.trim());
         ta.setSkills("");
         ta.setCvFilePath("");
-        ta.setApprovalStatus(ApprovalStatus.PENDING);
+        ta.setApprovalStatus(ApprovalStatus.APPROVED);
         ta.setEnabled(true);
         ta.setCreatedAt(LocalDateTime.now().toString());
 
@@ -97,7 +97,8 @@ public class AuthService {
         if (!user.isEnabled()) {
             throw new AppException("Account is disabled. Please contact admin.");
         }
-        if (user.getApprovalStatus() != ApprovalStatus.APPROVED) {
+        // Allow TA to login without admin approval. MO accounts still require APPROVED.
+        if (user.getRole() == Role.MO && user.getApprovalStatus() != ApprovalStatus.APPROVED) {
             throw new AppException("Account is pending/rejected and cannot login.");
         }
         if (!SecurityUtil.verifyPassword(password, user.getPasswordHash())) {
