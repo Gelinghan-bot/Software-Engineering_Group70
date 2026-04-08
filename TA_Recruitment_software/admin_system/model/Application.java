@@ -7,6 +7,8 @@ public class Application {
     private ApplicationStatus status;
     private String submissionTime;
     private String updatedTime;
+    private String statusNote;
+    private String statusHistory;
 
     public String getApplicationId() {
         return applicationId;
@@ -54,6 +56,22 @@ public class Application {
 
     public void setUpdatedTime(String updatedTime) {
         this.updatedTime = updatedTime;
+    }
+
+    public String getStatusNote() {
+        return statusNote;
+    }
+
+    public void setStatusNote(String statusNote) {
+        this.statusNote = statusNote;
+    }
+
+    public String getStatusHistory() {
+        return statusHistory;
+    }
+
+    public void setStatusHistory(String statusHistory) {
+        this.statusHistory = statusHistory;
     }
 
     @Override
