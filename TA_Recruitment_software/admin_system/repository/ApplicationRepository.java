@@ -10,7 +10,7 @@ import java.util.Optional;
 public class ApplicationRepository {
     private static final String FILE_NAME = "applications.csv";
     private static final String HEADER =
-        "applicationId,applicantUserId,positionId,status,submissionTime,updatedTime";
+        "applicationId,applicantUserId,positionId,status,submissionTime,updatedTime,statusNote,statusHistory";
 
     public List<Application> findAll() {
         List<List<String>> rows = FileStorageUtil.readRows(FILE_NAME, HEADER);
@@ -83,6 +83,8 @@ public class ApplicationRepository {
         row.add(app.getStatus().name());
         row.add(nvl(app.getSubmissionTime()));
         row.add(nvl(app.getUpdatedTime()));
+        row.add(nvl(app.getStatusNote()));
+        row.add(nvl(app.getStatusHistory()));
         return row;
     }
 
@@ -94,6 +96,8 @@ public class ApplicationRepository {
         app.setStatus(ApplicationStatus.valueOf(cell(row, 3)));
         app.setSubmissionTime(cell(row, 4));
         app.setUpdatedTime(cell(row, 5));
+        app.setStatusNote(cell(row, 6));
+        app.setStatusHistory(cell(row, 7));
         return app;
     }
 

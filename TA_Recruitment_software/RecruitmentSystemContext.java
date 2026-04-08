@@ -34,7 +34,7 @@ public class RecruitmentSystemContext {
         this.profileService = new ProfileService(userRepository, sessionManager);
         this.taJobService = new TAJobService(positionRepository, applicationRepository, userRepository, sessionManager);
         this.moPublishService = new MOPublishService(positionRepository, userRepository, sessionManager);
-        this.moReviewService = new MOReviewService(positionRepository, applicationRepository, sessionManager);
+        this.moReviewService = new MOReviewService(positionRepository, applicationRepository, userRepository, sessionManager);
         this.adminService = new AdminService(userRepository, sessionManager);
         this.adminService.seedDefaultAdmin();
     }
