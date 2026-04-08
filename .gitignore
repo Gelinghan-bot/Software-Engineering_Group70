@@ -32,3 +32,8 @@ bin/
 *.class
 TA_Recruitment_software/data/
 .idea/vcs.xml
+# IntelliJ IDEA 本地配置文件
+.idea/
+*.iml
+*.iws
+*.ipr
