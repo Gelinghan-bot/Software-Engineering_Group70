@@ -76,7 +76,7 @@ public class AuthUI {
                     emailField.getText().trim(),
                     phoneField.getText().trim()
                 );
-                JOptionPane.showMessageDialog(parent, "Registration successful! Pending admin approval.");
+                JOptionPane.showMessageDialog(parent, "Registration successful! You can now log in.");
             } catch (AppException ex) {
                 JOptionPane.showMessageDialog(parent, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
