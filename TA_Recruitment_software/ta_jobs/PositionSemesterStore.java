@@ -15,8 +15,8 @@ import java.util.Map;
 /**
  * 岗位与学期的对应关系，仅由本模块的 CSV 维护（不修改 positions.csv）。
  * <p>
- * 规则：若某 positionId 在此文件中<strong>没有</strong>记录，则该岗位对任意学期均可见（与改前行为一致）；
- * 若有记录，则仅当 semester 与 {@link CurrentSemesterStore} 中当前学期一致时，TA 端列表才显示、才允许申请。
+ * 规则：某 positionId 在此文件中<strong>没有</strong>记录时，视为未标记学期，不允许在 TA 端显示或申请；
+ * 仅当 semester 与 {@link CurrentSemesterStore} 中当前学期一致时，TA 端列表才显示、才允许申请。
  */
 public final class PositionSemesterStore {
 
@@ -65,7 +65,7 @@ public final class PositionSemesterStore {
     public static boolean isAllowedForCurrentSemester(String positionId, String currentSemester, Map<String, String> semesterByPositionId) {
         String tagged = semesterByPositionId.get(positionId);
         if (tagged == null || tagged.trim().isEmpty()) {
-            return true;
+            return false;
         }
         return tagged.trim().equals(currentSemester);
     }

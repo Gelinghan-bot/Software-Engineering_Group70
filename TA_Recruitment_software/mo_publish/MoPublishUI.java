@@ -16,6 +16,13 @@ public class MoPublishUI {
             return;
         }
 
+        try {
+            context.getSessionManager().requireRole(token, TA_Recruitment_software.admin_system.model.Role.MO);
+        } catch (AppException ex) {
+            JOptionPane.showMessageDialog(parent, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
         JPanel formPanel = new JPanel(new GridLayout(5, 2, 8, 8));
         JTextField courseField = new JTextField(20);
         JTextField deadlineField = new JTextField("YYYY-MM-DD", 20);
