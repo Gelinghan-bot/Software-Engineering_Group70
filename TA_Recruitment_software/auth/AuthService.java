@@ -19,9 +19,14 @@ public class AuthService {
         this.sessionManager = sessionManager;
     }
 
+    /**
+     * Register a new Teaching Assistant account.
+     * The account is created with PENDING approval status and must be approved by admin before login.
+     */
     public User registerTA(
         String accountId,
         String password,
+        String confirmPassword,
         String fullName,
         String studentId,
         String major,
@@ -29,7 +34,7 @@ public class AuthService {
         String phone
     ) {
         String checkedAccountId = ValidationUtil.validateAccountId(accountId);
-        ValidationUtil.validatePassword(password);
+        validatePasswordWithConfirm(password, confirmPassword);
         ValidationUtil.validateName(fullName, "Full name");
         ValidationUtil.requireNotBlank(studentId, "Student ID");
         ValidationUtil.requireNotBlank(major, "Major");
@@ -50,7 +55,7 @@ public class AuthService {
         ta.setPhone(phone.trim());
         ta.setSkills("");
         ta.setCvFilePath("");
-        ta.setApprovalStatus(ApprovalStatus.APPROVED);
+        ta.setApprovalStatus(ApprovalStatus.PENDING);
         ta.setEnabled(true);
         ta.setCreatedAt(LocalDateTime.now().toString());
 
@@ -58,9 +63,34 @@ public class AuthService {
         return ta;
     }
 
-    public User registerMO(String accountId, String password, String fullName, String department, String email, String phone) {
+    // Backward-compatible overload without confirmPassword
+    public User registerTA(
+        String accountId,
+        String password,
+        String fullName,
+        String studentId,
+        String major,
+        String email,
+        String phone
+    ) {
+        return registerTA(accountId, password, password, fullName, studentId, major, email, phone);
+    }
+
+    /**
+     * Register a new Module Officer account.
+     * The account is created with PENDING approval status and must be approved by admin before login.
+     */
+    public User registerMO(
+        String accountId,
+        String password,
+        String confirmPassword,
+        String fullName,
+        String department,
+        String email,
+        String phone
+    ) {
         String checkedAccountId = ValidationUtil.validateAccountId(accountId);
-        ValidationUtil.validatePassword(password);
+        validatePasswordWithConfirm(password, confirmPassword);
         ValidationUtil.validateName(fullName, "Full name");
         ValidationUtil.requireNotBlank(department, "Department");
         ValidationUtil.validateEmail(email, true);
@@ -87,6 +117,16 @@ public class AuthService {
         return mo;
     }
 
+    // Backward-compatible overload without confirmPassword
+    public User registerMO(String accountId, String password, String fullName, String department, String email, String phone) {
+        return registerMO(accountId, password, password, fullName, department, email, phone);
+    }
+
+    /**
+     * Authenticate user with account ID and password.
+     * Checks account enabled status and admin approval before granting access.
+     * Returns a session token on success.
+     */
     public String login(String accountId, String password) {
         String checkedAccountId = ValidationUtil.validateAccountId(accountId);
         ValidationUtil.requireNotBlank(password, "Password");
@@ -97,9 +137,11 @@ public class AuthService {
         if (!user.isEnabled()) {
             throw new AppException("Account is disabled. Please contact admin.");
         }
-        // Allow TA to login without admin approval. MO accounts still require APPROVED.
-        if (user.getRole() == Role.MO && user.getApprovalStatus() != ApprovalStatus.APPROVED) {
-            throw new AppException("Account is pending/rejected and cannot login.");
+        if (user.getApprovalStatus() == ApprovalStatus.REJECTED) {
+            throw new AppException("Account registration was rejected. Please contact admin.");
+        }
+        if (user.getApprovalStatus() == ApprovalStatus.PENDING) {
+            throw new AppException("Account is pending approval. Please wait for admin to approve your registration.");
         }
         if (!SecurityUtil.verifyPassword(password, user.getPasswordHash())) {
             throw new AppException("Invalid account or password.");
@@ -107,15 +149,90 @@ public class AuthService {
         return sessionManager.createSession(user);
     }
 
+    /**
+     * Logout the current session, invalidating the token.
+     */
+    public void logout(String token) {
+        sessionManager.logout(token);
+    }
+
+    /**
+     * Retrieve the current user from a valid session token.
+     */
     public User getUserByToken(String token) {
         SessionContext ctx = sessionManager.requireSession(token);
         return userRepository.findByUserId(ctx.getUserId())
             .orElseThrow(() -> new AppException("User not found."));
     }
 
+    /**
+     * Change password for the currently logged-in user.
+     * Requires old password verification and new password confirmation.
+     */
+    public void changePassword(String token, String oldPassword, String newPassword, String confirmNewPassword) {
+        SessionContext ctx = sessionManager.requireSession(token);
+        User user = userRepository.findByUserId(ctx.getUserId())
+            .orElseThrow(() -> new AppException("User not found."));
+
+        // Verify old password
+        if (!SecurityUtil.verifyPassword(oldPassword, user.getPasswordHash())) {
+            throw new AppException("Current password is incorrect.");
+        }
+
+        // Validate new password
+        validatePasswordWithConfirm(newPassword, confirmNewPassword);
+
+        // Ensure new password differs from old
+        if (SecurityUtil.verifyPassword(newPassword, user.getPasswordHash())) {
+            throw new AppException("New password must be different from current password.");
+        }
+
+        user.setPasswordHash(SecurityUtil.sha256(newPassword));
+        userRepository.save(user);
+
+        // Invalidate all existing sessions for security, then create a new one
+        sessionManager.invalidateUserSessions(user.getUserId());
+    }
+
+    /**
+     * Check if a session token is still valid.
+     */
+    public boolean isLoggedIn(String token) {
+        return sessionManager.isSessionValid(token);
+    }
+
+    /**
+     * Get remaining session time in minutes.
+     */
+    public long getSessionRemainingMinutes(String token) {
+        return sessionManager.getRemainingMinutes(token);
+    }
+
     private void ensureAccountNotExist(String accountId) {
         if (userRepository.findByAccountId(accountId).isPresent()) {
             throw new AppException("Account ID already exists.");
+        }
+    }
+
+    /**
+     * Validate password strength and confirm match.
+     * Requirements: at least 8 chars, contains uppercase, lowercase, and digit.
+     */
+    private void validatePasswordWithConfirm(String password, String confirmPassword) {
+        ValidationUtil.validatePassword(password);
+
+        if (confirmPassword == null || !password.equals(confirmPassword)) {
+            throw new AppException("Passwords do not match.");
+        }
+
+        boolean hasUpper = false, hasLower = false, hasDigit = false;
+        for (char c : password.toCharArray()) {
+            if (Character.isUpperCase(c)) hasUpper = true;
+            if (Character.isLowerCase(c)) hasLower = true;
+            if (Character.isDigit(c)) hasDigit = true;
+        }
+        if (!hasUpper || !hasLower || !hasDigit) {
+            throw new AppException("Password must contain at least one uppercase letter, one lowercase letter, and one digit.");
         }
     }
 }
