@@ -23,7 +23,7 @@ public class TAJobsUI {
                 JOptionPane.showMessageDialog(
                     parent,
                     "No open positions for current semester: " + currentSemester
-                        + "\n(Tip: edit ta_jobs/data/position_semesters.csv to tag positionId with this semester.)"
+                        + "\n(Tip: tag each visible positionId in ta_jobs/data/position_semesters.csv.)"
                 );
                 return;
             }
