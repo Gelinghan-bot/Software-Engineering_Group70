@@ -23,35 +23,22 @@ public class MoPublishUI {
             return;
         }
 
-        JPanel formPanel = new JPanel(new GridLayout(5, 2, 8, 8));
-        JTextField courseField = new JTextField(20);
-        JTextField deadlineField = new JTextField("YYYY-MM-DD", 20);
-        JTextField workingHoursField = new JTextField(20);
-        JTextArea jobDescriptionArea = new JTextArea(3, 20);
-        JTextArea requirementsArea = new JTextArea(3, 20);
-
-        formPanel.add(new JLabel("Course Name:")); formPanel.add(courseField);
-        formPanel.add(new JLabel("Deadline:")); formPanel.add(deadlineField);
-        formPanel.add(new JLabel("Working Hours:")); formPanel.add(workingHoursField);
-        formPanel.add(new JLabel("Job Description:")); formPanel.add(new JScrollPane(jobDescriptionArea));
-        formPanel.add(new JLabel("Requirements:")); formPanel.add(new JScrollPane(requirementsArea));
-
-        int result = JOptionPane.showConfirmDialog(parent, formPanel, "Publish Position", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-        if (result == JOptionPane.OK_OPTION) {
-            try {
-                Position position = context.getMoPublishService().publishPosition(
-                    token,
-                    courseField.getText().trim(),
-                    jobDescriptionArea.getText().trim(),
-                    requirementsArea.getText().trim(),
-                    deadlineField.getText().trim(),
-                    workingHoursField.getText().trim()
-                );
-                JOptionPane.showMessageDialog(parent, "Published successfully! ID: " + position.getPositionId(), "Success", JOptionPane.INFORMATION_MESSAGE);
-            } catch (AppException ex) {
-                JOptionPane.showMessageDialog(parent, ex.getMessage(), "Publish failed", JOptionPane.ERROR_MESSAGE);
-            }
+        Container contentPane = parent.getContentPane();
+        BorderLayout layout = (BorderLayout) contentPane.getLayout();
+        Component centerComponent = layout.getLayoutComponent(BorderLayout.CENTER);
+        
+        if (centerComponent instanceof JobPublishPanel) {
+            return; // Already showing this panel
         }
+        
+        JobPublishPanel publishPanel = new JobPublishPanel(parent, context, token, centerComponent);
+        
+        if (centerComponent != null) {
+            contentPane.remove(centerComponent);
+        }
+        contentPane.add(publishPanel, BorderLayout.CENTER);
+        parent.revalidate();
+        parent.repaint();
     }
 
     public static void showMyPositionsDialog(JFrame parent, RecruitmentSystemContext context, String token) {
