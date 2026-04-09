@@ -29,7 +29,7 @@ public class Home2 extends JFrame {
         add(headerPanel, BorderLayout.NORTH);
 
         // Main Background Panel
-        BackgroundPanel bgPanel = new BackgroundPanel("TA_Recruitment_software/HomeBackGround.png"); 
+        BackgroundPanel bgPanel = new BackgroundPanel("HomeBackGround.png"); 
         bgPanel.setLayout(new GridBagLayout());
         
         JPanel contentPanel = new JPanel();

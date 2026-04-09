@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class FileStorageUtil {
-    private static final Path DATA_DIR = Paths.get("TA_Recruitment_software", "data");
+    private static final Path DATA_DIR = Paths.get("data");
 
     private FileStorageUtil() {
     }
