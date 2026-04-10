@@ -18,6 +18,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class TAJobService {
     private final PositionRepository positionRepository;
@@ -37,7 +38,12 @@ public class TAJobService {
         this.sessionManager = sessionManager;
     }
 
+    /**
+     * 开放且未过期的岗位；若 {@link PositionSemesterStore} 中为该岗位登记了学期，则须与当前学期一致。
+     */
     public List<Position> listAvailableJobs() {
+        String currentSemester = CurrentSemesterStore.readCurrentSemester();
+        Map<String, String> semesterByPositionId = PositionSemesterStore.readAll();
         List<Position> all = positionRepository.findAll();
         List<Position> available = new ArrayList<>();
         LocalDate today = LocalDate.now();
@@ -47,6 +53,9 @@ public class TAJobService {
             }
             LocalDate deadline = LocalDate.parse(position.getDeadline());
             if (deadline.isBefore(today)) {
+                continue;
+            }
+            if (!PositionSemesterStore.isAllowedForCurrentSemester(position.getPositionId(), currentSemester, semesterByPositionId)) {
                 continue;
             }
             available.add(position);
@@ -70,8 +79,13 @@ public class TAJobService {
         if (LocalDate.parse(position.getDeadline()).isBefore(LocalDate.now())) {
             throw new AppException("Cannot apply. Position deadline has passed.");
         }
+        String currentSemester = CurrentSemesterStore.readCurrentSemester();
+        Map<String, String> semesterByPositionId = PositionSemesterStore.readAll();
+        if (!PositionSemesterStore.isAllowedForCurrentSemester(checkedPositionId, currentSemester, semesterByPositionId)) {
+            throw new AppException("This position is not available for the current semester.");
+        }
         if (applicationRepository.findByApplicantAndPosition(ta.getUserId(), checkedPositionId).isPresent()) {
-            throw new AppException("Duplicate application is not allowed.");
+            throw new AppException("You have already applied for this position. Duplicate applications are not allowed.");
         }
 
         Application app = new Application();

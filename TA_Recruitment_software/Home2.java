@@ -1,12 +1,12 @@
 package TA_Recruitment_software;
 
-import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.imageio.ImageIO;
+import javax.swing.*;
 
 public class Home2 extends JFrame {
     private final RecruitmentSystemContext context;
@@ -128,6 +128,7 @@ public class Home2 extends JFrame {
             } else if (link.equals("ADMIN")) {
                 subItems.put("Approve Registration", () -> TA_Recruitment_software.admin_system.AdminUI.showPendingUsersDialog(this, context, currentToken));
                 subItems.put("Manage Users", () -> TA_Recruitment_software.admin_system.AdminUI.showManageUsersDialog(this, context, currentToken));
+                subItems.put("TA Workload", () -> TA_Recruitment_software.admin_system.AdminUI.showTaWorkloadDialog(this, context, currentToken));
             } else if (link.equals("PERSONAL")) {
                 subItems.put("My Resume (Update Profile)", () -> TA_Recruitment_software.profile.ProfileUI.showUpdateProfileDialog(this, context, currentToken));
                 subItems.put("My Applications (TA)", () -> TA_Recruitment_software.ta_jobs.TAJobsUI.showMyApplications(this, context, currentToken));

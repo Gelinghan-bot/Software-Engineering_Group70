@@ -11,6 +11,8 @@ import TA_Recruitment_software.admin_system.repository.PositionRepository;
 import TA_Recruitment_software.admin_system.repository.UserRepository;
 import TA_Recruitment_software.auth.SessionContext;
 import TA_Recruitment_software.auth.SessionManager;
+import TA_Recruitment_software.ta_jobs.CurrentSemesterStore;
+import TA_Recruitment_software.ta_jobs.PositionSemesterStore;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -31,38 +33,38 @@ public class MOPublishService {
 
     public Position publishPosition(
         String token,
-        String jobTitle,
-        String jobType,
+        String courseName,
         String jobDescription,
         String requirements,
-        String interviewLocation,
-        String deadline
+        String deadline,
+        String workingHours,
+        String semester
     ) {
         SessionContext session = sessionManager.requireRole(token, Role.MO);
         User mo = userRepository.findByUserId(session.getUserId())
             .orElseThrow(() -> new AppException("MO account not found."));
 
-        String checkedTitle = ValidationUtil.validateName(jobTitle, "Job title");
-        String checkedType = ValidationUtil.sanitizeText(jobType, "Job type", 80);
+        String checkedCourse = ValidationUtil.validateName(courseName, "Course name");
         String checkedDesc = ValidationUtil.sanitizeText(jobDescription, "Job description", 800);
         String checkedReq = ValidationUtil.sanitizeText(requirements, "Requirements", 600);
-        String checkedLoc = ValidationUtil.sanitizeText(interviewLocation, "Interview location", 100);
+        String checkedHours = ValidationUtil.sanitizeText(workingHours, "Working hours", 80);
         LocalDate checkedDeadline = ValidationUtil.validateDate(deadline, "Deadline");
         ValidationUtil.ensureTodayOrFuture(checkedDeadline, "Deadline");
 
         Position position = new Position();
         position.setPositionId(IdGenerator.nextId("POS"));
-        position.setJobTitle(checkedTitle);
-        position.setJobType(checkedType);
+        position.setCourseName(checkedCourse);
         position.setResponsibleMO(mo.getFullName());
         position.setJobDescription(checkedDesc);
         position.setRequirements(checkedReq);
-        position.setInterviewLocation(checkedLoc);
         position.setDeadline(checkedDeadline.toString());
+        position.setWorkingHours(checkedHours);
         position.setPublishedByUserId(mo.getUserId());
         position.setStatus(PositionStatus.OPEN);
 
         positionRepository.save(position);
+        String sem = (semester != null && !semester.trim().isEmpty()) ? semester.trim() : CurrentSemesterStore.readCurrentSemester();
+        PositionSemesterStore.register(position.getPositionId(), sem);
         return position;
     }
 
