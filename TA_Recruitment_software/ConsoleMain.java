@@ -156,7 +156,8 @@ public class ConsoleMain {
                         read("Job description: "),
                         read("Requirements: "),
                         read("Deadline (YYYY-MM-DD): "),
-                        read("Working hours: ")
+                        read("Working hours: "),
+                        read("Semester (e.g. 2026-Spring): ")
                     );
                     System.out.println("Published: " + position);
                 } else if ("2".equals(choice)) {

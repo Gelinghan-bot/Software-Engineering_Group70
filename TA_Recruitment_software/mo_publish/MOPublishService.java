@@ -11,6 +11,8 @@ import TA_Recruitment_software.admin_system.repository.PositionRepository;
 import TA_Recruitment_software.admin_system.repository.UserRepository;
 import TA_Recruitment_software.auth.SessionContext;
 import TA_Recruitment_software.auth.SessionManager;
+import TA_Recruitment_software.ta_jobs.CurrentSemesterStore;
+import TA_Recruitment_software.ta_jobs.PositionSemesterStore;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -35,7 +37,8 @@ public class MOPublishService {
         String jobDescription,
         String requirements,
         String deadline,
-        String workingHours
+        String workingHours,
+        String semester
     ) {
         SessionContext session = sessionManager.requireRole(token, Role.MO);
         User mo = userRepository.findByUserId(session.getUserId())
@@ -60,6 +63,8 @@ public class MOPublishService {
         position.setStatus(PositionStatus.OPEN);
 
         positionRepository.save(position);
+        String sem = (semester != null && !semester.trim().isEmpty()) ? semester.trim() : CurrentSemesterStore.readCurrentSemester();
+        PositionSemesterStore.register(position.getPositionId(), sem);
         return position;
     }
 
