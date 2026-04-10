@@ -288,6 +288,10 @@ public class ConsoleMain {
                         read("Requirements: "),
                         read("Interview Location: "),
                         read("Deadline (YYYY-MM-DD): "),
+<<<<<<< HEAD
+=======
+                        read("Working hours: "),
+>>>>>>> 179aa8879d8943061cbd74b0af326f3fb47375a5
                         read("Semester (e.g. 2026-Spring): ")
                     );
                     System.out.println("Published: " + position);
