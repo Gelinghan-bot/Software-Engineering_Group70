@@ -71,11 +71,26 @@ public class JobPublishPanel extends JPanel {
         JTextField jobCatField = createTextField("Enter your job category");
         JTextField closingDateField = createTextField("yyyy-mm-dd");
 
+        String currentYear = String.valueOf(java.time.LocalDate.now().getYear());
+        String nextYear = String.valueOf(java.time.LocalDate.now().getYear() + 1);
+        String nextNextYear = String.valueOf(java.time.LocalDate.now().getYear() + 2);
+        JComboBox<String> semesterBox = new JComboBox<>(new String[]{
+            currentYear + "-Spring",
+            currentYear + "-Fall",
+            nextYear + "-Spring",
+            nextYear + "-Fall",
+            nextNextYear + "-Spring",
+            nextNextYear + "-Fall"
+        });
+        semesterBox.setSelectedItem(TA_Recruitment_software.ta_jobs.CurrentSemesterStore.readCurrentSemester());
+        semesterBox.setPreferredSize(new Dimension(800, 40));
+        semesterBox.setFont(new Font("Arial", Font.PLAIN, 14));
+
         int row = 0;
         addFormField(formCenter, "JOB TITLE", jobTitleField, gbc, row++);
         addFormField(formCenter, "JOB DESCRIPTION", jobDescField, gbc, row++);
         addFormField(formCenter, "JOB LOCATION", jobLocField, gbc, row++);
-        
+
         // Add Map Panel
         gbc.gridx = 1;
         gbc.gridy = row++;
@@ -86,6 +101,22 @@ public class JobPublishPanel extends JPanel {
         addFormField(formCenter, "JOB TYPE", jobTypeField, gbc, row++);
         addFormField(formCenter, "JOB CATEGORY", jobCatField, gbc, row++);
         addFormField(formCenter, "CLOSING DATE", closingDateField, gbc, row++);
+
+        // Semester selector
+        gbc.gridy = row;
+        gbc.gridx = 0;
+        gbc.weightx = 0.0;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.WEST;
+        JLabel semLabel = new JLabel("SEMESTER");
+        semLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        semLabel.setForeground(new Color(80, 80, 80));
+        formCenter.add(semLabel, gbc);
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        formCenter.add(semesterBox, gbc);
+        row++;
 
         // Submit Button & Cancel Button
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
@@ -111,7 +142,8 @@ public class JobPublishPanel extends JPanel {
                     jobDescField.getText().trim() + " [Location: " + jobLocField.getText().trim() + "]",
                     jobCatField.getText().trim(), // using category field for requirements
                     closingDateField.getText().trim(),    // deadline String
-                    jobTypeField.getText().trim()         // working hours String
+                    jobTypeField.getText().trim(),        // working hours String
+                    (String) semesterBox.getSelectedItem() // semester
                 );
                 JOptionPane.showMessageDialog(parent, "Published successfully! ID: " + position.getPositionId(), "Success", JOptionPane.INFORMATION_MESSAGE);
                 goBack();

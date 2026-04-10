@@ -62,6 +62,24 @@ public final class PositionSemesterStore {
         return s == null || s.isEmpty() ? "-" : s;
     }
 
+    public static void register(String positionId, String semester) {
+        try {
+            Files.createDirectories(DATA_DIR);
+            Path file = DATA_DIR.resolve(FILE_NAME);
+            if (!Files.exists(file)) {
+                Files.write(file, List.of(HEADER), StandardCharsets.UTF_8);
+            }
+            Map<String, String> existing = readAll();
+            if (existing.containsKey(positionId)) {
+                return;
+            }
+            Files.write(file, List.of(positionId + "," + semester),
+                StandardCharsets.UTF_8, java.nio.file.StandardOpenOption.APPEND);
+        } catch (IOException e) {
+            throw new AppException("Failed to write: " + FILE_NAME);
+        }
+    }
+
     public static boolean isAllowedForCurrentSemester(String positionId, String currentSemester, Map<String, String> semesterByPositionId) {
         String tagged = semesterByPositionId.get(positionId);
         if (tagged == null || tagged.trim().isEmpty()) {
