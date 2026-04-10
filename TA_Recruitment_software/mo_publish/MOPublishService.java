@@ -31,31 +31,34 @@ public class MOPublishService {
 
     public Position publishPosition(
         String token,
-        String courseName,
+        String jobTitle,
+        String jobType,
         String jobDescription,
         String requirements,
-        String deadline,
-        String workingHours
+        String interviewLocation,
+        String deadline
     ) {
         SessionContext session = sessionManager.requireRole(token, Role.MO);
         User mo = userRepository.findByUserId(session.getUserId())
             .orElseThrow(() -> new AppException("MO account not found."));
 
-        String checkedCourse = ValidationUtil.validateName(courseName, "Course name");
+        String checkedTitle = ValidationUtil.validateName(jobTitle, "Job title");
+        String checkedType = ValidationUtil.sanitizeText(jobType, "Job type", 80);
         String checkedDesc = ValidationUtil.sanitizeText(jobDescription, "Job description", 800);
         String checkedReq = ValidationUtil.sanitizeText(requirements, "Requirements", 600);
-        String checkedHours = ValidationUtil.sanitizeText(workingHours, "Working hours", 80);
+        String checkedLoc = ValidationUtil.sanitizeText(interviewLocation, "Interview location", 100);
         LocalDate checkedDeadline = ValidationUtil.validateDate(deadline, "Deadline");
         ValidationUtil.ensureTodayOrFuture(checkedDeadline, "Deadline");
 
         Position position = new Position();
         position.setPositionId(IdGenerator.nextId("POS"));
-        position.setCourseName(checkedCourse);
+        position.setJobTitle(checkedTitle);
+        position.setJobType(checkedType);
         position.setResponsibleMO(mo.getFullName());
         position.setJobDescription(checkedDesc);
         position.setRequirements(checkedReq);
+        position.setInterviewLocation(checkedLoc);
         position.setDeadline(checkedDeadline.toString());
-        position.setWorkingHours(checkedHours);
         position.setPublishedByUserId(mo.getUserId());
         position.setStatus(PositionStatus.OPEN);
 

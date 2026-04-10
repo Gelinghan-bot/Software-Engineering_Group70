@@ -23,7 +23,7 @@ public class TAJobsUI {
                 @Override public boolean isCellEditable(int row, int column) { return false; }
             };
             for (Position p : positions) {
-                model.addRow(new Object[]{p.getPositionId(), p.getCourseName(), p.getDeadline(), p.getStatus()});
+                model.addRow(new Object[]{p.getPositionId(), p.getJobTitle(), p.getDeadline(), p.getStatus()});
             }
 
             JTable table = new JTable(model);

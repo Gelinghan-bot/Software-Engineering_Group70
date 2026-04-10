@@ -151,11 +151,12 @@ public class ConsoleMain {
                 if ("1".equals(choice)) {
                     Position position = context.getMoPublishService().publishPosition(
                         token,
-                        read("Course name: "),
-                        read("Job description: "),
+                        read("Job Title: "),
+                        read("Job Type: "),
+                        read("Description: "),
                         read("Requirements: "),
-                        read("Deadline (YYYY-MM-DD): "),
-                        read("Working hours: ")
+                        read("Interview Location: "),
+                        read("Deadline (YYYY-MM-DD): ")
                     );
                     System.out.println("Published: " + position);
                 } else if ("2".equals(choice)) {
