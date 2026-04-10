@@ -2,11 +2,12 @@ package TA_Recruitment_software.admin_system;
 
 import TA_Recruitment_software.RecruitmentSystemContext;
 import TA_Recruitment_software.admin_system.foundation.AppException;
+import TA_Recruitment_software.admin_system.model.TaWorkloadSummary;
 import TA_Recruitment_software.admin_system.model.User;
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 
 public class AdminUI {
 
@@ -93,6 +94,7 @@ public class AdminUI {
             JPanel btnPanel = new JPanel();
             JButton toggleBtn = new JButton("Toggle Enable/Disable");
             JButton resetPwdBtn = new JButton("Reset Password");
+            JButton workloadBtn = new JButton("Show TA Workload");
 
             toggleBtn.addActionListener(e -> {
                 int row = table.getSelectedRow();
@@ -117,12 +119,53 @@ public class AdminUI {
                 }
             });
 
+            workloadBtn.addActionListener(e -> showTaWorkloadDialog(parent, context, token));
+
             btnPanel.add(toggleBtn);
             btnPanel.add(resetPwdBtn);
+            btnPanel.add(workloadBtn);
             panel.add(btnPanel, BorderLayout.SOUTH);
 
             JOptionPane.showMessageDialog(parent, panel, "Manage Users", JOptionPane.PLAIN_MESSAGE);
 
+        } catch (AppException ex) {
+            JOptionPane.showMessageDialog(parent, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    public static void showTaWorkloadDialog(JFrame parent, RecruitmentSystemContext context, String token) {
+        if (token == null) {
+            JOptionPane.showMessageDialog(parent, "Please login as ADMIN first.");
+            return;
+        }
+
+        try {
+            List<TaWorkloadSummary> workloads = context.getAdminService().listTaWorkloadSummary(token);
+            if (workloads.isEmpty()) {
+                JOptionPane.showMessageDialog(parent, "No TA workload data available.");
+                return;
+            }
+
+            DefaultTableModel model = new DefaultTableModel(
+                new Object[]{"User ID", "Account ID", "Name", "Assigned Positions", "Total Hours"}, 0) {
+                @Override public boolean isCellEditable(int row, int column) { return false; }
+            };
+
+            for (TaWorkloadSummary workload : workloads) {
+                model.addRow(new Object[]{
+                    workload.getUserId(),
+                    workload.getAccountId(),
+                    workload.getFullName(),
+                    workload.getAssignedPositionCount(),
+                    workload.getTotalAssignedHours()
+                });
+            }
+
+            JTable table = new JTable(model);
+            JPanel panel = new JPanel(new BorderLayout());
+            panel.add(new JScrollPane(table), BorderLayout.CENTER);
+            panel.setPreferredSize(new Dimension(700, 350));
+            JOptionPane.showMessageDialog(parent, panel, "TA Workload Summary", JOptionPane.PLAIN_MESSAGE);
         } catch (AppException ex) {
             JOptionPane.showMessageDialog(parent, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }

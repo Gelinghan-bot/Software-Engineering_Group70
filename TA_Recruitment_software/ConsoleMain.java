@@ -5,6 +5,7 @@ import TA_Recruitment_software.admin_system.model.Application;
 import TA_Recruitment_software.admin_system.model.ApplicationStatus;
 import TA_Recruitment_software.admin_system.model.Position;
 import TA_Recruitment_software.admin_system.model.Role;
+import TA_Recruitment_software.admin_system.model.TaWorkloadSummary;
 import TA_Recruitment_software.admin_system.model.User;
 import TA_Recruitment_software.auth.SessionContext;
 import java.util.List;
@@ -203,7 +204,8 @@ public class ConsoleMain {
             System.out.println("3. Enable/Disable User");
             System.out.println("4. Reset User Password");
             System.out.println("5. List All Users");
-            System.out.println("6. Logout");
+            System.out.println("6. Show TA Workload Summary");
+            System.out.println("7. Logout");
             String choice = read("Choose: ");
             try {
                 if ("1".equals(choice)) {
@@ -225,6 +227,9 @@ public class ConsoleMain {
                     List<User> users = context.getAdminService().listAllUsers(token);
                     printList(users);
                 } else if ("6".equals(choice)) {
+                    List<TaWorkloadSummary> workloads = context.getAdminService().listTaWorkloadSummary(token);
+                    printList(workloads);
+                } else if ("7".equals(choice)) {
                     context.getSessionManager().logout(token);
                     return;
                 } else {
