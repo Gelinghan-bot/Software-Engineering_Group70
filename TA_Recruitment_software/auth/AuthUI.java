@@ -3,15 +3,14 @@ package TA_Recruitment_software.auth;
 import TA_Recruitment_software.RecruitmentSystemContext;
 import TA_Recruitment_software.admin_system.foundation.AppException;
 import TA_Recruitment_software.admin_system.model.User;
+import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 
 /**
  * Authentication UI module providing Login, Registration (TA/MO),
@@ -38,10 +37,21 @@ public class AuthUI {
 
     /**
      * Show the login dialog. Returns [token, roleName] on success, null on cancel/failure.
+     * If there are valid persistent sessions, shows a dialog to choose which one to use.
      */
     public static String[] showLoginDialog(JFrame parent, RecruitmentSystemContext context) {
+        // Check for valid persistent sessions
+        java.util.Map<String, TA_Recruitment_software.auth.SessionContext> validSessions = getValidPersistentSessions(context);
+        if (!validSessions.isEmpty()) {
+            String[] autoLoginResult = showAutoLoginDialog(parent, context, validSessions);
+            if (autoLoginResult != null) {
+                return autoLoginResult;
+            }
+            // User chose to login manually, continue with normal login dialog
+        }
+
         JDialog dialog = new JDialog(parent, "Login - JobHere", true);
-        dialog.setSize(420, 340);
+        dialog.setSize(480, 420);
         dialog.setLocationRelativeTo(parent);
         dialog.setResizable(false);
 
@@ -70,17 +80,36 @@ public class AuthUI {
             passField.setEchoChar(showPassCheck.isSelected() ? (char) 0 : '\u2022');
         });
 
+        // Login history dropdown
+        java.util.List<String> historyAccounts = LoginHistoryStore.getAllAccounts();
+        String[] historyArray = new String[historyAccounts.size() + 1];
+        historyArray[0] = "-- Select from history --";
+        for (int i = 0; i < historyAccounts.size(); i++) {
+            historyArray[i + 1] = historyAccounts.get(i);
+        }
+        JComboBox<String> historyCombo = new JComboBox<>(historyArray);
+        historyCombo.setFont(FIELD_FONT);
+        historyCombo.setEnabled(historyAccounts.size() > 0);
+        historyCombo.addActionListener(e -> {
+            int idx = historyCombo.getSelectedIndex();
+            if (idx > 0 && idx < historyArray.length) {
+                accountField.setText(historyArray[idx]);
+                passField.requestFocus();
+            }
+        });
+
         JLabel statusLabel = new JLabel(" ");
         statusLabel.setFont(HINT_FONT);
         statusLabel.setForeground(ERROR_RED);
 
-        addFormRow(formPanel, gbc, 0, "Account ID", accountField);
-        addFormRow(formPanel, gbc, 1, "Password", passField);
+        addFormRow(formPanel, gbc, 0, "Recent Accounts", historyCombo);
+        addFormRow(formPanel, gbc, 1, "Account ID", accountField);
+        addFormRow(formPanel, gbc, 2, "Password", passField);
 
-        gbc.gridx = 1; gbc.gridy = 2; gbc.anchor = GridBagConstraints.WEST;
+        gbc.gridx = 1; gbc.gridy = 3; gbc.anchor = GridBagConstraints.WEST;
         formPanel.add(showPassCheck, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 2; gbc.anchor = GridBagConstraints.CENTER;
+        gbc.gridx = 0; gbc.gridy = 4; gbc.gridwidth = 2; gbc.anchor = GridBagConstraints.CENTER;
         formPanel.add(statusLabel, gbc);
 
         mainPanel.add(formPanel, BorderLayout.CENTER);
@@ -90,6 +119,8 @@ public class AuthUI {
         buttonPanel.setBackground(Color.WHITE);
 
         JButton loginBtn = createPrimaryButton("Login");
+        JButton loginInBtn = createSecondaryButton("Login In");
+        JButton clearHistoryBtn = createSecondaryButton("Clear History");
         JButton cancelBtn = createSecondaryButton("Cancel");
 
         final String[][] result = {null};
@@ -110,6 +141,30 @@ public class AuthUI {
             }
         });
 
+        loginInBtn.addActionListener(e -> {
+            if (validSessions.isEmpty()) {
+                JOptionPane.showMessageDialog(parent, "No saved login sessions available.", "No Sessions", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+            String[] autoLoginResult = showAutoLoginDialog(parent, context, validSessions);
+            if (autoLoginResult != null) {
+                result[0] = autoLoginResult;
+                dialog.dispose();
+            }
+        });
+
+        clearHistoryBtn.addActionListener(e -> {
+            int confirm = JOptionPane.showConfirmDialog(parent,
+                "Are you sure you want to clear login history?",
+                "Clear History", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                LoginHistoryStore.clearAll();
+                JOptionPane.showMessageDialog(parent, "Login history cleared!");
+                dialog.dispose();
+                showLoginDialog(parent, context);
+            }
+        });
+
         cancelBtn.addActionListener(e -> dialog.dispose());
 
         // Enter key triggers login
@@ -125,6 +180,8 @@ public class AuthUI {
         passField.addKeyListener(enterKeyListener);
 
         buttonPanel.add(loginBtn);
+        buttonPanel.add(loginInBtn);
+        buttonPanel.add(clearHistoryBtn);
         buttonPanel.add(cancelBtn);
         mainPanel.add(buttonPanel, BorderLayout.SOUTH);
 
@@ -575,7 +632,6 @@ public class AuthUI {
         if (password.length() >= 12) score++;
         if (password.matches(".*[A-Z].*")) score++;
         if (password.matches(".*[a-z].*")) score++;
-        if (password.matches(".*\\d.*")) score++;
         if (password.matches(".*[^A-Za-z0-9].*")) score++;
 
         if (score <= 2) {
@@ -588,5 +644,102 @@ public class AuthUI {
             label.setText("Strength: Strong");
             label.setForeground(SUCCESS_GREEN);
         }
+    }
+
+    /**
+     * Get all valid persistent sessions that haven't expired.
+     */
+    private static java.util.Map<String, TA_Recruitment_software.auth.SessionContext> getValidPersistentSessions(RecruitmentSystemContext context) {
+        return context.getSessionManager().getAllValidSessions();
+    }
+
+    /**
+     * Show dialog to choose from valid persistent sessions for auto-login.
+     */
+    private static String[] showAutoLoginDialog(JFrame parent, RecruitmentSystemContext context,
+                                               java.util.Map<String, TA_Recruitment_software.auth.SessionContext> validSessions) {
+        if (validSessions.isEmpty()) {
+            return null;
+        }
+
+        JDialog dialog = new JDialog(parent, "Resume Session - JobHere", true);
+        dialog.setSize(520, 360);
+        dialog.setLocationRelativeTo(parent);
+        dialog.setResizable(false);
+
+        JPanel mainPanel = new JPanel(new BorderLayout(0, 10));
+        mainPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
+        mainPanel.setBackground(Color.WHITE);
+
+        // Title
+        JLabel titleLabel = new JLabel("Welcome Back!", SwingConstants.CENTER);
+        titleLabel.setFont(TITLE_FONT);
+        titleLabel.setForeground(PRIMARY_GREEN);
+        mainPanel.add(titleLabel, BorderLayout.NORTH);
+
+        // Session list
+        JPanel centerPanel = new JPanel(new BorderLayout());
+        centerPanel.setBackground(Color.WHITE);
+
+        String[] sessionOptions = new String[validSessions.size() + 1];
+        java.util.List<String> tokens = new java.util.ArrayList<>(validSessions.keySet());
+        sessionOptions[0] = "-- Choose a session to resume --";
+        int i = 1;
+        for (TA_Recruitment_software.auth.SessionContext ctx : validSessions.values()) {
+            sessionOptions[i] = ctx.getFullName() + " (" + ctx.getAccountId() + ") - " + ctx.getRole();
+            i++;
+        }
+
+        JComboBox<String> sessionCombo = new JComboBox<>(sessionOptions);
+        sessionCombo.setFont(LABEL_FONT);
+        sessionCombo.setSelectedIndex(0);
+
+        centerPanel.add(sessionCombo, BorderLayout.CENTER);
+
+        // Message
+        JLabel messageLabel = new JLabel("<html>Select a session to continue, or login with a different account.</html>", SwingConstants.CENTER);
+        messageLabel.setFont(LABEL_FONT);
+        messageLabel.setBorder(new EmptyBorder(10, 0, 10, 0));
+        centerPanel.add(messageLabel, BorderLayout.NORTH);
+
+        mainPanel.add(centerPanel, BorderLayout.CENTER);
+
+        // Buttons
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 15, 0));
+        buttonPanel.setBackground(Color.WHITE);
+
+        JButton resumeBtn = new JButton("Resume Selected Session");
+        resumeBtn.setBackground(PRIMARY_GREEN);
+        resumeBtn.setForeground(Color.WHITE);
+        resumeBtn.setFont(BUTTON_FONT);
+
+        JButton otherAccountBtn = new JButton("Login Other Account");
+        otherAccountBtn.setFont(BUTTON_FONT);
+
+        final String[] result = new String[2];
+
+        resumeBtn.addActionListener(e -> {
+            int selectedIndex = sessionCombo.getSelectedIndex();
+            if (selectedIndex > 0 && selectedIndex <= tokens.size()) {
+                String selectedToken = tokens.get(selectedIndex - 1);
+                TA_Recruitment_software.auth.SessionContext ctx = validSessions.get(selectedToken);
+                result[0] = selectedToken;
+                result[1] = ctx.getRole().name();
+                dialog.dispose();
+            }
+        });
+
+        otherAccountBtn.addActionListener(e -> {
+            dialog.dispose();
+        });
+
+        buttonPanel.add(resumeBtn);
+        buttonPanel.add(otherAccountBtn);
+        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+        dialog.add(mainPanel);
+        dialog.setVisible(true);
+
+        return result[0] != null ? result : null;
     }
 }

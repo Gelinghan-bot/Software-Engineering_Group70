@@ -105,6 +105,36 @@ public class AdminService {
         return user;
     }
 
+    public User updateUserInfo(String adminToken, String userId, String fullName, String email, 
+                               String phone, String major, String department, String skills) {
+        sessionManager.requireRole(adminToken, Role.ADMIN);
+        User user = userRepository.findByUserId(ValidationUtil.requireNotBlank(userId, "User ID"))
+            .orElseThrow(() -> new AppException("User not found."));
+        
+        if (fullName != null && !fullName.trim().isEmpty()) {
+            user.setFullName(fullName.trim());
+        }
+        if (email != null && !email.trim().isEmpty()) {
+            ValidationUtil.validateEmail(email.trim(), true);
+            user.setEmail(email.trim());
+        }
+        if (phone != null && !phone.trim().isEmpty()) {
+            user.setPhone(phone.trim());
+        }
+        if (major != null && !major.trim().isEmpty()) {
+            user.setMajor(major.trim());
+        }
+        if (department != null && !department.trim().isEmpty()) {
+            user.setDepartment(department.trim());
+        }
+        if (skills != null) {
+            user.setSkills(skills.trim());
+        }
+        
+        userRepository.save(user);
+        return user;
+    }
+
     public List<TaWorkloadSummary> listTaWorkloadSummary(String adminToken) {
         sessionManager.requireRole(adminToken, Role.ADMIN);
 

@@ -17,7 +17,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
@@ -64,18 +63,32 @@ public class MOReviewService {
     }
 
     public List<Application> listApplicationsForPosition(String token, String positionId) {
-        SessionContext session = sessionManager.requireRole(token, Role.MO);
+        SessionContext session = sessionManager.requireSession(token);
+        if (session.getRole() != Role.MO && session.getRole() != Role.ADMIN) {
+            throw new AppException("Permission denied. Only MO and ADMIN can review applications.");
+        }
         String checkedPositionId = ValidationUtil.requireNotBlank(positionId, "Position ID");
         Position position = positionRepository.findById(checkedPositionId)
             .orElseThrow(() -> new AppException("Position not found."));
-        if (!position.getPublishedByUserId().equals(session.getUserId())) {
+        
+        // Admin can review any position; MO can only review their own
+        if (session.getRole() == Role.MO && !position.getPublishedByUserId().equals(session.getUserId())) {
             throw new AppException("Permission denied. You can only review your own positions.");
         }
         return applicationRepository.findByPosition(checkedPositionId);
     }
 
     public List<Application> listAllApplicationsOfMyPositions(String token) {
-        SessionContext session = sessionManager.requireRole(token, Role.MO);
+        SessionContext session = sessionManager.requireSession(token);
+        if (session.getRole() != Role.MO && session.getRole() != Role.ADMIN) {
+            throw new AppException("Permission denied. Only MO and ADMIN can review applications.");
+        }
+        
+        // Admin can see all applications; MO can only see their own positions' applications
+        if (session.getRole() == Role.ADMIN) {
+            return applicationRepository.findAll();
+        }
+        
         List<Position> ownedPositions = positionRepository.findByPublisher(session.getUserId());
         Set<String> positionIds = new HashSet<>();
         for (Position position : ownedPositions) {
@@ -106,14 +119,18 @@ public class MOReviewService {
 
     public Application updateApplicationStatus(String token, String applicationId,
                                                 ApplicationStatus newStatus, String note) {
-        SessionContext session = sessionManager.requireRole(token, Role.MO);
+        SessionContext session = sessionManager.requireSession(token);
+        if (session.getRole() != Role.MO && session.getRole() != Role.ADMIN) {
+            throw new AppException("Permission denied. Only MO and ADMIN can update application status.");
+        }
         Application app = applicationRepository
             .findById(ValidationUtil.requireNotBlank(applicationId, "Application ID"))
             .orElseThrow(() -> new AppException("Application not found."));
         Position position = positionRepository.findById(app.getPositionId())
             .orElseThrow(() -> new AppException("Position not found for this application."));
 
-        if (!position.getPublishedByUserId().equals(session.getUserId())) {
+        // Admin can update any application; MO can only update for their own positions
+        if (session.getRole() == Role.MO && !position.getPublishedByUserId().equals(session.getUserId())) {
             throw new AppException("Permission denied. You can only update applications for your own positions.");
         }
 

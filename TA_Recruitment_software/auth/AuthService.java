@@ -146,7 +146,10 @@ public class AuthService {
         if (!SecurityUtil.verifyPassword(password, user.getPasswordHash())) {
             throw new AppException("Invalid account or password.");
         }
-        return sessionManager.createSession(user);
+        String token = sessionManager.createSession(user);
+        // Save successful login to history
+        LoginHistoryStore.addAccount(checkedAccountId);
+        return token;
     }
 
     /**

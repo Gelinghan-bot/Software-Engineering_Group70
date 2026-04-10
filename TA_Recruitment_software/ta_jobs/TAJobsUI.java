@@ -4,13 +4,13 @@ import TA_Recruitment_software.RecruitmentSystemContext;
 import TA_Recruitment_software.admin_system.foundation.AppException;
 import TA_Recruitment_software.admin_system.model.Application;
 import TA_Recruitment_software.admin_system.model.Position;
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 
 public class TAJobsUI {
 
@@ -58,7 +58,10 @@ public class TAJobsUI {
 
             JTable table = new JTable(model);
             JPanel panel = new JPanel(new BorderLayout());
-            panel.add(new JScrollPane(table), BorderLayout.CENTER);
+            JScrollPane scrollPane = new JScrollPane(table);
+            scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+            scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
+            panel.add(scrollPane, BorderLayout.CENTER);
             panel.setPreferredSize(new Dimension(760, 320));
 
             JPanel btnPanel = new JPanel();
@@ -128,7 +131,10 @@ public class TAJobsUI {
 
             JTable table = new JTable(model);
             JPanel panel = new JPanel(new BorderLayout());
-            panel.add(new JScrollPane(table), BorderLayout.CENTER);
+            JScrollPane scrollPane = new JScrollPane(table);
+            scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+            scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
+            panel.add(scrollPane, BorderLayout.CENTER);
             panel.setPreferredSize(new Dimension(600, 200));
 
             JOptionPane.showMessageDialog(parent, panel, "My Applications", JOptionPane.PLAIN_MESSAGE);

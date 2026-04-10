@@ -6,22 +6,25 @@ import TA_Recruitment_software.admin_system.model.Application;
 import TA_Recruitment_software.admin_system.model.ApplicationStatus;
 import TA_Recruitment_software.admin_system.model.Position;
 import TA_Recruitment_software.admin_system.model.User;
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.util.List;
 import java.util.Optional;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 
 public class MoReviewUI {
 
     public static void showReviewDialog(JFrame parent, RecruitmentSystemContext context, String token) {
         if (token == null) {
-            JOptionPane.showMessageDialog(parent, "Please login as MO first.");
+            JOptionPane.showMessageDialog(parent, "Please login as MO or ADMIN.");
             return;
         }
 
         try {
+            TA_Recruitment_software.admin_system.model.Role role = context.getSessionManager().requireSession(token).getRole();
+            if (role != TA_Recruitment_software.admin_system.model.Role.MO && role != TA_Recruitment_software.admin_system.model.Role.ADMIN) {
+                throw new AppException("Permission denied. Only MO and ADMIN can review applications.");
+            }
             MOReviewService service = context.getMoReviewService();
             List<Application> applications = service.listAllApplicationsOfMyPositions(token);
             if (applications.isEmpty()) {
@@ -71,6 +74,8 @@ public class MoReviewUI {
             table.getColumnModel().getColumn(7).setPreferredWidth(140);
 
             JScrollPane scrollPane = new JScrollPane(table);
+            scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+            scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
             dialog.add(scrollPane, BorderLayout.CENTER);
 
             // --- Bottom: Action buttons ---
@@ -219,6 +224,8 @@ public class MoReviewUI {
         textArea.setCaretPosition(0);
 
         JScrollPane scrollPane = new JScrollPane(textArea);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
         scrollPane.setPreferredSize(new Dimension(550, 450));
 
         JOptionPane.showMessageDialog(parent, scrollPane, "Application Details", JOptionPane.PLAIN_MESSAGE);
@@ -297,6 +304,8 @@ public class MoReviewUI {
         textArea.setCaretPosition(0);
 
         JScrollPane scrollPane = new JScrollPane(textArea);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
         scrollPane.setPreferredSize(new Dimension(500, 300));
 
         JOptionPane.showMessageDialog(parent, scrollPane, "Status History", JOptionPane.PLAIN_MESSAGE);

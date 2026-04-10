@@ -41,9 +41,12 @@ public class MOPublishService {
         String deadline,
         String semester
     ) {
-        SessionContext session = sessionManager.requireRole(token, Role.MO);
-        User mo = userRepository.findByUserId(session.getUserId())
-            .orElseThrow(() -> new AppException("MO account not found."));
+        SessionContext session = sessionManager.requireSession(token);
+        if (session.getRole() != Role.MO && session.getRole() != Role.ADMIN) {
+            throw new AppException("Permission denied. Only MO and ADMIN can publish positions.");
+        }
+        User publisher = userRepository.findByUserId(session.getUserId())
+            .orElseThrow(() -> new AppException("Account not found."));
 
         String checkedTitle = ValidationUtil.validateName(jobTitle, "Job title");
         String checkedType = ValidationUtil.sanitizeText(jobType, "Job type", 80);
@@ -57,12 +60,12 @@ public class MOPublishService {
         position.setPositionId(IdGenerator.nextId("POS"));
         position.setJobTitle(checkedTitle);
         position.setJobType(checkedType);
-        position.setResponsibleMO(mo.getFullName());
+        position.setResponsibleMO(publisher.getFullName());
         position.setJobDescription(checkedDesc);
         position.setRequirements(checkedReq);
         position.setInterviewLocation(checkedLoc);
         position.setDeadline(checkedDeadline.toString());
-        position.setPublishedByUserId(mo.getUserId());
+        position.setPublishedByUserId(publisher.getUserId());
         position.setStatus(PositionStatus.OPEN);
 
         positionRepository.save(position);

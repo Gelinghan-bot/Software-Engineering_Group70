@@ -3,21 +3,24 @@ package TA_Recruitment_software.mo_publish;
 import TA_Recruitment_software.RecruitmentSystemContext;
 import TA_Recruitment_software.admin_system.foundation.AppException;
 import TA_Recruitment_software.admin_system.model.Position;
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 
 public class MoPublishUI {
 
     public static void showPublishDialog(JFrame parent, RecruitmentSystemContext context, String token) {
         if (token == null) {
-            JOptionPane.showMessageDialog(parent, "Please login as MO first.");
+            JOptionPane.showMessageDialog(parent, "Please login as MO or ADMIN.");
             return;
         }
 
         try {
-            context.getSessionManager().requireRole(token, TA_Recruitment_software.admin_system.model.Role.MO);
+            TA_Recruitment_software.admin_system.model.Role role = context.getSessionManager().requireSession(token).getRole();
+            if (role != TA_Recruitment_software.admin_system.model.Role.MO && role != TA_Recruitment_software.admin_system.model.Role.ADMIN) {
+                throw new AppException("Permission denied. Only MO and ADMIN can publish positions.");
+            }
         } catch (AppException ex) {
             JOptionPane.showMessageDialog(parent, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             return;
@@ -43,11 +46,15 @@ public class MoPublishUI {
 
     public static void showMyPositionsDialog(JFrame parent, RecruitmentSystemContext context, String token) {
         if (token == null) {
-            JOptionPane.showMessageDialog(parent, "Please login as MO first.");
+            JOptionPane.showMessageDialog(parent, "Please login as MO or ADMIN.");
             return;
         }
 
         try {
+            TA_Recruitment_software.admin_system.model.Role role = context.getSessionManager().requireSession(token).getRole();
+            if (role != TA_Recruitment_software.admin_system.model.Role.MO && role != TA_Recruitment_software.admin_system.model.Role.ADMIN) {
+                throw new AppException("Permission denied. Only MO and ADMIN can manage positions.");
+            }
             List<Position> positions = context.getMoPublishService().listMyPositions(token);
             DefaultTableModel model = new DefaultTableModel(new Object[]{"Position ID", "Job Title", "Deadline", "Status"}, 0) {
                 @Override public boolean isCellEditable(int row, int column) { return false; }
@@ -58,7 +65,10 @@ public class MoPublishUI {
 
             JTable table = new JTable(model);
             JPanel panel = new JPanel(new BorderLayout());
-            panel.add(new JScrollPane(table), BorderLayout.CENTER);
+            JScrollPane scrollPane = new JScrollPane(table);
+            scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+            scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
+            panel.add(scrollPane, BorderLayout.CENTER);
             panel.setPreferredSize(new Dimension(600, 300));
 
             JPanel btnPanel = new JPanel();

@@ -33,7 +33,10 @@ public class AdminUI {
 
             JTable table = new JTable(model);
             JPanel panel = new JPanel(new BorderLayout());
-            panel.add(new JScrollPane(table), BorderLayout.CENTER);
+            JScrollPane scrollPane = new JScrollPane(table);
+            scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+            scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
+            panel.add(scrollPane, BorderLayout.CENTER);
             panel.setPreferredSize(new Dimension(500, 300));
 
             JPanel btnPanel = new JPanel();
@@ -87,14 +90,32 @@ public class AdminUI {
             }
 
             JTable table = new JTable(model);
+            table.setRowHeight(25);
             JPanel panel = new JPanel(new BorderLayout());
-            panel.add(new JScrollPane(table), BorderLayout.CENTER);
-            panel.setPreferredSize(new Dimension(600, 300));
+            JScrollPane scrollPane = new JScrollPane(table);
+            scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+            scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
+            panel.add(scrollPane, BorderLayout.CENTER);
+            panel.setPreferredSize(new Dimension(700, 350));
 
-            JPanel btnPanel = new JPanel();
+            JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+            JButton editBtn = new JButton("Edit Selected");
             JButton toggleBtn = new JButton("Toggle Enable/Disable");
-            JButton resetPwdBtn = new JButton("Reset Password");
             JButton workloadBtn = new JButton("Show TA Workload");
+
+            editBtn.addActionListener(e -> {
+                int row = table.getSelectedRow();
+                if (row >= 0) {
+                    String userId = (String) model.getValueAt(row, 0);
+                    User selectedUser = context.getAdminService().listAllUsers(token).stream()
+                        .filter(u -> u.getUserId().equals(userId)).findFirst().orElse(null);
+                    if (selectedUser != null) {
+                        showEditUserDialog(parent, context, token, selectedUser, model, row);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(parent, "Please select a user to edit.");
+                }
+            });
 
             toggleBtn.addActionListener(e -> {
                 int row = table.getSelectedRow();
@@ -103,26 +124,16 @@ public class AdminUI {
                     boolean currentStatus = (Boolean) model.getValueAt(row, 4);
                     context.getAdminService().setUserEnabled(token, userId, !currentStatus);
                     model.setValueAt(!currentStatus, row, 4);
-                    JOptionPane.showMessageDialog(parent, "User status toggled!");
-                }
-            });
-
-            resetPwdBtn.addActionListener(e -> {
-                int row = table.getSelectedRow();
-                if (row >= 0) {
-                    String userId = (String) model.getValueAt(row, 0);
-                    String newPwd = JOptionPane.showInputDialog(parent, "Enter new password:");
-                    if (newPwd != null && !newPwd.trim().isEmpty()) {
-                        context.getAdminService().resetPassword(token, userId, newPwd);
-                        JOptionPane.showMessageDialog(parent, "Password reset successfully!");
-                    }
+                    JOptionPane.showMessageDialog(parent, "User status updated!");
+                } else {
+                    JOptionPane.showMessageDialog(parent, "Please select a user.");
                 }
             });
 
             workloadBtn.addActionListener(e -> showTaWorkloadDialog(parent, context, token));
 
+            btnPanel.add(editBtn);
             btnPanel.add(toggleBtn);
-            btnPanel.add(resetPwdBtn);
             btnPanel.add(workloadBtn);
             panel.add(btnPanel, BorderLayout.SOUTH);
 
@@ -131,6 +142,156 @@ public class AdminUI {
         } catch (AppException ex) {
             JOptionPane.showMessageDialog(parent, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    public static void showEditUserDialog(JFrame parent, RecruitmentSystemContext context, String token, 
+                                         User user, DefaultTableModel model, int tableRow) {
+        JDialog dialog = new JDialog(parent, "Edit User - " + user.getAccountId(), true);
+        dialog.setSize(500, 600);
+        dialog.setLocationRelativeTo(parent);
+        dialog.setResizable(false);
+
+        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        mainPanel.setBackground(Color.WHITE);
+
+        // Title
+        JLabel titleLabel = new JLabel("Edit User Information", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        titleLabel.setForeground(new Color(39, 174, 96));
+        mainPanel.add(titleLabel, BorderLayout.NORTH);
+
+        // Form
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setBackground(Color.WHITE);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.weightx = 1.0;
+
+        JLabel userIdLabel = new JLabel("User ID: " + user.getUserId());
+        userIdLabel.setFont(new Font("Arial", Font.BOLD, 12));
+        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
+        formPanel.add(userIdLabel, gbc);
+
+        JLabel accountLabel = new JLabel("Account ID: " + user.getAccountId());
+        accountLabel.setFont(new Font("Arial", Font.PLAIN, 11));
+        gbc.gridy = 1;
+        formPanel.add(accountLabel, gbc);
+
+        JLabel roleLabel = new JLabel("Role: " + user.getRole());
+        roleLabel.setFont(new Font("Arial", Font.PLAIN, 11));
+        gbc.gridy = 2;
+        formPanel.add(roleLabel, gbc);
+
+        gbc.gridwidth = 1;
+        gbc.gridy = 3;
+        JLabel fullNameLbl = new JLabel("Full Name:");
+        formPanel.add(fullNameLbl, gbc);
+        JTextField fullNameField = new JTextField(user.getFullName() != null ? user.getFullName() : "");
+        gbc.gridx = 1;
+        formPanel.add(fullNameField, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 4;
+        JLabel emailLbl = new JLabel("Email:");
+        formPanel.add(emailLbl, gbc);
+        JTextField emailField = new JTextField(user.getEmail() != null ? user.getEmail() : "");
+        gbc.gridx = 1;
+        formPanel.add(emailField, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 5;
+        JLabel phoneLbl = new JLabel("Phone:");
+        formPanel.add(phoneLbl, gbc);
+        JTextField phoneField = new JTextField(user.getPhone() != null ? user.getPhone() : "");
+        gbc.gridx = 1;
+        formPanel.add(phoneField, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 6;
+        JLabel majorLbl = new JLabel("Major/Dept:");
+        formPanel.add(majorLbl, gbc);
+        JTextField majorField = new JTextField(user.getMajor() != null ? user.getMajor() : (user.getDepartment() != null ? user.getDepartment() : ""));
+        gbc.gridx = 1;
+        formPanel.add(majorField, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 7;
+        JLabel skillsLbl = new JLabel("Skills:");
+        formPanel.add(skillsLbl, gbc);
+        JTextField skillsField = new JTextField(user.getSkills() != null ? user.getSkills() : "");
+        gbc.gridx = 1;
+        formPanel.add(skillsField, gbc);
+
+        // Password reset section
+        gbc.gridx = 0; gbc.gridy = 8; gbc.gridwidth = 2;
+        JSeparator sep = new JSeparator();
+        formPanel.add(sep, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 9;
+        JLabel pwdLbl = new JLabel("New Password (leave empty to keep current):");
+        pwdLbl.setFont(new Font("Arial", Font.BOLD, 11));
+        formPanel.add(pwdLbl, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 10; gbc.gridwidth = 2;
+        JPasswordField passwordField = new JPasswordField();
+        formPanel.add(passwordField, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 11; gbc.gridwidth = 2;
+        JLabel pwdHint = new JLabel("Password must contain uppercase, lowercase, digit, min 8 chars");
+        pwdHint.setFont(new Font("Arial", Font.ITALIC, 10));
+        pwdHint.setForeground(new Color(100, 100, 100));
+        formPanel.add(pwdHint, gbc);
+
+        JScrollPane scrollPane = new JScrollPane(formPanel);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
+        scrollPane.setBackground(Color.WHITE);
+        mainPanel.add(scrollPane, BorderLayout.CENTER);
+
+        // Buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
+        buttonPanel.setBackground(Color.WHITE);
+        JButton saveBtn = new JButton("Save Changes");
+        saveBtn.setBackground(new Color(39, 174, 96));
+        saveBtn.setForeground(Color.WHITE);
+        saveBtn.setFont(new Font("Arial", Font.BOLD, 12));
+        JButton cancelBtn = new JButton("Cancel");
+        cancelBtn.setFont(new Font("Arial", Font.PLAIN, 12));
+
+        saveBtn.addActionListener(e -> {
+            try {
+                String fullName = fullNameField.getText().trim();
+                String email = emailField.getText().trim();
+                String phone = phoneField.getText().trim();
+                String major = majorField.getText().trim();
+                String skills = skillsField.getText().trim();
+                String newPassword = new String(passwordField.getPassword());
+
+                context.getAdminService().updateUserInfo(token, user.getUserId(), fullName, email, phone, major, major, skills);
+
+                if (!newPassword.isEmpty()) {
+                    context.getAdminService().resetPassword(token, user.getUserId(), newPassword);
+                    JOptionPane.showMessageDialog(dialog, "User information and password updated successfully!");
+                } else {
+                    JOptionPane.showMessageDialog(dialog, "User information updated successfully!");
+                }
+
+                if (model != null && tableRow >= 0) {
+                    model.setValueAt(fullName, tableRow, 2);
+                }
+
+                dialog.dispose();
+            } catch (AppException ex) {
+                JOptionPane.showMessageDialog(dialog, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        cancelBtn.addActionListener(e -> dialog.dispose());
+
+        buttonPanel.add(saveBtn);
+        buttonPanel.add(cancelBtn);
+        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+        dialog.setContentPane(mainPanel);
+        dialog.setVisible(true);
     }
 
     public static void showTaWorkloadDialog(JFrame parent, RecruitmentSystemContext context, String token) {
@@ -163,7 +324,10 @@ public class AdminUI {
 
             JTable table = new JTable(model);
             JPanel panel = new JPanel(new BorderLayout());
-            panel.add(new JScrollPane(table), BorderLayout.CENTER);
+            JScrollPane workloadScrollPane = new JScrollPane(table);
+            workloadScrollPane.getVerticalScrollBar().setUnitIncrement(16);
+            workloadScrollPane.getHorizontalScrollBar().setUnitIncrement(16);
+            panel.add(workloadScrollPane, BorderLayout.CENTER);
             panel.setPreferredSize(new Dimension(700, 350));
             JOptionPane.showMessageDialog(parent, panel, "TA Workload Summary", JOptionPane.PLAIN_MESSAGE);
         } catch (AppException ex) {
