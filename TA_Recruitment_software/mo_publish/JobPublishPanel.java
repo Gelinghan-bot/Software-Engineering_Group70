@@ -3,12 +3,11 @@ package TA_Recruitment_software.mo_publish;
 import TA_Recruitment_software.RecruitmentSystemContext;
 import TA_Recruitment_software.admin_system.foundation.AppException;
 import TA_Recruitment_software.admin_system.model.Position;
-
+import java.awt.*;
+import java.awt.geom.RoundRectangle2D;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
-import java.awt.*;
-import java.awt.geom.RoundRectangle2D;
 
 public class JobPublishPanel extends JPanel {
     private RecruitmentSystemContext context;
@@ -162,6 +161,8 @@ public class JobPublishPanel extends JPanel {
         formCenter.add(buttonPanel, gbc);
 
         JScrollPane scrollPane = new JScrollPane(formCenter);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
         scrollPane.setBorder(null);
         add(scrollPane, BorderLayout.CENTER);
     }

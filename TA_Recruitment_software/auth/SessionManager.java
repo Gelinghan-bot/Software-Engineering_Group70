@@ -1,18 +1,27 @@
 package TA_Recruitment_software.auth;
 
 import TA_Recruitment_software.admin_system.foundation.AppException;
+import TA_Recruitment_software.admin_system.foundation.FileStorageUtil;
 import TA_Recruitment_software.admin_system.foundation.SecurityUtil;
 import TA_Recruitment_software.admin_system.model.Role;
 import TA_Recruitment_software.admin_system.model.User;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class SessionManager {
-    private static final int EXPIRE_MINUTES = 30;
+    private static final int EXPIRE_MINUTES = 7 * 24 * 60; // 7 days
+    private static final String SESSIONS_FILE = "sessions.csv";
+    private static final String SESSIONS_HEADER = "token,userId,role,accountId,fullName,lastAccessAt";
+    private static final DateTimeFormatter DATETIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private final Map<String, SessionContext> sessions = new ConcurrentHashMap<>();
+
+    public SessionManager() {
+        loadSessions();
+    }
 
     public String createSession(User user) {
         // Remove any existing sessions for this user (single-session policy)
@@ -25,6 +34,7 @@ public class SessionManager {
             LocalDateTime.now()
         );
         sessions.put(token, context);
+        saveSessions();
         return token;
     }
 
@@ -39,9 +49,11 @@ public class SessionManager {
         LocalDateTime now = LocalDateTime.now();
         if (context.getLastAccessAt().plusMinutes(EXPIRE_MINUTES).isBefore(now)) {
             sessions.remove(token);
+            saveSessions();
             throw new AppException("Session expired. Please login again.");
         }
         context.setLastAccessAt(now);
+        saveSessions();
         return context;
     }
 
@@ -56,6 +68,7 @@ public class SessionManager {
     public void logout(String token) {
         if (token != null) {
             sessions.remove(token);
+            saveSessions();
         }
     }
 
@@ -72,6 +85,9 @@ public class SessionManager {
         }
         for (String t : tokensToRemove) {
             sessions.remove(t);
+        }
+        if (!tokensToRemove.isEmpty()) {
+            saveSessions();
         }
     }
 
@@ -96,6 +112,7 @@ public class SessionManager {
         }
         if (context.getLastAccessAt().plusMinutes(EXPIRE_MINUTES).isBefore(LocalDateTime.now())) {
             sessions.remove(token);
+            saveSessions();
             return false;
         }
         return true;
@@ -114,10 +131,72 @@ public class SessionManager {
         return java.time.Duration.between(now, expiry).toMinutes();
     }
 
+    /**
+     * Get all valid (non-expired) sessions.
+     */
+    public java.util.Map<String, SessionContext> getAllValidSessions() {
+        cleanExpiredSessions();
+        return new java.util.LinkedHashMap<>(sessions);
+    }
+
     private void cleanExpiredSessions() {
         LocalDateTime now = LocalDateTime.now();
-        sessions.entrySet().removeIf(entry ->
+        boolean hasExpired = sessions.entrySet().removeIf(entry ->
             entry.getValue().getLastAccessAt().plusMinutes(EXPIRE_MINUTES).isBefore(now)
         );
+        if (hasExpired) {
+            saveSessions();
+        }
+    }
+
+    private void saveSessions() {
+        try {
+            List<List<String>> rows = new ArrayList<>();
+            for (SessionContext context : sessions.values()) {
+                List<String> fields = new ArrayList<>();
+                fields.add(context.getToken());
+                fields.add(context.getUserId());
+                fields.add(context.getRole().name());
+                fields.add(context.getAccountId());
+                fields.add(context.getFullName());
+                fields.add(context.getLastAccessAt().format(DATETIME_FORMAT));
+                rows.add(fields);
+            }
+            FileStorageUtil.writeRows(SESSIONS_FILE, SESSIONS_HEADER, rows);
+        } catch (Exception e) {
+            // Log error but don't fail the operation
+            System.err.println("Failed to save sessions: " + e.getMessage());
+        }
+    }
+
+    private void loadSessions() {
+        try {
+            List<List<String>> rows = FileStorageUtil.readRows(SESSIONS_FILE, SESSIONS_HEADER);
+            LocalDateTime now = LocalDateTime.now();
+            for (List<String> row : rows) {
+                if (row.size() >= 6) {
+                    try {
+                        String token = row.get(0);
+                        String userId = row.get(1);
+                        Role role = Role.valueOf(row.get(2));
+                        String accountId = row.get(3);
+                        String fullName = row.get(4);
+                        LocalDateTime lastAccessAt = LocalDateTime.parse(row.get(5), DATETIME_FORMAT);
+
+                        // Only load non-expired sessions
+                        if (lastAccessAt.plusMinutes(EXPIRE_MINUTES).isAfter(now)) {
+                            SessionContext context = new SessionContext(token, userId, role, accountId, fullName, lastAccessAt);
+                            sessions.put(token, context);
+                        }
+                    } catch (Exception e) {
+                        // Skip invalid session data
+                        System.err.println("Skipping invalid session data: " + e.getMessage());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // If file doesn't exist or can't be read, start with empty sessions
+            System.err.println("Failed to load sessions: " + e.getMessage());
+        }
     }
 }
