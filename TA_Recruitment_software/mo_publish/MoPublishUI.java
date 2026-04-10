@@ -49,7 +49,7 @@ public class MoPublishUI {
 
         try {
             List<Position> positions = context.getMoPublishService().listMyPositions(token);
-            DefaultTableModel model = new DefaultTableModel(new Object[]{"Position ID", "Course Name", "Deadline", "Status"}, 0) {
+            DefaultTableModel model = new DefaultTableModel(new Object[]{"Position ID", "Job Title", "Deadline", "Status"}, 0) {
                 @Override public boolean isCellEditable(int row, int column) { return false; }
             };
             for (Position p : positions) {
