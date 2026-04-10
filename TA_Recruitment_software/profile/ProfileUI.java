@@ -3,8 +3,8 @@ package TA_Recruitment_software.profile;
 import TA_Recruitment_software.RecruitmentSystemContext;
 import TA_Recruitment_software.admin_system.foundation.AppException;
 import TA_Recruitment_software.admin_system.model.User;
-import javax.swing.*;
 import java.awt.*;
+import javax.swing.*;
 
 public class ProfileUI {
 
@@ -27,7 +27,10 @@ public class ProfileUI {
             formPanel.add(new JLabel("Major:")); formPanel.add(majorField);
             formPanel.add(new JLabel("Email:")); formPanel.add(emailField);
             formPanel.add(new JLabel("Phone:")); formPanel.add(phoneField);
-            formPanel.add(new JLabel("Skills:")); formPanel.add(new JScrollPane(skillsArea));
+            JScrollPane skillsScroll = new JScrollPane(skillsArea);
+            skillsScroll.getVerticalScrollBar().setUnitIncrement(16);
+            skillsScroll.getHorizontalScrollBar().setUnitIncrement(16);
+            formPanel.add(new JLabel("Skills:")); formPanel.add(skillsScroll);
             formPanel.add(new JLabel("CV Path:")); formPanel.add(cvField);
 
             int result = JOptionPane.showConfirmDialog(parent, formPanel, "Update Profile", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);

@@ -205,7 +205,11 @@ public class ConsoleMain {
             System.out.println("4. Reset User Password");
             System.out.println("5. List All Users");
             System.out.println("6. Show TA Workload Summary");
-            System.out.println("7. Logout");
+            System.out.println("7. Edit User Information");
+            System.out.println("8. Publish Position");
+            System.out.println("9. List All Positions");
+            System.out.println("10. Close Position");
+            System.out.println("11. Logout");
             String choice = read("Choose: ");
             try {
                 if ("1".equals(choice)) {
@@ -230,6 +234,46 @@ public class ConsoleMain {
                     List<TaWorkloadSummary> workloads = context.getAdminService().listTaWorkloadSummary(token);
                     printList(workloads);
                 } else if ("7".equals(choice)) {
+                    String userId = read("User ID: ");
+                    List<User> allUsers = context.getAdminService().listAllUsers(token);
+                    User targetUser = allUsers.stream().filter(u -> u.getUserId().equals(userId)).findFirst().orElse(null);
+                    if (targetUser == null) {
+                        System.out.println("User not found.");
+                    } else {
+                        System.out.println("Editing: " + targetUser.getAccountId());
+                        String fullName = read("Full Name (press enter to skip): ").trim();
+                        String email = read("Email (press enter to skip): ").trim();
+                        String phone = read("Phone (press enter to skip): ").trim();
+                        String major = read("Major/Department (press enter to skip): ").trim();
+                        String skills = read("Skills (press enter to skip): ").trim();
+                        
+                        User updated = context.getAdminService().updateUserInfo(
+                            token, userId, fullName.isEmpty() ? null : fullName,
+                            email.isEmpty() ? null : email,
+                            phone.isEmpty() ? null : phone,
+                            major.isEmpty() ? null : major,
+                            major.isEmpty() ? null : major,
+                            skills.isEmpty() ? null : skills
+                        );
+                        System.out.println("Updated: " + updated);
+                    }
+                } else if ("8".equals(choice)) {
+                    Position position = context.getMoPublishService().publishPosition(
+                        token,
+                        read("Course name: "),
+                        read("Job description: "),
+                        read("Requirements: "),
+                        read("Deadline (YYYY-MM-DD): "),
+                        read("Working hours: ")
+                    );
+                    System.out.println("Published: " + position);
+                } else if ("9".equals(choice)) {
+                    List<Position> positions = context.getMoPublishService().listMyPositions(token);
+                    printList(positions);
+                } else if ("10".equals(choice)) {
+                    Position position = context.getMoPublishService().closePosition(token, read("Position ID: "));
+                    System.out.println("Position closed: " + position);
+                } else if ("11".equals(choice)) {
                     context.getSessionManager().logout(token);
                     return;
                 } else {
