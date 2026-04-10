@@ -8,6 +8,9 @@ import TA_Recruitment_software.admin_system.model.Role;
 import TA_Recruitment_software.admin_system.model.TaWorkloadSummary;
 import TA_Recruitment_software.admin_system.model.User;
 import TA_Recruitment_software.auth.SessionContext;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Scanner;
 
@@ -95,15 +98,32 @@ public class ConsoleMain {
     private void taMenu(String token) {
         while (true) {
             System.out.println("\n=== TA Menu ===");
-            System.out.println("1. Update Profile");
-            System.out.println("2. Upload/Replace CV");
-            System.out.println("3. List Open Positions");
-            System.out.println("4. Apply Position");
-            System.out.println("5. My Applications");
-            System.out.println("6. Logout");
+            System.out.println("1. View Profile");
+            System.out.println("2. Update Profile");
+            System.out.println("3. Upload/Replace CV");
+            System.out.println("4. List Open Positions");
+            System.out.println("5. Apply Position");
+            System.out.println("6. My Applications");
+            System.out.println("7. Logout");
             String choice = read("Choose: ");
             try {
                 if ("1".equals(choice)) {
+                    User user = context.getProfileService().getMyProfile(token);
+                    System.out.println("\n--- My Profile ---");
+                    System.out.println("Major: " + user.getMajor());
+                    System.out.println("Email: " + user.getEmail());
+                    System.out.println("Phone: " + user.getPhone());
+                    System.out.println("Skills: " + (user.getSkills() == null ? "" : user.getSkills()));
+
+                    String cvPath = user.getCvFilePath();
+                    if (cvPath == null || cvPath.trim().isEmpty()) {
+                        System.out.println("CV: (not uploaded)");
+                    } else {
+                        Path p = Paths.get(cvPath);
+                        boolean exists = Files.exists(p) && Files.isRegularFile(p);
+                        System.out.println("CV: " + cvPath + (exists ? " (available)" : " (missing)"));
+                    }
+                } else if ("2".equals(choice)) {
                     User user = context.getProfileService().updateProfile(
                         token,
                         read("Major: "),
@@ -112,19 +132,19 @@ public class ConsoleMain {
                         read("Skills: ")
                     );
                     System.out.println("Profile updated: " + user);
-                } else if ("2".equals(choice)) {
-                    User user = context.getProfileService().uploadCV(token, read("CV file path: "));
-                    System.out.println("CV updated: " + user.getCvFilePath());
                 } else if ("3".equals(choice)) {
+                    User user = context.getProfileService().uploadCV(token, read("Local CV file path: "));
+                    System.out.println("CV uploaded. Stored at: " + user.getCvFilePath());
+                } else if ("4".equals(choice)) {
                     List<Position> positions = context.getTaJobService().listAvailableJobs();
                     printList(positions);
-                } else if ("4".equals(choice)) {
+                } else if ("5".equals(choice)) {
                     Application app = context.getTaJobService().applyForJob(token, read("Position ID: "));
                     System.out.println("Applied successfully: " + app);
-                } else if ("5".equals(choice)) {
+                } else if ("6".equals(choice)) {
                     List<Application> apps = context.getTaJobService().listMyApplications(token);
                     printList(apps);
-                } else if ("6".equals(choice)) {
+                } else if ("7".equals(choice)) {
                     context.getSessionManager().logout(token);
                     return;
                 } else {
@@ -268,6 +288,10 @@ public class ConsoleMain {
                         read("Requirements: "),
                         read("Interview Location: "),
                         read("Deadline (YYYY-MM-DD): "),
+<<<<<<< HEAD
+=======
+                        read("Working hours: "),
+>>>>>>> 179aa8879d8943061cbd74b0af326f3fb47375a5
                         read("Semester (e.g. 2026-Spring): ")
                     );
                     System.out.println("Published: " + position);
