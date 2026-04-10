@@ -11,10 +11,18 @@ import TA_Recruitment_software.auth.SessionManager;
 public class ProfileService {
     private final UserRepository userRepository;
     private final SessionManager sessionManager;
+    private final CvStorageService cvStorageService;
 
     public ProfileService(UserRepository userRepository, SessionManager sessionManager) {
         this.userRepository = userRepository;
         this.sessionManager = sessionManager;
+        this.cvStorageService = new CvStorageService();
+    }
+
+    public User getMyProfile(String token) {
+        SessionContext session = sessionManager.requireRole(token, Role.TA);
+        return userRepository.findByUserId(session.getUserId())
+            .orElseThrow(() -> new AppException("User not found."));
     }
 
     public User updateProfile(String token, String major, String email, String phone, String skills) {
@@ -35,12 +43,9 @@ public class ProfileService {
         User user = userRepository.findByUserId(session.getUserId())
             .orElseThrow(() -> new AppException("User not found."));
 
-        String path = ValidationUtil.requireNotBlank(cvFilePath, "CV file path");
-        String lower = path.toLowerCase();
-        if (!(lower.endsWith(".pdf") || lower.endsWith(".doc") || lower.endsWith(".docx"))) {
-            throw new AppException("CV must be .pdf, .doc or .docx");
-        }
-        user.setCvFilePath(path);
+        String sourcePath = ValidationUtil.requireNotBlank(cvFilePath, "CV file path");
+        String storedPath = cvStorageService.storeCvFile(user.getUserId(), sourcePath);
+        user.setCvFilePath(storedPath);
         userRepository.save(user);
         return user;
     }
