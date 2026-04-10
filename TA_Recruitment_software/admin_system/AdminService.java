@@ -157,7 +157,7 @@ public class AdminService {
                     continue;
                 }
                 assignedCount++;
-                totalHours += parseWorkingHours(position.getWorkingHours());
+                totalHours += parseWorkingHours(position.getJobType());
             }
 
             workloadSummaries.add(new TaWorkloadSummary(

@@ -10,7 +10,7 @@ import java.util.Optional;
 public class PositionRepository {
     private static final String FILE_NAME = "positions.csv";
     private static final String HEADER =
-        "positionId,courseName,responsibleMO,jobDescription,requirements,deadline,workingHours,publishedByUserId,status";
+        "positionId,jobTitle,jobType,responsibleMO,jobDescription,requirements,interviewLocation,deadline,publishedByUserId,status";
 
     public List<Position> findAll() {
         List<List<String>> rows = FileStorageUtil.readRows(FILE_NAME, HEADER);
@@ -62,12 +62,13 @@ public class PositionRepository {
     private List<String> toRow(Position position) {
         List<String> row = new ArrayList<>();
         row.add(position.getPositionId());
-        row.add(nvl(position.getCourseName()));
+        row.add(nvl(position.getJobTitle()));
+        row.add(nvl(position.getJobType()));
         row.add(nvl(position.getResponsibleMO()));
         row.add(nvl(position.getJobDescription()));
         row.add(nvl(position.getRequirements()));
+        row.add(nvl(position.getInterviewLocation()));
         row.add(nvl(position.getDeadline()));
-        row.add(nvl(position.getWorkingHours()));
         row.add(nvl(position.getPublishedByUserId()));
         row.add(position.getStatus().name());
         return row;
@@ -76,14 +77,15 @@ public class PositionRepository {
     private Position fromRow(List<String> row) {
         Position position = new Position();
         position.setPositionId(cell(row, 0));
-        position.setCourseName(cell(row, 1));
-        position.setResponsibleMO(cell(row, 2));
-        position.setJobDescription(cell(row, 3));
-        position.setRequirements(cell(row, 4));
-        position.setDeadline(cell(row, 5));
-        position.setWorkingHours(cell(row, 6));
-        position.setPublishedByUserId(cell(row, 7));
-        position.setStatus(PositionStatus.valueOf(cell(row, 8)));
+        position.setJobTitle(cell(row, 1));
+        position.setJobType(cell(row, 2));
+        position.setResponsibleMO(cell(row, 3));
+        position.setJobDescription(cell(row, 4));
+        position.setRequirements(cell(row, 5));
+        position.setInterviewLocation(cell(row, 6));
+        position.setDeadline(cell(row, 7));
+        position.setPublishedByUserId(cell(row, 8));
+        position.setStatus(PositionStatus.valueOf(cell(row, 9)));
         return position;
     }
 

@@ -40,7 +40,7 @@ public class TAJobsUI {
             }
 
             DefaultTableModel model = new DefaultTableModel(
-                new Object[]{"Position ID", "Course", "Semester", "Deadline", "Status", "Already applied"}, 0) {
+                new Object[]{"Position ID", "Job Title", "Semester", "Deadline", "Status", "Already applied"}, 0) {
                 @Override public boolean isCellEditable(int row, int column) { return false; }
             };
             for (Position p : positions) {
@@ -48,7 +48,7 @@ public class TAJobsUI {
                 String semLabel = PositionSemesterStore.labelFor(p.getPositionId(), semesterByPositionId);
                 model.addRow(new Object[]{
                     p.getPositionId(),
-                    p.getCourseName(),
+                    p.getJobTitle(),
                     semLabel,
                     p.getDeadline(),
                     p.getStatus(),

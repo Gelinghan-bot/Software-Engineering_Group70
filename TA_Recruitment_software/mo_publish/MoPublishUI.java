@@ -56,11 +56,11 @@ public class MoPublishUI {
                 throw new AppException("Permission denied. Only MO and ADMIN can manage positions.");
             }
             List<Position> positions = context.getMoPublishService().listMyPositions(token);
-            DefaultTableModel model = new DefaultTableModel(new Object[]{"Position ID", "Course Name", "Deadline", "Status"}, 0) {
+            DefaultTableModel model = new DefaultTableModel(new Object[]{"Position ID", "Job Title", "Deadline", "Status"}, 0) {
                 @Override public boolean isCellEditable(int row, int column) { return false; }
             };
             for (Position p : positions) {
-                model.addRow(new Object[]{p.getPositionId(), p.getCourseName(), p.getDeadline(), p.getStatus()});
+                model.addRow(new Object[]{p.getPositionId(), p.getJobTitle(), p.getDeadline(), p.getStatus()});
             }
 
             JTable table = new JTable(model);

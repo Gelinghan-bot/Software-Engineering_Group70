@@ -51,7 +51,7 @@ public class MoReviewUI {
             dialog.add(topPanel, BorderLayout.NORTH);
 
             // --- Center: Application table ---
-            String[] columns = {"App ID", "Course Name", "TA Name", "Student ID", "Major", "CV", "Status", "Submit Time"};
+            String[] columns = {"App ID", "Job Title", "TA Name", "Student ID", "Major", "CV", "Status", "Submit Time"};
             DefaultTableModel model = new DefaultTableModel(columns, 0) {
                 @Override
                 public boolean isCellEditable(int row, int column) {
@@ -153,7 +153,7 @@ public class MoReviewUI {
             Optional<User> userOpt = service.getApplicantInfo(app.getApplicantUserId());
             Optional<Position> posOpt = service.getPositionInfo(app.getPositionId());
 
-            String courseName = posOpt.map(Position::getCourseName).orElse("N/A");
+            String courseName = posOpt.map(Position::getJobTitle).orElse("N/A");
             String taName = userOpt.map(User::getFullName).orElse("N/A");
             String studentId = userOpt.map(User::getStudentId).orElse("N/A");
             String major = userOpt.map(u -> u.getMajor() != null ? u.getMajor() : "").orElse("");
@@ -190,11 +190,11 @@ public class MoReviewUI {
         if (posOpt.isPresent()) {
             Position pos = posOpt.get();
             sb.append("=== Position Info ===\n");
-            sb.append("Course: ").append(nvl(pos.getCourseName())).append("\n");
+            sb.append("Job Title: ").append(nvl(pos.getJobTitle())).append("\n");
             sb.append("Responsible MO: ").append(nvl(pos.getResponsibleMO())).append("\n");
             sb.append("Description: ").append(nvl(pos.getJobDescription())).append("\n");
             sb.append("Requirements: ").append(nvl(pos.getRequirements())).append("\n");
-            sb.append("Working Hours: ").append(nvl(pos.getWorkingHours())).append("\n");
+            sb.append("Job Type: ").append(nvl(pos.getJobType())).append("\n");
             sb.append("Deadline: ").append(nvl(pos.getDeadline())).append("\n");
             sb.append("Status: ").append(pos.getStatus()).append("\n\n");
         }
