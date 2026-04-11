@@ -14,6 +14,7 @@ public class Home2 extends JFrame {
     private TA_Recruitment_software.admin_system.model.Role currentRole;
 
     private JLabel sessionLabel = new JLabel("");
+    private BackgroundPanel bgPanel;
 
     public Home2() {
         this.context = new RecruitmentSystemContext();
@@ -29,7 +30,7 @@ public class Home2 extends JFrame {
         add(headerPanel, BorderLayout.NORTH);
 
         // Main Background Panel
-        BackgroundPanel bgPanel = new BackgroundPanel("HomeBackGround.png"); 
+        bgPanel = new BackgroundPanel("HomeBackGround.png"); 
         bgPanel.setLayout(new GridBagLayout());
         
         JPanel contentPanel = new JPanel();
@@ -117,7 +118,10 @@ public class Home2 extends JFrame {
         String[] links = {"HOME", "JOBS", "FORUM", "CONTACT", "ADMIN", "PERSONAL"};
         for (String link : links) {
             Map<String, Runnable> subItems = new LinkedHashMap<>();
-            if (link.equals("JOBS")) {
+            Runnable mainAction = null;
+            if (link.equals("HOME")) {
+                mainAction = this::showHomeView;
+            } else if (link.equals("JOBS")) {
                 subItems.put("Job Details", () -> TA_Recruitment_software.ta_jobs.TAJobsUI.showAvailableJobs(this, context, currentToken));
                 subItems.put("Post a Job (MO)", () -> TA_Recruitment_software.mo_publish.MoPublishUI.showPublishDialog(this, context, currentToken));
                 subItems.put("Manage My Positions (MO)", () -> TA_Recruitment_software.mo_publish.MoPublishUI.showMyPositionsDialog(this, context, currentToken));
@@ -139,7 +143,7 @@ public class Home2 extends JFrame {
                 subItems.put("Settings", () -> JOptionPane.showMessageDialog(this, "Settings feature coming soon."));
                 subItems.put("EXIT (Logout)", () -> logout());
             }
-            NavLabel linkLabel = new NavLabel(link, subItems);
+            NavLabel linkLabel = new NavLabel(link, subItems, mainAction);
             navPanel.add(linkLabel);
         }
 
@@ -190,10 +194,23 @@ public class Home2 extends JFrame {
         return headerPanel;
     }
 
+    public void showHomeView() {
+        Component center = ((BorderLayout) getContentPane().getLayout()).getLayoutComponent(BorderLayout.CENTER);
+        if (center != bgPanel) {
+            if (center != null) {
+                getContentPane().remove(center);
+            }
+            getContentPane().add(bgPanel, BorderLayout.CENTER);
+            revalidate();
+            repaint();
+        }
+    }
+
     private void logout() {
         this.currentToken = null;
         this.currentRole = null;
         this.sessionLabel.setText("");
+        showHomeView();
         JOptionPane.showMessageDialog(this, "Logged out successfully!");
     }
 
@@ -321,13 +338,22 @@ public class Home2 extends JFrame {
         private JPopupMenu popup;
         private boolean isHovered = false;
 
-        public NavLabel(String text, Map<String, Runnable> subItems) {
+        public NavLabel(String text, Map<String, Runnable> subItems, Runnable mainAction) {
             super(text);
             setFont(new Font("Arial", Font.BOLD, 16));
             setForeground(new Color(51, 51, 51));
             setCursor(new Cursor(Cursor.HAND_CURSOR));
             // Provide bottom padding to leave visual space for the small green bar
             setBorder(BorderFactory.createEmptyBorder(5, 5, 12, 5)); 
+
+            if (mainAction != null) {
+                addMouseListener(new java.awt.event.MouseAdapter() {
+                    @Override
+                    public void mouseClicked(java.awt.event.MouseEvent e) {
+                        mainAction.run();
+                    }
+                });
+            }
 
             if (subItems != null && !subItems.isEmpty()) {
                 popup = new JPopupMenu();
