@@ -1,2 +1,2 @@
-positionId,courseName,responsibleMO,jobDescription,requirements,deadline,workingHours,publishedByUserId,status
-POS_1775833355110_2,213,123,12312 [Location: 3123],213123,2099-11-23,123123,MO_1775833260502_1,OPEN
+positionId,jobTitle,jobType,responsibleMO,jobDescription,requirements,interviewLocation,deadline,publishedByUserId,status
+POS_1775833355110_2,213,Full-Time,123,12312,213123,3123,2099-11-23,MO_1775833260502_1,OPEN
