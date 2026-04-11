@@ -3,6 +3,8 @@ package TA_Recruitment_software.admin_system.model;
 public class Position {
     private String positionId;
     private String jobTitle;
+    private String grade;
+    private String major;
     private String jobType;
     private String responsibleMO;
     private String jobDescription;
@@ -14,6 +16,12 @@ public class Position {
 
     public String getPositionId() { return positionId; }
     public void setPositionId(String positionId) { this.positionId = positionId; }
+
+    public String getGrade() { return grade; }
+    public void setGrade(String grade) { this.grade = grade; }
+
+    public String getMajor() { return major; }
+    public void setMajor(String major) { this.major = major; }
 
     public String getJobTitle() { return jobTitle; }
     public void setJobTitle(String jobTitle) { this.jobTitle = jobTitle; }
@@ -47,6 +55,8 @@ public class Position {
         return "Position{"
             + "positionId='" + positionId + '\''
             + ", jobTitle='" + jobTitle + '\''
+            + ", grade='" + grade + '\''
+            + ", major='" + major + '\''
             + ", jobType='" + jobType + '\''
             + ", responsibleMO='" + responsibleMO + '\''
             + ", deadline='" + deadline + '\''
