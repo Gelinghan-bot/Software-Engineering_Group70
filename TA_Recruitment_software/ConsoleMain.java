@@ -173,6 +173,8 @@ public class ConsoleMain {
                     Position position = context.getMoPublishService().publishPosition(
                         token,
                         read("Job Title: "),
+                        read("Grade (Year1/...): "),
+                        read("Major (IOT/EE/...): "),
                         read("Job Type: "),
                         read("Description: "),
                         read("Requirements: "),
@@ -231,7 +233,10 @@ public class ConsoleMain {
             System.out.println("8. Publish Position");
             System.out.println("9. List All Positions");
             System.out.println("10. Close Position");
-            System.out.println("11. Logout");
+            System.out.println("11. Applications for One Position");
+            System.out.println("12. All Applications");
+            System.out.println("13. Update Application Status");
+            System.out.println("14. Logout");
             String choice = read("Choose: ");
             try {
                 if ("1".equals(choice)) {
@@ -283,6 +288,8 @@ public class ConsoleMain {
                     Position position = context.getMoPublishService().publishPosition(
                         token,
                         read("Job Title: "),
+                        read("Grade (Year1/...): "),
+                        read("Major (IOT/EE/...): "),
                         read("Job Type: "),
                         read("Job description: "),
                         read("Requirements: "),
@@ -298,6 +305,19 @@ public class ConsoleMain {
                     Position position = context.getMoPublishService().closePosition(token, read("Position ID: "));
                     System.out.println("Position closed: " + position);
                 } else if ("11".equals(choice)) {
+                    List<Application> apps = context.getMoReviewService()
+                        .listApplicationsForPosition(token, read("Position ID: "));
+                    printList(apps);
+                } else if ("12".equals(choice)) {
+                    List<Application> apps = context.getMoReviewService().listAllApplicationsOfMyPositions(token);
+                    printList(apps);
+                } else if ("13".equals(choice)) {
+                    String rawStatus = read("New status(PENDING/APPROVED/REJECTED/HIRED): ");
+                    ApplicationStatus status = ApplicationStatus.valueOf(rawStatus.trim().toUpperCase());
+                    Application app = context.getMoReviewService()
+                        .updateApplicationStatus(token, read("Application ID: "), status);
+                    System.out.println("Status updated: " + app);
+                } else if ("14".equals(choice)) {
                     context.getSessionManager().logout(token);
                     return;
                 } else {

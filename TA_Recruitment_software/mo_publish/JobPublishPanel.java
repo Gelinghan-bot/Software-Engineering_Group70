@@ -64,7 +64,32 @@ public class JobPublishPanel extends JPanel {
         gbc.insets = new Insets(15, 0, 15, 40);
 
         JTextField jobTitleField = createTextField("Enter your job title");
-        JTextField jobTypeField = createTextField("Enter your job type");
+        
+        JComboBox<String> gradeCombo = new JComboBox<>(new String[]{
+            "Year1", "Year2", "Year3", "Year4"
+        });
+        gradeCombo.setPreferredSize(new Dimension(800, 40));
+        gradeCombo.setFont(new Font("Arial", Font.PLAIN, 14));
+        gradeCombo.setBackground(Color.WHITE);
+        
+        JComboBox<String> majorCombo = new JComboBox<>(new String[]{
+            "IOT", "EE", "IST", "TEM"
+        });
+        majorCombo.setPreferredSize(new Dimension(800, 40));
+        majorCombo.setFont(new Font("Arial", Font.PLAIN, 14));
+        majorCombo.setBackground(Color.WHITE);
+        
+        JComboBox<String> jobTypeCombo = new JComboBox<>(new String[]{
+            "Daily attendance",
+            "grading",
+            "invigilation",
+            "Assess",
+            "and other tasks"
+        });
+        jobTypeCombo.setPreferredSize(new Dimension(800, 40));
+        jobTypeCombo.setFont(new Font("Arial", Font.PLAIN, 14));
+        jobTypeCombo.setBackground(Color.WHITE);
+
         JTextArea jobDescArea = new JTextArea();
         JScrollPane jobDescScroll = createTextAreaScroll("Enter your job description", jobDescArea);
         JTextArea jobReqArea = new JTextArea();
@@ -89,7 +114,9 @@ public class JobPublishPanel extends JPanel {
 
         int row = 0;
         addFormField(formCenter, "JOB TITLE", jobTitleField, gbc, row++);
-        addFormField(formCenter, "JOB TYPE", jobTypeField, gbc, row++);
+        addFormField(formCenter, "GRADE", gradeCombo, gbc, row++);
+        addFormField(formCenter, "MAJOR", majorCombo, gbc, row++);
+        addFormField(formCenter, "JOB TYPE", jobTypeCombo, gbc, row++);
         addTextAreaField(formCenter, "JOB DESCRIPTION", jobDescScroll, gbc, row++);
         addTextAreaField(formCenter, "Job Requirements", jobReqScroll, gbc, row++);
         addFormField(formCenter, "Interview Location", interviewLocField, gbc, row++);
@@ -140,7 +167,9 @@ public class JobPublishPanel extends JPanel {
                 Position position = context.getMoPublishService().publishPosition(
                     token,
                     jobTitleField.getText().trim(),
-                    jobTypeField.getText().trim(),
+                    (String) gradeCombo.getSelectedItem(),
+                    (String) majorCombo.getSelectedItem(),
+                    (String) jobTypeCombo.getSelectedItem(),
                     safeDesc,
                     safeReq,
                     interviewLoc,
@@ -186,7 +215,7 @@ public class JobPublishPanel extends JPanel {
         parent.repaint();
     }
 
-    private void addFormField(JPanel panel, String labelText, JTextField field, GridBagConstraints gbc, int y) {
+    private void addFormField(JPanel panel, String labelText, JComponent field, GridBagConstraints gbc, int y) {
         gbc.gridy = y;
         gbc.gridx = 0;
         gbc.weightx = 0.0;

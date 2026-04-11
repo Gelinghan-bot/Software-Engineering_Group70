@@ -40,15 +40,7 @@ public class AuthUI {
      * If there are valid persistent sessions, shows a dialog to choose which one to use.
      */
     public static String[] showLoginDialog(JFrame parent, RecruitmentSystemContext context) {
-        // Check for valid persistent sessions
         java.util.Map<String, TA_Recruitment_software.auth.SessionContext> validSessions = getValidPersistentSessions(context);
-        if (!validSessions.isEmpty()) {
-            String[] autoLoginResult = showAutoLoginDialog(parent, context, validSessions);
-            if (autoLoginResult != null) {
-                return autoLoginResult;
-            }
-            // User chose to login manually, continue with normal login dialog
-        }
 
         JDialog dialog = new JDialog(parent, "Login - JobHere", true);
         dialog.setSize(480, 420);
@@ -119,7 +111,7 @@ public class AuthUI {
         buttonPanel.setBackground(Color.WHITE);
 
         JButton loginBtn = createPrimaryButton("Login");
-        JButton loginInBtn = createSecondaryButton("Login In");
+        JButton loginInBtn = createSecondaryButton("resume session");
         JButton clearHistoryBtn = createSecondaryButton("Clear History");
         JButton cancelBtn = createSecondaryButton("Cancel");
 
@@ -570,7 +562,7 @@ public class AuthUI {
         btn.setFont(BUTTON_FONT);
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
-        btn.setPreferredSize(new Dimension(140, 40));
+        btn.setPreferredSize(new Dimension(180, 40));
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         return btn;
     }
@@ -663,7 +655,7 @@ public class AuthUI {
         }
 
         JDialog dialog = new JDialog(parent, "Resume Session - JobHere", true);
-        dialog.setSize(520, 360);
+        dialog.setSize(480, 250);
         dialog.setLocationRelativeTo(parent);
         dialog.setResizable(false);
 
@@ -705,7 +697,7 @@ public class AuthUI {
         mainPanel.add(centerPanel, BorderLayout.CENTER);
 
         // Buttons
-        JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 15, 0));
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 2));
         buttonPanel.setBackground(Color.WHITE);
 
         JButton resumeBtn = new JButton("Resume Selected Session");

@@ -10,7 +10,7 @@ import java.util.Optional;
 public class PositionRepository {
     private static final String FILE_NAME = "positions.csv";
     private static final String HEADER =
-        "positionId,jobTitle,jobType,responsibleMO,jobDescription,requirements,interviewLocation,deadline,publishedByUserId,status";
+        "positionId,jobTitle,jobType,responsibleMO,jobDescription,requirements,interviewLocation,deadline,publishedByUserId,status,grade,major";
 
     public List<Position> findAll() {
         List<List<String>> rows = FileStorageUtil.readRows(FILE_NAME, HEADER);
@@ -71,6 +71,8 @@ public class PositionRepository {
         row.add(nvl(position.getDeadline()));
         row.add(nvl(position.getPublishedByUserId()));
         row.add(position.getStatus().name());
+        row.add(nvl(position.getGrade()));
+        row.add(nvl(position.getMajor()));
         return row;
     }
 
@@ -86,6 +88,8 @@ public class PositionRepository {
         position.setDeadline(cell(row, 7));
         position.setPublishedByUserId(cell(row, 8));
         position.setStatus(PositionStatus.valueOf(cell(row, 9)));
+        position.setGrade(cell(row, 10));
+        position.setMajor(cell(row, 11));
         return position;
     }
 
