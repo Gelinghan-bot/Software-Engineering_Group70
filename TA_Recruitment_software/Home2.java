@@ -54,17 +54,17 @@ public class Home2 extends JFrame {
         searchPanel.setOpaque(false);
         searchPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 10));
 
-        String[] grades = {"All Grades"};
+        String[] grades = {"All Grades", "Year1", "Year2", "Year3", "Year4"};
         JComboBox<String> gradeCombo = new JComboBox<>(grades);
         gradeCombo.setPreferredSize(new Dimension(180, 45));
         gradeCombo.setBackground(Color.WHITE);
 
-        String[] majors = {"All majors"};
+        String[] majors = {"All majors", "IOT", "EE", "IST", "TEM"};
         JComboBox<String> majorCombo = new JComboBox<>(majors);
         majorCombo.setPreferredSize(new Dimension(180, 45));
         majorCombo.setBackground(Color.WHITE);
 
-        String[] categories = {"Category"};
+        String[] categories = {"All Categories", "Daily attendance", "grading", "invigilation", "Assess", "and other tasks"};
         JComboBox<String> categoryCombo = new JComboBox<>(categories);
         categoryCombo.setPreferredSize(new Dimension(180, 45));
         categoryCombo.setBackground(Color.WHITE);
@@ -76,6 +76,13 @@ public class Home2 extends JFrame {
         searchBtn.setBorderPainted(false);
         searchBtn.setFont(new Font("Arial", Font.BOLD, 14));
         searchBtn.setPreferredSize(new Dimension(130, 45));
+        
+        searchBtn.addActionListener(e -> {
+            String selectedGrade = (String) gradeCombo.getSelectedItem();
+            String selectedMajor = (String) majorCombo.getSelectedItem();
+            String selectedCategory = (String) categoryCombo.getSelectedItem();
+            TA_Recruitment_software.ta_jobs.TAJobsUI.showFilteredJobs(this, context, currentToken, selectedGrade, selectedMajor, selectedCategory);
+        });
 
         searchPanel.add(gradeCombo);
         searchPanel.add(majorCombo);

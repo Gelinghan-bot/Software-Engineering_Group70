@@ -15,15 +15,26 @@ import javax.swing.table.DefaultTableModel;
 public class TAJobsUI {
 
     public static void showAvailableJobs(JFrame parent, RecruitmentSystemContext context, String token) {
+        showFilteredJobs(parent, context, token, "All Grades", "All majors", "All Categories");
+    }
+
+    public static void showFilteredJobs(JFrame parent, RecruitmentSystemContext context, String token, String gradeFilter, String majorFilter, String categoryFilter) {
         try {
             String currentSemester = CurrentSemesterStore.readCurrentSemester();
             Map<String, String> semesterByPositionId = PositionSemesterStore.readAll();
             List<Position> positions = context.getTaJobService().listAvailableJobs();
+            
+            positions = positions.stream().filter(p -> {
+                boolean matchGrade = "All Grades".equals(gradeFilter) || gradeFilter.equals(p.getGrade());
+                boolean matchMajor = "All majors".equals(majorFilter) || majorFilter.equals(p.getMajor());
+                boolean matchCategory = "All Categories".equals(categoryFilter) || categoryFilter.equals(p.getJobType());
+                return matchGrade && matchMajor && matchCategory;
+            }).collect(java.util.stream.Collectors.toList());
+
             if (positions.isEmpty()) {
                 JOptionPane.showMessageDialog(
                     parent,
-                    "No open positions for current semester: " + currentSemester
-                        + "\n(Tip: tag each visible positionId in ta_jobs/data/position_semesters.csv.)"
+                    "No open positions found matching your criteria for semester: " + currentSemester
                 );
                 return;
             }
@@ -40,7 +51,7 @@ public class TAJobsUI {
             }
 
             DefaultTableModel model = new DefaultTableModel(
-                new Object[]{"Position ID", "Job Title", "Semester", "Deadline", "Status", "Already applied"}, 0) {
+                new Object[]{"Position ID", "Job Title", "Grade", "Major", "Job Type", "Semester", "Deadline", "Status", "Already applied"}, 0) {
                 @Override public boolean isCellEditable(int row, int column) { return false; }
             };
             for (Position p : positions) {
@@ -49,6 +60,9 @@ public class TAJobsUI {
                 model.addRow(new Object[]{
                     p.getPositionId(),
                     p.getJobTitle(),
+                    p.getGrade(),
+                    p.getMajor(),
+                    p.getJobType(),
                     semLabel,
                     p.getDeadline(),
                     p.getStatus(),
@@ -62,7 +76,7 @@ public class TAJobsUI {
             scrollPane.getVerticalScrollBar().setUnitIncrement(16);
             scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
             panel.add(scrollPane, BorderLayout.CENTER);
-            panel.setPreferredSize(new Dimension(760, 320));
+            panel.setPreferredSize(new Dimension(1000, 320));
 
             JPanel btnPanel = new JPanel();
             JButton applyBtn = new JButton("Apply for Selected Job");
@@ -75,7 +89,7 @@ public class TAJobsUI {
                 int row = table.getSelectedRow();
                 if (row >= 0) {
                     String posId = (String) model.getValueAt(row, 0);
-                    if ("Yes".equals(model.getValueAt(row, 5))) {
+                    if ("Yes".equals(model.getValueAt(row, 8))) {
                         JOptionPane.showMessageDialog(
                             parent,
                             "You have already applied for this position.",
@@ -86,7 +100,7 @@ public class TAJobsUI {
                     }
                     try {
                         context.getTaJobService().applyForJob(token, posId);
-                        model.setValueAt("Yes", row, 5);
+                        model.setValueAt("Yes", row, 8);
                         JOptionPane.showMessageDialog(parent, "Applied successfully!");
                     } catch (AppException ex) {
                         JOptionPane.showMessageDialog(parent, ex.getMessage(), "Apply failed", JOptionPane.ERROR_MESSAGE);
