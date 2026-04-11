@@ -75,11 +75,14 @@ public class MOPublishService {
     }
 
     public Position updateDeadline(String token, String positionId, String newDeadline) {
-        SessionContext session = sessionManager.requireRole(token, Role.MO);
+        SessionContext session = sessionManager.requireSession(token);
+        if (session.getRole() != Role.MO && session.getRole() != Role.ADMIN) {
+            throw new AppException("Permission denied. Only MO and ADMIN can update positions.");
+        }
         Position position = positionRepository.findById(ValidationUtil.requireNotBlank(positionId, "Position ID"))
             .orElseThrow(() -> new AppException("Position not found."));
 
-        if (!position.getPublishedByUserId().equals(session.getUserId())) {
+        if (session.getRole() == Role.MO && !position.getPublishedByUserId().equals(session.getUserId())) {
             throw new AppException("Permission denied. You can only update your own positions.");
         }
         LocalDate checkedDate = ValidationUtil.validateDate(newDeadline, "Deadline");
@@ -90,11 +93,14 @@ public class MOPublishService {
     }
 
     public Position closePosition(String token, String positionId) {
-        SessionContext session = sessionManager.requireRole(token, Role.MO);
+        SessionContext session = sessionManager.requireSession(token);
+        if (session.getRole() != Role.MO && session.getRole() != Role.ADMIN) {
+            throw new AppException("Permission denied. Only MO and ADMIN can close positions.");
+        }
         Position position = positionRepository.findById(ValidationUtil.requireNotBlank(positionId, "Position ID"))
             .orElseThrow(() -> new AppException("Position not found."));
 
-        if (!position.getPublishedByUserId().equals(session.getUserId())) {
+        if (session.getRole() == Role.MO && !position.getPublishedByUserId().equals(session.getUserId())) {
             throw new AppException("Permission denied. You can only close your own positions.");
         }
         position.setStatus(PositionStatus.CLOSED);
@@ -103,7 +109,13 @@ public class MOPublishService {
     }
 
     public List<Position> listMyPositions(String token) {
-        SessionContext session = sessionManager.requireRole(token, Role.MO);
+        SessionContext session = sessionManager.requireSession(token);
+        if (session.getRole() != Role.MO && session.getRole() != Role.ADMIN) {
+            throw new AppException("Permission denied. Only MO and ADMIN can manage positions.");
+        }
+        if (session.getRole() == Role.ADMIN) {
+            return positionRepository.findAll();
+        }
         return positionRepository.findByPublisher(session.getUserId());
     }
 }
