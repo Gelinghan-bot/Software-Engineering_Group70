@@ -119,7 +119,7 @@ public class AuthUI {
         buttonPanel.setBackground(Color.WHITE);
 
         JButton loginBtn = createPrimaryButton("Login");
-        JButton loginInBtn = createSecondaryButton("Login In");
+        JButton loginInBtn = createSecondaryButton("resume session");
         JButton clearHistoryBtn = createSecondaryButton("Clear History");
         JButton cancelBtn = createSecondaryButton("Cancel");
 
@@ -570,7 +570,7 @@ public class AuthUI {
         btn.setFont(BUTTON_FONT);
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
-        btn.setPreferredSize(new Dimension(140, 40));
+        btn.setPreferredSize(new Dimension(180, 40));
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         return btn;
     }
@@ -705,16 +705,18 @@ public class AuthUI {
         mainPanel.add(centerPanel, BorderLayout.CENTER);
 
         // Buttons
-        JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 15, 0));
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 2));
         buttonPanel.setBackground(Color.WHITE);
 
         JButton resumeBtn = new JButton("Resume Selected Session");
         resumeBtn.setBackground(PRIMARY_GREEN);
         resumeBtn.setForeground(Color.WHITE);
         resumeBtn.setFont(BUTTON_FONT);
+        resumeBtn.setPreferredSize(new Dimension(180, 24));
 
         JButton otherAccountBtn = new JButton("Login Other Account");
         otherAccountBtn.setFont(BUTTON_FONT);
+        otherAccountBtn.setPreferredSize(new Dimension(180, 24));
 
         final String[] result = new String[2];
 
