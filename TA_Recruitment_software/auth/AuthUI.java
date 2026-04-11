@@ -40,15 +40,7 @@ public class AuthUI {
      * If there are valid persistent sessions, shows a dialog to choose which one to use.
      */
     public static String[] showLoginDialog(JFrame parent, RecruitmentSystemContext context) {
-        // Check for valid persistent sessions
         java.util.Map<String, TA_Recruitment_software.auth.SessionContext> validSessions = getValidPersistentSessions(context);
-        if (!validSessions.isEmpty()) {
-            String[] autoLoginResult = showAutoLoginDialog(parent, context, validSessions);
-            if (autoLoginResult != null) {
-                return autoLoginResult;
-            }
-            // User chose to login manually, continue with normal login dialog
-        }
 
         JDialog dialog = new JDialog(parent, "Login - JobHere", true);
         dialog.setSize(480, 420);
@@ -663,7 +655,7 @@ public class AuthUI {
         }
 
         JDialog dialog = new JDialog(parent, "Resume Session - JobHere", true);
-        dialog.setSize(520, 360);
+        dialog.setSize(480, 250);
         dialog.setLocationRelativeTo(parent);
         dialog.setResizable(false);
 
@@ -705,18 +697,16 @@ public class AuthUI {
         mainPanel.add(centerPanel, BorderLayout.CENTER);
 
         // Buttons
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 2));
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 2));
         buttonPanel.setBackground(Color.WHITE);
 
         JButton resumeBtn = new JButton("Resume Selected Session");
         resumeBtn.setBackground(PRIMARY_GREEN);
         resumeBtn.setForeground(Color.WHITE);
         resumeBtn.setFont(BUTTON_FONT);
-        resumeBtn.setPreferredSize(new Dimension(180, 24));
 
         JButton otherAccountBtn = new JButton("Login Other Account");
         otherAccountBtn.setFont(BUTTON_FONT);
-        otherAccountBtn.setPreferredSize(new Dimension(180, 24));
 
         final String[] result = new String[2];
 
