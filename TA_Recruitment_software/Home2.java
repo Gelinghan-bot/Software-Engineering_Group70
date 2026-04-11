@@ -126,6 +126,7 @@ public class Home2 extends JFrame {
                 subItems.put("Post a Job (MO)", () -> TA_Recruitment_software.mo_publish.MoPublishUI.showPublishDialog(this, context, currentToken));
                 subItems.put("Manage My Positions (MO)", () -> TA_Recruitment_software.mo_publish.MoPublishUI.showMyPositionsDialog(this, context, currentToken));
                 subItems.put("Review Applications (MO)", () -> TA_Recruitment_software.mo_review.MoReviewUI.showReviewDialog(this, context, currentToken));
+                subItems.put("View TA Profiles & CVs (MO)", () -> TA_Recruitment_software.profile.MoTaProfileViewUI.showDialog(this, context, currentToken));
             } else if (link.equals("CONTACT")) {
                 subItems.put("Contact with MO", () -> JOptionPane.showMessageDialog(this, "MO Contact Info: mo_support@bupt.edu"));
                 subItems.put("Contact with us", () -> JOptionPane.showMessageDialog(this, "Admin Contact Info: support@jobhere.com"));

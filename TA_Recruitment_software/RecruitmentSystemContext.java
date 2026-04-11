@@ -8,6 +8,7 @@ import TA_Recruitment_software.auth.AuthService;
 import TA_Recruitment_software.auth.SessionManager;
 import TA_Recruitment_software.mo_publish.MOPublishService;
 import TA_Recruitment_software.mo_review.MOReviewService;
+import TA_Recruitment_software.profile.MoTaProfileViewService;
 import TA_Recruitment_software.profile.ProfileService;
 import TA_Recruitment_software.ta_jobs.TAJobService;
 
@@ -19,6 +20,7 @@ public class RecruitmentSystemContext {
 
     private final AuthService authService;
     private final ProfileService profileService;
+    private final MoTaProfileViewService moTaProfileViewService;
     private final TAJobService taJobService;
     private final MOPublishService moPublishService;
     private final MOReviewService moReviewService;
@@ -32,6 +34,7 @@ public class RecruitmentSystemContext {
 
         this.authService = new AuthService(userRepository, sessionManager);
         this.profileService = new ProfileService(userRepository, sessionManager);
+        this.moTaProfileViewService = new MoTaProfileViewService(userRepository, sessionManager);
         this.taJobService = new TAJobService(positionRepository, applicationRepository, userRepository, sessionManager);
         this.moPublishService = new MOPublishService(positionRepository, userRepository, sessionManager);
         this.moReviewService = new MOReviewService(positionRepository, applicationRepository, userRepository, sessionManager);
@@ -45,6 +48,10 @@ public class RecruitmentSystemContext {
 
     public ProfileService getProfileService() {
         return profileService;
+    }
+
+    public MoTaProfileViewService getMoTaProfileViewService() {
+        return moTaProfileViewService;
     }
 
     public TAJobService getTaJobService() {
