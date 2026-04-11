@@ -153,7 +153,7 @@ public class MoReviewUI {
             Optional<User> userOpt = service.getApplicantInfo(app.getApplicantUserId());
             Optional<Position> posOpt = service.getPositionInfo(app.getPositionId());
 
-            String courseName = posOpt.map(Position::getJobTitle).orElse("N/A");
+            String jobTitle = posOpt.map(Position::getJobTitle).orElse("N/A");
             String taName = userOpt.map(User::getFullName).orElse("N/A");
             String studentId = userOpt.map(User::getStudentId).orElse("N/A");
             String major = userOpt.map(u -> u.getMajor() != null ? u.getMajor() : "").orElse("");
@@ -161,7 +161,7 @@ public class MoReviewUI {
 
             model.addRow(new Object[]{
                 app.getApplicationId(),
-                courseName,
+                jobTitle,
                 taName,
                 studentId,
                 major,
