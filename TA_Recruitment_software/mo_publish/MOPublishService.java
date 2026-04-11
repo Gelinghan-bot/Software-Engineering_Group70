@@ -34,6 +34,8 @@ public class MOPublishService {
     public Position publishPosition(
         String token,
         String jobTitle,
+        String grade,
+        String major,
         String jobType,
         String jobDescription,
         String requirements,
@@ -49,8 +51,11 @@ public class MOPublishService {
             .orElseThrow(() -> new AppException("Account not found."));
 
         String checkedTitle = ValidationUtil.validateName(jobTitle, "Job title");
+        String checkedGrade = ValidationUtil.sanitizeText(grade, "Grade", 50);
+        String checkedMajor = ValidationUtil.sanitizeText(major, "Major", 50);
         String checkedType = ValidationUtil.sanitizeText(jobType, "Job type", 80);
         String checkedDesc = ValidationUtil.sanitizeText(jobDescription, "Job description", 800);
+
         String checkedReq = ValidationUtil.sanitizeText(requirements, "Requirements", 600);
         String checkedLoc = ValidationUtil.sanitizeText(interviewLocation, "Interview location", 100);
         LocalDate checkedDeadline = ValidationUtil.validateDate(deadline, "Deadline");
@@ -59,6 +64,8 @@ public class MOPublishService {
         Position position = new Position();
         position.setPositionId(IdGenerator.nextId("POS"));
         position.setJobTitle(checkedTitle);
+        position.setGrade(checkedGrade);
+        position.setMajor(checkedMajor);
         position.setJobType(checkedType);
         position.setResponsibleMO(publisher.getFullName());
         position.setJobDescription(checkedDesc);

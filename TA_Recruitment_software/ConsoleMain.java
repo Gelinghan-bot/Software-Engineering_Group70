@@ -173,6 +173,8 @@ public class ConsoleMain {
                     Position position = context.getMoPublishService().publishPosition(
                         token,
                         read("Job Title: "),
+                        read("Grade (Year1/...): "),
+                        read("Major (IOT/EE/...): "),
                         read("Job Type: "),
                         read("Description: "),
                         read("Requirements: "),
@@ -286,6 +288,8 @@ public class ConsoleMain {
                     Position position = context.getMoPublishService().publishPosition(
                         token,
                         read("Job Title: "),
+                        read("Grade (Year1/...): "),
+                        read("Major (IOT/EE/...): "),
                         read("Job Type: "),
                         read("Job description: "),
                         read("Requirements: "),
