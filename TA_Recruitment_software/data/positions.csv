@@ -1,8 +1,8 @@
 positionId,jobTitle,jobType,responsibleMO,jobDescription,requirements,interviewLocation,deadline,publishedByUserId,status,grade,major
 POS_1775833355110_2,213,Full-Time,123,12312,213123,3123,2099-11-23,MO_1775833260502_1,OPEN,Year1,IOT
-POS_1775895765244_1,IOT Assistant,assistant,LGL,sssssssssssssss,aaaaaaaaaaaaaaaaaaa,TB3,2026-08-15,MO_1775665335271_1,OPEN,Year2,IOT
+POS_1775895765244_1,IOT Assistant,assistant,LGL,sssssssssssssss,aaaaaaaaaaaaaaaaaaa,TB3,2026-08-15,MO_1775665335271_1,CLOSED,Year2,IOT
 POS_1775896933901_2,12312,31231231,LGL,23123123,123123123123,123123123,2099-11-11,MO_1775665335271_1,OPEN,Year3,IOT
-POS_1775902164118_1,TEST3,grading,LGL,nsbgfd,sDSSS,TB3,2026-10-30,MO_1775665335271_1,OPEN,Year3,IOT
+POS_1775902164118_1,TEST3,grading,LGL,nsbgfd,sDSSS,TB3,2026-11-10,MO_1775665335271_1,OPEN,Year3,IOT
 POS_2026041100000_01,Intro to IOT TA,grading,LGL,Grade weekly assignments,Familiar with basic IOT concepts,Room 101,2026-09-01,MO_1775665335271_1,OPEN,Year1,IOT
 POS_2026041100000_02,Circuit Lab Assistant,Daily attendance,LGL,Check attendance for Lab sessions,Responsible and punctual,Lab 2,2026-09-05,MO_1775665335271_1,OPEN,Year1,EE
 POS_2026041100000_03,Programming Fundamentals TA,Assess,LGL,Assess student mini-projects,Proficient in Python/Java,Room 205,2026-09-10,MO_1775665335271_1,OPEN,Year1,IST
