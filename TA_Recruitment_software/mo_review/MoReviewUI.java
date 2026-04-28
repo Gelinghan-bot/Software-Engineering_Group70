@@ -34,10 +34,11 @@ public class MoReviewUI {
 
             service.sortBySubmissionTime(applications, false);
 
-            JDialog dialog = new JDialog(parent, "MO Application Review", true);
-            dialog.setSize(1000, 600);
-            dialog.setLocationRelativeTo(parent);
-            dialog.setLayout(new BorderLayout(5, 5));
+            Container contentPane = parent.getContentPane();
+            BorderLayout layout = (BorderLayout) contentPane.getLayout();
+            Component previousCenter = layout.getLayoutComponent(BorderLayout.CENTER);
+
+            JPanel reviewPanel = new JPanel(new BorderLayout(5, 5));
 
             // --- Top: Sort controls ---
             JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -48,7 +49,7 @@ public class MoReviewUI {
             topPanel.add(sortTimeNewBtn);
             topPanel.add(sortTimeOldBtn);
             topPanel.add(sortMajorBtn);
-            dialog.add(topPanel, BorderLayout.NORTH);
+            reviewPanel.add(topPanel, BorderLayout.NORTH);
 
             // --- Center: Application table ---
             String[] columns = {"App ID", "Job Title", "TA Name", "Student ID", "Major", "CV", "Status", "Submit Time"};
@@ -76,7 +77,7 @@ public class MoReviewUI {
             JScrollPane scrollPane = new JScrollPane(table);
             scrollPane.getVerticalScrollBar().setUnitIncrement(16);
             scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
-            dialog.add(scrollPane, BorderLayout.CENTER);
+            reviewPanel.add(scrollPane, BorderLayout.CENTER);
 
             // --- Bottom: Action buttons ---
             JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
@@ -89,7 +90,7 @@ public class MoReviewUI {
             btnPanel.add(updateStatusBtn);
             btnPanel.add(viewHistoryBtn);
             btnPanel.add(closeBtn);
-            dialog.add(btnPanel, BorderLayout.SOUTH);
+            reviewPanel.add(btnPanel, BorderLayout.SOUTH);
 
             // --- Sort button actions ---
             sortTimeNewBtn.addActionListener(e -> {
@@ -109,38 +110,51 @@ public class MoReviewUI {
             viewDetailBtn.addActionListener(e -> {
                 int row = table.getSelectedRow();
                 if (row < 0) {
-                    JOptionPane.showMessageDialog(dialog, "Please select an application first.");
+                    JOptionPane.showMessageDialog(parent, "Please select an application first.");
                     return;
                 }
                 Application app = applications.get(row);
-                showApplicationDetail(dialog, service, app);
+                showApplicationDetail(parent, service, app);
             });
 
             // --- Update Status action ---
             updateStatusBtn.addActionListener(e -> {
                 int row = table.getSelectedRow();
                 if (row < 0) {
-                    JOptionPane.showMessageDialog(dialog, "Please select an application first.");
+                    JOptionPane.showMessageDialog(parent, "Please select an application first.");
                     return;
                 }
                 Application app = applications.get(row);
-                handleStatusUpdate(dialog, context, token, app, applications, model, service);
+                handleStatusUpdate(parent, context, token, app, applications, model, service);
             });
 
             // --- View History action ---
             viewHistoryBtn.addActionListener(e -> {
                 int row = table.getSelectedRow();
                 if (row < 0) {
-                    JOptionPane.showMessageDialog(dialog, "Please select an application first.");
+                    JOptionPane.showMessageDialog(parent, "Please select an application first.");
                     return;
                 }
                 Application app = applications.get(row);
-                showStatusHistory(dialog, app);
+                showStatusHistory(parent, app);
             });
 
-            closeBtn.addActionListener(e -> dialog.dispose());
+            closeBtn.setText("Back");
+            closeBtn.addActionListener(e -> {
+                contentPane.remove(reviewPanel);
+                if (previousCenter != null) {
+                    contentPane.add(previousCenter, BorderLayout.CENTER);
+                }
+                parent.revalidate();
+                parent.repaint();
+            });
 
-            dialog.setVisible(true);
+            if (previousCenter != null) {
+                contentPane.remove(previousCenter);
+            }
+            contentPane.add(reviewPanel, BorderLayout.CENTER);
+            parent.revalidate();
+            parent.repaint();
 
         } catch (AppException ex) {
             JOptionPane.showMessageDialog(parent, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
@@ -176,7 +190,7 @@ public class MoReviewUI {
         populateTable(model, apps, service);
     }
 
-    private static void showApplicationDetail(JDialog parent, MOReviewService service, Application app) {
+    private static void showApplicationDetail(Component parent, MOReviewService service, Application app) {
         Optional<User> userOpt = service.getApplicantInfo(app.getApplicantUserId());
         Optional<Position> posOpt = service.getPositionInfo(app.getPositionId());
 
@@ -231,7 +245,7 @@ public class MoReviewUI {
         JOptionPane.showMessageDialog(parent, scrollPane, "Application Details", JOptionPane.PLAIN_MESSAGE);
     }
 
-    private static void handleStatusUpdate(JDialog parent, RecruitmentSystemContext context,
+    private static void handleStatusUpdate(Component parent, RecruitmentSystemContext context,
                                             String token, Application app,
                                             List<Application> applications,
                                             DefaultTableModel model, MOReviewService service) {
@@ -283,7 +297,7 @@ public class MoReviewUI {
         }
     }
 
-    private static void showStatusHistory(JDialog parent, Application app) {
+    private static void showStatusHistory(Component parent, Application app) {
         String history = app.getStatusHistory();
         if (history == null || history.isEmpty()) {
             JOptionPane.showMessageDialog(parent, "No status change history.", "Status History", JOptionPane.INFORMATION_MESSAGE);

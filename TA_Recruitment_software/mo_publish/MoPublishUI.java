@@ -69,11 +69,15 @@ public class MoPublishUI {
             scrollPane.getVerticalScrollBar().setUnitIncrement(16);
             scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
             panel.add(scrollPane, BorderLayout.CENTER);
-            panel.setPreferredSize(new Dimension(600, 300));
+
+            Container contentPane = parent.getContentPane();
+            BorderLayout layout = (BorderLayout) contentPane.getLayout();
+            Component previousCenter = layout.getLayoutComponent(BorderLayout.CENTER);
 
             JPanel btnPanel = new JPanel();
             JButton updateTBtn = new JButton("Update Deadline");
             JButton closeBtn = new JButton("Close Position");
+            JButton backBtn = new JButton("Back");
 
             updateTBtn.addActionListener(e -> {
                 int row = table.getSelectedRow();
@@ -100,9 +104,24 @@ public class MoPublishUI {
 
             btnPanel.add(updateTBtn);
             btnPanel.add(closeBtn);
+            btnPanel.add(backBtn);
             panel.add(btnPanel, BorderLayout.SOUTH);
 
-            JOptionPane.showMessageDialog(parent, panel, "My Published Positions", JOptionPane.PLAIN_MESSAGE);
+            backBtn.addActionListener(e -> {
+                contentPane.remove(panel);
+                if (previousCenter != null) {
+                    contentPane.add(previousCenter, BorderLayout.CENTER);
+                }
+                parent.revalidate();
+                parent.repaint();
+            });
+
+            if (previousCenter != null) {
+                contentPane.remove(previousCenter);
+            }
+            contentPane.add(panel, BorderLayout.CENTER);
+            parent.revalidate();
+            parent.repaint();
 
         } catch (AppException ex) {
             JOptionPane.showMessageDialog(parent, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);

@@ -76,10 +76,14 @@ public class TAJobsUI {
             scrollPane.getVerticalScrollBar().setUnitIncrement(16);
             scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
             panel.add(scrollPane, BorderLayout.CENTER);
-            panel.setPreferredSize(new Dimension(1000, 320));
+
+            Container contentPane = parent.getContentPane();
+            BorderLayout layout = (BorderLayout) contentPane.getLayout();
+            Component previousCenter = layout.getLayoutComponent(BorderLayout.CENTER);
 
             JPanel btnPanel = new JPanel();
             JButton applyBtn = new JButton("Apply for Selected Job");
+            JButton backBtn = new JButton("Back");
 
             applyBtn.addActionListener(e -> {
                 if (token == null) {
@@ -109,14 +113,24 @@ public class TAJobsUI {
             });
 
             btnPanel.add(applyBtn);
+            btnPanel.add(backBtn);
             panel.add(btnPanel, BorderLayout.SOUTH);
 
-            JOptionPane.showMessageDialog(
-                parent,
-                panel,
-                "Available Jobs (semester: " + currentSemester + ")",
-                JOptionPane.PLAIN_MESSAGE
-            );
+            backBtn.addActionListener(e -> {
+                contentPane.remove(panel);
+                if (previousCenter != null) {
+                    contentPane.add(previousCenter, BorderLayout.CENTER);
+                }
+                parent.revalidate();
+                parent.repaint();
+            });
+
+            if (previousCenter != null) {
+                contentPane.remove(previousCenter);
+            }
+            contentPane.add(panel, BorderLayout.CENTER);
+            parent.revalidate();
+            parent.repaint();
 
         } catch (AppException ex) {
             JOptionPane.showMessageDialog(parent, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
@@ -149,9 +163,31 @@ public class TAJobsUI {
             scrollPane.getVerticalScrollBar().setUnitIncrement(16);
             scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
             panel.add(scrollPane, BorderLayout.CENTER);
-            panel.setPreferredSize(new Dimension(600, 200));
 
-            JOptionPane.showMessageDialog(parent, panel, "My Applications", JOptionPane.PLAIN_MESSAGE);
+            Container contentPane = parent.getContentPane();
+            BorderLayout layout = (BorderLayout) contentPane.getLayout();
+            Component previousCenter = layout.getLayoutComponent(BorderLayout.CENTER);
+
+            JPanel btnPanel = new JPanel();
+            JButton backBtn = new JButton("Back");
+            btnPanel.add(backBtn);
+            panel.add(btnPanel, BorderLayout.SOUTH);
+
+            backBtn.addActionListener(e -> {
+                contentPane.remove(panel);
+                if (previousCenter != null) {
+                    contentPane.add(previousCenter, BorderLayout.CENTER);
+                }
+                parent.revalidate();
+                parent.repaint();
+            });
+
+            if (previousCenter != null) {
+                contentPane.remove(previousCenter);
+            }
+            contentPane.add(panel, BorderLayout.CENTER);
+            parent.revalidate();
+            parent.repaint();
 
         } catch (AppException ex) {
             JOptionPane.showMessageDialog(parent, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
