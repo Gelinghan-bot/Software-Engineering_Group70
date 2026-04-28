@@ -26,8 +26,7 @@ public class Home2 extends JFrame {
         setLayout(new BorderLayout());
 
         // Top Navigation Bar
-        JPanel headerPanel = createHeaderPanel();
-        add(headerPanel, BorderLayout.NORTH);
+        refreshHeaderPanel();
 
         // Main Background Panel
         bgPanel = new BackgroundPanel("HomeBackGround.png"); 
@@ -101,6 +100,18 @@ public class Home2 extends JFrame {
         add(bgPanel, BorderLayout.CENTER);
     }
 
+    private void refreshHeaderPanel() {
+        BorderLayout layout = (BorderLayout) getContentPane().getLayout();
+        Component top = layout.getLayoutComponent(BorderLayout.NORTH);
+        if (top != null) {
+            getContentPane().remove(top);
+        }
+        JPanel headerPanel = createHeaderPanel();
+        getContentPane().add(headerPanel, BorderLayout.NORTH);
+        revalidate();
+        repaint();
+    }
+
     private JPanel createHeaderPanel() {
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(Color.WHITE);
@@ -122,18 +133,30 @@ public class Home2 extends JFrame {
         // Navigation Links
         JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 25, 20));
         navPanel.setBackground(Color.WHITE);
-        String[] links = {"HOME", "JOBS", "FORUM", "CONTACT", "ADMIN", "PERSONAL"};
+        
+        String[] links;
+        if (currentRole == TA_Recruitment_software.admin_system.model.Role.TA || currentRole == null) {
+            links = new String[]{"HOME", "JOBS", "FORUM", "CONTACT", "PERSONAL"};
+        } else {
+            // Keep default/other roles unchanged for now
+            links = new String[]{"HOME", "JOBS", "FORUM", "CONTACT", "ADMIN", "PERSONAL"};
+        }
+
         for (String link : links) {
             Map<String, Runnable> subItems = new LinkedHashMap<>();
             Runnable mainAction = null;
             if (link.equals("HOME")) {
                 mainAction = this::showHomeView;
             } else if (link.equals("JOBS")) {
-                subItems.put("Job Details", () -> TA_Recruitment_software.ta_jobs.TAJobsUI.showAvailableJobs(this, context, currentToken));
-                subItems.put("Post a Job (MO)", () -> TA_Recruitment_software.mo_publish.MoPublishUI.showPublishDialog(this, context, currentToken));
-                subItems.put("Manage My Positions (MO)", () -> TA_Recruitment_software.mo_publish.MoPublishUI.showMyPositionsDialog(this, context, currentToken));
-                subItems.put("Review Applications (MO)", () -> TA_Recruitment_software.mo_review.MoReviewUI.showReviewDialog(this, context, currentToken));
-                subItems.put("View TA Profiles & CVs (MO)", () -> TA_Recruitment_software.profile.MoTaProfileViewUI.showDialog(this, context, currentToken));
+                if (currentRole == TA_Recruitment_software.admin_system.model.Role.TA || currentRole == null) {
+                    mainAction = () -> TA_Recruitment_software.ta_jobs.TAJobsUI.showAvailableJobs(this, context, currentToken);
+                } else {
+                    subItems.put("Job Details", () -> TA_Recruitment_software.ta_jobs.TAJobsUI.showAvailableJobs(this, context, currentToken));
+                    subItems.put("Post a Job (MO)", () -> TA_Recruitment_software.mo_publish.MoPublishUI.showPublishDialog(this, context, currentToken));
+                    subItems.put("Manage My Positions (MO)", () -> TA_Recruitment_software.mo_publish.MoPublishUI.showMyPositionsDialog(this, context, currentToken));
+                    subItems.put("Review Applications (MO)", () -> TA_Recruitment_software.mo_review.MoReviewUI.showReviewDialog(this, context, currentToken));
+                    subItems.put("View TA Profiles & CVs (MO)", () -> TA_Recruitment_software.profile.MoTaProfileViewUI.showDialog(this, context, currentToken));
+                }
             } else if (link.equals("CONTACT")) {
                 subItems.put("Contact with MO", () -> JOptionPane.showMessageDialog(this, "MO Contact Info: mo_support@bupt.edu"));
                 subItems.put("Contact with us", () -> JOptionPane.showMessageDialog(this, "Admin Contact Info: support@jobhere.com"));
@@ -145,11 +168,15 @@ public class Home2 extends JFrame {
                 subItems.put("Manage Positions", () -> TA_Recruitment_software.mo_publish.MoPublishUI.showMyPositionsDialog(this, context, currentToken));
                 subItems.put("Review Applications", () -> TA_Recruitment_software.mo_review.MoReviewUI.showReviewDialog(this, context, currentToken));
             } else if (link.equals("PERSONAL")) {
-                subItems.put("My Resume (Update Profile)", () -> TA_Recruitment_software.profile.ProfileUI.showUpdateProfileDialog(this, context, currentToken));
-                subItems.put("My Applications (TA)", () -> TA_Recruitment_software.ta_jobs.TAJobsUI.showMyApplications(this, context, currentToken));
-                subItems.put("Recommendation Records", () -> JOptionPane.showMessageDialog(this, "Recommendation records feature coming soon."));
-                subItems.put("Settings", () -> JOptionPane.showMessageDialog(this, "Settings feature coming soon."));
-                subItems.put("EXIT (Logout)", () -> logout());
+                if (currentRole == null) {
+                    mainAction = () -> JOptionPane.showMessageDialog(this, "Please login first to use personal features.", "Not Logged In", JOptionPane.WARNING_MESSAGE);
+                } else {
+                    subItems.put("My Resume (Update Profile)", () -> TA_Recruitment_software.profile.ProfileUI.showUpdateProfileDialog(this, context, currentToken));
+                    subItems.put("My Applications (TA)", () -> TA_Recruitment_software.ta_jobs.TAJobsUI.showMyApplications(this, context, currentToken));
+                    subItems.put("Recommendation Records", () -> JOptionPane.showMessageDialog(this, "Recommendation records feature coming soon."));
+                    subItems.put("Settings", () -> JOptionPane.showMessageDialog(this, "Settings feature coming soon."));
+                    subItems.put("EXIT (Logout)", () -> logout());
+                }
             }
             NavLabel linkLabel = new NavLabel(link, subItems, mainAction);
             navPanel.add(linkLabel);
@@ -160,6 +187,12 @@ public class Home2 extends JFrame {
         buttonPanel.setBackground(Color.WHITE);
         
         // Add Session Label
+        if (currentToken != null && currentRole != null) {
+            sessionLabel.setText("Logged in: " + currentRole.name());
+        } else {
+            sessionLabel.setText("");
+        }
+        
         sessionLabel.setFont(new Font("Arial", Font.BOLD, 14));
         sessionLabel.setForeground(new Color(65, 65, 65));
         sessionLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 15));
@@ -188,7 +221,7 @@ public class Home2 extends JFrame {
             if (result != null && result.length == 2) {
                 this.currentToken = result[0];
                 this.currentRole = TA_Recruitment_software.admin_system.model.Role.valueOf(result[1]);
-                sessionLabel.setText("Logged in: " + result[1]);
+                refreshHeaderPanel();
             }
         });
 
@@ -217,7 +250,7 @@ public class Home2 extends JFrame {
     private void logout() {
         this.currentToken = null;
         this.currentRole = null;
-        this.sessionLabel.setText("");
+        refreshHeaderPanel();
         showHomeView();
         JOptionPane.showMessageDialog(this, "Logged out successfully!");
     }
