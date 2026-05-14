@@ -135,8 +135,10 @@ public class Home2 extends JFrame {
         navPanel.setBackground(Color.WHITE);
         
         String[] links;
-        if (currentRole == TA_Recruitment_software.admin_system.model.Role.TA || currentRole == null) {
+        if (currentRole == TA_Recruitment_software.admin_system.model.Role.TA || currentRole == TA_Recruitment_software.admin_system.model.Role.MO || currentRole == null) {
             links = new String[]{"HOME", "JOBS", "FORUM", "CONTACT", "PERSONAL"};
+        } else if (currentRole == TA_Recruitment_software.admin_system.model.Role.ADMIN) {
+            links = new String[]{"HOME", "USERS", "JOBS", "FORUM", "WORKLOAD", "SETTINGS"};
         } else {
             // Keep default/other roles unchanged for now
             links = new String[]{"HOME", "JOBS", "FORUM", "CONTACT", "ADMIN", "PERSONAL"};
@@ -147,9 +149,21 @@ public class Home2 extends JFrame {
             Runnable mainAction = null;
             if (link.equals("HOME")) {
                 mainAction = this::showHomeView;
+            } else if (link.equals("USERS")) {
+                subItems.put("Approve Registration", () -> TA_Recruitment_software.admin_system.AdminUI.showPendingUsersDialog(this, context, currentToken));
+                subItems.put("Manage Users", () -> TA_Recruitment_software.admin_system.AdminUI.showManageUsersDialog(this, context, currentToken));
+            } else if (link.equals("WORKLOAD")) {
+                subItems.put("TA Workload", () -> TA_Recruitment_software.admin_system.AdminUI.showTaWorkloadDialog(this, context, currentToken));
+            } else if (link.equals("SETTINGS")) {
+                subItems.put("Settings", () -> JOptionPane.showMessageDialog(this, "Settings feature coming soon."));
+                subItems.put("EXIT (Logout)", () -> logout());
             } else if (link.equals("JOBS")) {
                 if (currentRole == TA_Recruitment_software.admin_system.model.Role.TA || currentRole == null) {
                     mainAction = () -> TA_Recruitment_software.ta_jobs.TAJobsUI.showAvailableJobs(this, context, currentToken);
+                } else if (currentRole == TA_Recruitment_software.admin_system.model.Role.ADMIN) {
+                    subItems.put("Post a Job", () -> TA_Recruitment_software.mo_publish.MoPublishUI.showPublishDialog(this, context, currentToken));
+                    subItems.put("Manage Positions", () -> TA_Recruitment_software.mo_publish.MoPublishUI.showMyPositionsDialog(this, context, currentToken));
+                    subItems.put("Review Applications", () -> TA_Recruitment_software.mo_review.MoReviewUI.showReviewDialog(this, context, currentToken));
                 } else {
                     subItems.put("Job Details", () -> TA_Recruitment_software.ta_jobs.TAJobsUI.showAvailableJobs(this, context, currentToken));
                     subItems.put("Post a Job (MO)", () -> TA_Recruitment_software.mo_publish.MoPublishUI.showPublishDialog(this, context, currentToken));
