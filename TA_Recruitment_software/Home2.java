@@ -149,6 +149,8 @@ public class Home2 extends JFrame {
             Runnable mainAction = null;
             if (link.equals("HOME")) {
                 mainAction = this::showHomeView;
+            } else if (link.equals("FORUM")) {
+                mainAction = () -> TA_Recruitment_software.forum.ForumUI.showForum(this, context, currentToken);
             } else if (link.equals("USERS")) {
                 subItems.put("Approve Registration", () -> TA_Recruitment_software.admin_system.AdminUI.showPendingUsersDialog(this, context, currentToken));
                 subItems.put("Manage Users", () -> TA_Recruitment_software.admin_system.AdminUI.showManageUsersDialog(this, context, currentToken));
