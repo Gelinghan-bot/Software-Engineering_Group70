@@ -85,6 +85,13 @@ public class TAJobsUI {
             JButton applyBtn = new JButton("Apply for Selected Job");
             JButton backBtn = new JButton("Back");
 
+            TA_Recruitment_software.admin_system.model.Role userRole = null;
+            if (token != null) {
+                try {
+                    userRole = context.getSessionManager().requireSession(token).getRole();
+                } catch (AppException ignored) {}
+            }
+
             applyBtn.addActionListener(e -> {
                 if (token == null) {
                     JOptionPane.showMessageDialog(parent, "Please login as TA first.");
@@ -112,7 +119,9 @@ public class TAJobsUI {
                 }
             });
 
-            btnPanel.add(applyBtn);
+            if (userRole == null || userRole == TA_Recruitment_software.admin_system.model.Role.TA) {
+                btnPanel.add(applyBtn);
+            }
             btnPanel.add(backBtn);
             panel.add(btnPanel, BorderLayout.SOUTH);
 

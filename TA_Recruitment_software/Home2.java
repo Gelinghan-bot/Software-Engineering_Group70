@@ -184,10 +184,14 @@ public class Home2 extends JFrame {
             } else if (link.equals("PERSONAL")) {
                 if (currentRole == null) {
                     mainAction = () -> JOptionPane.showMessageDialog(this, "Please login first to use personal features.", "Not Logged In", JOptionPane.WARNING_MESSAGE);
+                } else if (currentRole == TA_Recruitment_software.admin_system.model.Role.MO) {
+                    subItems.put("My Resume", () -> TA_Recruitment_software.profile.ProfileUI.showUpdateProfileDialog(this, context, currentToken));
+                    subItems.put("Settings", () -> JOptionPane.showMessageDialog(this, "Settings feature coming soon."));
+                    subItems.put("EXIT (Logout)", () -> logout());
                 } else {
                     subItems.put("My Resume (Update Profile)", () -> TA_Recruitment_software.profile.ProfileUI.showUpdateProfileDialog(this, context, currentToken));
-                    subItems.put("My Applications (TA)", () -> TA_Recruitment_software.ta_jobs.TAJobsUI.showMyApplications(this, context, currentToken));
-                    subItems.put("Recommendation Records", () -> JOptionPane.showMessageDialog(this, "Recommendation records feature coming soon."));
+                    subItems.put("My Applications", () -> TA_Recruitment_software.ta_jobs.TAJobsUI.showMyApplications(this, context, currentToken));
+                    subItems.put("AI Recommendation", () -> JOptionPane.showMessageDialog(this, "Recommendation records feature coming soon."));
                     subItems.put("Settings", () -> JOptionPane.showMessageDialog(this, "Settings feature coming soon."));
                     subItems.put("EXIT (Logout)", () -> logout());
                 }
