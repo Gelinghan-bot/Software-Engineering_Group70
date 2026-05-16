@@ -27,15 +27,27 @@ public class TopicRepository {
     public List<Topic> getAllTopics() {
         List<Topic> topics = new ArrayList<>();
         try {
-            List<String> lines = java.nio.file.Files.readAllLines(new File(DATA_FILE).toPath());
+            // 默认情况下这里在Win中文系统上容易和FileWriter（GBK）产生编码冲突，所以显式先使用系统默认编码（GBK）读取
+            List<String> lines = java.nio.file.Files.readAllLines(new File(DATA_FILE).toPath(), java.nio.charset.Charset.defaultCharset());
             for (String line : lines) {
                 Topic t = Topic.fromCsvRow(line);
                 if (t != null) {
                     topics.add(t);
                 }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            try {
+                // 如果GBK失败，则退回到纯 UTF-8 尝试读取
+                List<String> lines = java.nio.file.Files.readAllLines(new File(DATA_FILE).toPath(), java.nio.charset.StandardCharsets.UTF_8);
+                for (String line : lines) {
+                    Topic t = Topic.fromCsvRow(line);
+                    if (t != null) {
+                        topics.add(t);
+                    }
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
         return topics;
     }
@@ -44,6 +56,22 @@ public class TopicRepository {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(DATA_FILE, true))) {
             writer.write(topic.toCsvRow());
             writer.newLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void updateTopic(Topic updatedTopic) {
+        List<Topic> topics = getAllTopics();
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(DATA_FILE))) { // Overwrite to update
+            for (Topic t : topics) {
+                if (t.getId().equals(updatedTopic.getId())) {
+                    writer.write(updatedTopic.toCsvRow());
+                } else {
+                    writer.write(t.toCsvRow());
+                }
+                writer.newLine();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
