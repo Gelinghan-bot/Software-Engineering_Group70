@@ -75,20 +75,27 @@ public class MoPublishUI {
             Component previousCenter = layout.getLayoutComponent(BorderLayout.CENTER);
 
             JPanel btnPanel = new JPanel();
-            JButton updateTBtn = new JButton("Update Deadline");
+            JButton updateTBtn = new JButton("Modify Job Details");
             JButton closeBtn = new JButton("Close Position");
             JButton backBtn = new JButton("Back");
 
             updateTBtn.addActionListener(e -> {
                 int row = table.getSelectedRow();
                 if (row >= 0) {
-                    String posId = (String) model.getValueAt(row, 0);
-                    String newDl = JOptionPane.showInputDialog(parent, "Enter new deadline (YYYY-MM-DD):");
-                    if (newDl != null && !newDl.trim().isEmpty()) {
-                        context.getMoPublishService().updateDeadline(token, posId, newDl);
-                        model.setValueAt(newDl, row, 2);
-                        JOptionPane.showMessageDialog(parent, "Deadline updated.");
-                    }
+                    Position selectedPos = positions.get(row);
+                    
+                    JobEditPanel editPanel = new JobEditPanel(parent, context, token, panel, selectedPos, () -> {
+                        // This callback updates the table row with potentially new data (like Title and Deadline)
+                        model.setValueAt(selectedPos.getJobTitle(), row, 1);
+                        model.setValueAt(selectedPos.getDeadline(), row, 2);
+                    });
+                    
+                    contentPane.remove(panel);
+                    contentPane.add(editPanel, BorderLayout.CENTER);
+                    parent.revalidate();
+                    parent.repaint();
+                } else {
+                    JOptionPane.showMessageDialog(parent, "Please select a position to modify.");
                 }
             });
 
