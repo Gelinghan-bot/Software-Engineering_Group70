@@ -89,9 +89,28 @@ public class ForumPanel extends JPanel {
         // Left Title & New Topic Button
         JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
         left.setBackground(Color.WHITE);
-        JLabel title = new JLabel("System Forum");
+        JLabel title = new JLabel("Forum Area");
         title.setFont(new Font("Arial", Font.BOLD, 18));
         title.setForeground(new Color(39, 174, 96));
+        title.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        title.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                // Reset all states
+                currentFilterStrategy = FilterStrategy.ALL;
+                currentSortStrategy = SortStrategy.DEFAULT;
+                currentPage = 1;
+                // Make sure we switch out of detail view back to lists
+                ((CardLayout)mainAreaWrapper.getLayout()).show(mainAreaWrapper, "List");
+                // Reload data
+                loadTopics();
+            }
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                title.setText("<html><u>Forum Area</u></html>");
+            }
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                title.setText("Forum Area");
+            }
+        });
         
         JButton newTopicBtn = new JButton("Start New Topic");
         newTopicBtn.setBackground(new Color(39, 174, 96));
@@ -187,6 +206,9 @@ public class ForumPanel extends JPanel {
     private enum SortStrategy { DEFAULT, LIKES, FAVORITES, COMMENTS, DATE }
     private SortStrategy currentSortStrategy = SortStrategy.DEFAULT;
 
+    private enum FilterStrategy { ALL, MY_POSTS, LIKED, FAVORITES }
+    private FilterStrategy currentFilterStrategy = FilterStrategy.ALL;
+
     private void loadTopics() {
         loadTopics(null);
     }
@@ -198,7 +220,9 @@ public class ForumPanel extends JPanel {
 
         // 1. Filter
         List<Topic> filtered = new java.util.ArrayList<>();
+        String loggedInUser = getLoggedInUsername();
         for (Topic t : topics) {
+            // Apply keyword search
             if (keyword != null && !keyword.isEmpty()) {
                 String lowerK = keyword.toLowerCase();
                 if (!t.getTitle().toLowerCase().contains(lowerK) && 
@@ -207,6 +231,18 @@ public class ForumPanel extends JPanel {
                     continue; // skip
                 }
             }
+            
+            // Apply Dashboard filters
+            if (currentFilterStrategy == FilterStrategy.MY_POSTS && !t.getAuthorName().equals(loggedInUser)) {
+                continue;
+            }
+            if (currentFilterStrategy == FilterStrategy.LIKED && !t.getLikedByUsers().contains(loggedInUser)) {
+                continue;
+            }
+            if (currentFilterStrategy == FilterStrategy.FAVORITES && !t.getFavoritedByUsers().contains(loggedInUser)) {
+                continue;
+            }
+
             filtered.add(t);
         }
 
@@ -716,6 +752,7 @@ public class ForumPanel extends JPanel {
             popupMenu.setBackground(Color.WHITE);
             
             JMenuItem msgItem = new JMenuItem("📬 My Messages (0)");
+            JMenuItem allTopicsItem = new JMenuItem("🌐 All Topics (Reset Filter)");
             JMenuItem postItem = new JMenuItem("📝 My Published Topics");
             JMenuItem likesItem = new JMenuItem("❤️ Topics I Liked");
             JMenuItem favItem = new JMenuItem("⭐ My Favorites");
@@ -723,16 +760,41 @@ public class ForumPanel extends JPanel {
             
             Font itemFont = new Font("Segoe UI Emoji", Font.PLAIN, 13);
             msgItem.setFont(itemFont); msgItem.setBackground(Color.WHITE);
+            allTopicsItem.setFont(itemFont); allTopicsItem.setBackground(Color.WHITE);
             postItem.setFont(itemFont); postItem.setBackground(Color.WHITE);
             likesItem.setFont(itemFont); likesItem.setBackground(Color.WHITE);
             favItem.setFont(itemFont); favItem.setBackground(Color.WHITE);
             commentsItem.setFont(itemFont); commentsItem.setBackground(Color.WHITE);
             
+            popupMenu.add(allTopicsItem);
+            popupMenu.addSeparator();
             popupMenu.add(msgItem);
             popupMenu.add(postItem);
             popupMenu.add(likesItem);
             popupMenu.add(favItem);
             popupMenu.add(commentsItem);
+
+            // Add Actions
+            allTopicsItem.addActionListener(e -> {
+                currentFilterStrategy = FilterStrategy.ALL;
+                currentPage = 1;
+                loadTopics();
+            });
+            postItem.addActionListener(e -> {
+                currentFilterStrategy = FilterStrategy.MY_POSTS;
+                currentPage = 1;
+                loadTopics();
+            });
+            likesItem.addActionListener(e -> {
+                currentFilterStrategy = FilterStrategy.LIKED;
+                currentPage = 1;
+                loadTopics();
+            });
+            favItem.addActionListener(e -> {
+                currentFilterStrategy = FilterStrategy.FAVORITES;
+                currentPage = 1;
+                loadTopics();
+            });
 
             myHubLbl.addMouseListener(new java.awt.event.MouseAdapter() {
                 public void mouseEntered(java.awt.event.MouseEvent e) {

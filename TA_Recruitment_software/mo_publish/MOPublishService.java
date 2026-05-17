@@ -99,6 +99,54 @@ public class MOPublishService {
         return position;
     }
 
+    public Position updatePositionDetails(
+        String token,
+        String positionId,
+        String jobTitle,
+        String grade,
+        String major,
+        String jobType,
+        String jobDescription,
+        String requirements,
+        String interviewLocation,
+        String deadline
+    ) {
+        SessionContext session = sessionManager.requireSession(token);
+        if (session.getRole() != Role.MO && session.getRole() != Role.ADMIN) {
+            throw new AppException("Permission denied. Only MO and ADMIN can update positions.");
+        }
+        
+        Position position = positionRepository.findById(ValidationUtil.requireNotBlank(positionId, "Position ID"))
+            .orElseThrow(() -> new AppException("Position not found."));
+
+        if (session.getRole() == Role.MO && !position.getPublishedByUserId().equals(session.getUserId())) {
+            throw new AppException("Permission denied. You can only update your own positions.");
+        }
+
+        String checkedTitle = ValidationUtil.validateName(jobTitle, "Job title");
+        String checkedGrade = ValidationUtil.sanitizeText(grade, "Grade", 50);
+        String checkedMajor = ValidationUtil.sanitizeText(major, "Major", 50);
+        String checkedType = ValidationUtil.sanitizeText(jobType, "Job type", 80);
+        String checkedDesc = ValidationUtil.sanitizeText(jobDescription, "Job description", 800);
+
+        String checkedReq = ValidationUtil.sanitizeText(requirements, "Requirements", 600);
+        String checkedLoc = ValidationUtil.sanitizeText(interviewLocation, "Interview location", 100);
+        LocalDate checkedDeadline = ValidationUtil.validateDate(deadline, "Deadline");
+        ValidationUtil.ensureTodayOrFuture(checkedDeadline, "Deadline");
+
+        position.setJobTitle(checkedTitle);
+        position.setGrade(checkedGrade);
+        position.setMajor(checkedMajor);
+        position.setJobType(checkedType);
+        position.setJobDescription(checkedDesc);
+        position.setRequirements(checkedReq);
+        position.setInterviewLocation(checkedLoc);
+        position.setDeadline(checkedDeadline.toString());
+
+        positionRepository.save(position);
+        return position;
+    }
+
     public Position closePosition(String token, String positionId) {
         SessionContext session = sessionManager.requireSession(token);
         if (session.getRole() != Role.MO && session.getRole() != Role.ADMIN) {
