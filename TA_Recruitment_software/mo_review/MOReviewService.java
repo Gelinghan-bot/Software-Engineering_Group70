@@ -24,6 +24,15 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import java.util.Properties;
+import java.io.InputStream;
+import java.io.FileInputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.io.OutputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
 public class MOReviewService {
     private final PositionRepository positionRepository;
     private final ApplicationRepository applicationRepository;
@@ -188,5 +197,114 @@ public class MOReviewService {
     private String getMajorForApp(Application app) {
         Optional<User> user = userRepository.findByUserId(app.getApplicantUserId());
         return user.map(u -> u.getMajor() != null ? u.getMajor() : "").orElse("");
+    }
+
+    public String simulateAIComparison(List<Application> selectedApps) throws Exception {
+        if (selectedApps == null || selectedApps.isEmpty()) return "No candidates selected.";
+        
+        // 1. 读取 API KEY 和 模型配置
+        Properties aiConfig = loadAiConfig();
+        String apiKey = aiConfig.getProperty("ALIYUN_API_KEY");
+        String modelName = aiConfig.getProperty("ALIYUN_MODEL", "qwen-plus"); // 如果没配，默认用 qwen-plus
+
+        if (apiKey == null || apiKey.isEmpty() || apiKey.equals("YOUR_API_KEY_HERE")) {
+            throw new Exception("API KEY 未配置！请在 TA_Recruitment_software/data/ai-config.properties 中填入您的 API KEY。");
+        }
+
+        String positionId = selectedApps.get(0).getPositionId();
+        Position position = positionRepository.findById(positionId).orElse(null);
+        String jobTitle = position != null ? position.getJobTitle() : "Unknown Position";
+        String requirements = position != null ? position.getRequirements() : "None";
+        
+        // 2. 构造 Prompt
+        String systemPrompt = "你是一名非常专业的高校助教招聘 HR。请帮我对比以下候选人，指出各自的优劣势，并给出一个明确的推荐排名。必须使用中文回复。";
+        
+        StringBuilder userPrompt = new StringBuilder();
+        userPrompt.append("【岗位信息】\n");
+        userPrompt.append("名称：").append(jobTitle).append("\n");
+        userPrompt.append("要求：").append(requirements).append("\n\n");
+        userPrompt.append("【候选人列表】\n");
+        
+        int count = 1;
+        for (Application app : selectedApps) {
+            Optional<User> userOpt = userRepository.findByUserId(app.getApplicantUserId());
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                userPrompt.append("候选人 ").append(count++).append(":\n");
+                userPrompt.append("- 姓名：").append(user.getFullName()).append("\n");
+                userPrompt.append("- 专业：").append(user.getMajor() != null ? user.getMajor() : "N/A").append("\n");
+                userPrompt.append("- 特长/履历：").append(user.getSkills() != null ? user.getSkills() : "N/A").append("\n\n");
+            }
+        }
+        
+        // 3. 调用阿里云 API
+        return callAliyunBailianAPI(apiKey, modelName, systemPrompt, userPrompt.toString());
+    }
+
+    private Properties loadAiConfig() {
+        Properties prop = new Properties();
+        try (InputStream input = new FileInputStream("data/ai-config.properties")) {
+            prop.load(input);
+        } catch (Exception ex) {
+            // 文件不存在或读取失败，返回空属性
+        }
+        return prop;
+    }
+
+    private String callAliyunBailianAPI(String apiKey, String modelName, String systemPrompt, String userPrompt) throws Exception {
+        URL url = new URL("https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Authorization", "Bearer " + apiKey);
+        conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
+        conn.setDoOutput(true);
+
+        // 拼接最简单的 JSON 以避免引入额外的 Jar 包
+        String jsonInputString = String.format(
+            "{\"model\": \"%s\", \"messages\": [{\"role\": \"system\", \"content\": \"%s\"}, {\"role\": \"user\", \"content\": \"%s\"}]}",
+            modelName, escapeJson(systemPrompt), escapeJson(userPrompt)
+        );
+
+        try (OutputStream os = conn.getOutputStream()) {
+            byte[] input = jsonInputString.getBytes("utf-8");
+            os.write(input, 0, input.length);
+        }
+
+        int code = conn.getResponseCode();
+        InputStream is = code >= 200 && code < 300 ? conn.getInputStream() : conn.getErrorStream();
+        
+        StringBuilder response = new StringBuilder();
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(is, "utf-8"))) {
+            String responseLine;
+            while ((responseLine = br.readLine()) != null) {
+                response.append(responseLine.trim());
+            }
+        }
+        
+        if (code >= 200 && code < 300) {
+            return extractContentFromJson(response.toString());
+        } else {
+            throw new Exception("API 调用失败 (HTTP " + code + "): " + response.toString());
+        }
+    }
+
+    private String escapeJson(String s) {
+        return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "");
+    }
+
+    private String extractContentFromJson(String json) {
+        // 这是为了不引新 Jar 包写的一个极其简易的 JSON 截取方法
+        String marker = "\"content\":\"";
+        int start = json.indexOf(marker);
+        if (start == -1) return "解析返回结果失败。";
+        start += marker.length();
+        
+        // 找到 content 后面的结束位置 (遇到 "})
+        int end = json.indexOf("\"}", start);
+        if (end == -1) return json;
+        
+        String content = json.substring(start, end);
+        // 处理大模型返回的转义换行符和引号
+        return content.replace("\\n", "\n").replace("\\\"", "\"").replace("\\\\", "\\");
     }
 }

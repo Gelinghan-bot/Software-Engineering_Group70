@@ -27,3 +27,7 @@ POS_2026041100000_21,Embedded Systems TA,invigilation,LGL,Invigilate embedded sy
 POS_2026041100000_22,Analog Circuits TA,grading,LGL,Grade analog circuit designs,Detail-oriented,Room 102,2026-09-30,MO_1775665335271_1,OPEN,Year3,EE
 POS_2026041100000_23,Database Systems TA,and other tasks,LGL,Assist with SQL queries,Familiar with MySQL,Room 205,2026-10-10,MO_1775665335271_1,OPEN,Year4,IST
 POS_2026041100000_24,Satellite Comms Grader,grading,LGL,Grade theoretical assignments,Good math skills,Room 312,2026-10-15,MO_1775665335271_1,OPEN,Year4,TEM
+POS_IST_001,机器学习基础,Part-Time,Wang Wei,协助主讲老师批改作业解答学生疑问；每周需坐班辅导2次。,优先IST专业且成绩90分以上；熟练掌握Python和PyTorch；英语四六级成绩优异者优先。,宏福校区教学楼201,2026-06-30,MO_20260518_IST_1,OPEN,Year3,IST
+POS_IST_002,面向对象编程(Java),Part-Time,Wang Wei,批改Java编程作业引导学生完成大作业设计；收集学生平时的代码疑问并汇总解答。,计算机类相关专业；Java成绩优异了解设计模式；能够熟练使用GitHub；有耐心。,宏福校区实验楼302,2026-06-30,MO_20260518_IST_1,OPEN,Year2,IST
+POS_EE_001,电路分析基础,Part-Time,Liu Yang,负责配合主讲教师批改电路分析理论题作业；指导实验课帮助学生排除电路板实验故障。,EE专业且核心专业课全优；熟练使用示波器实验仪器能熟练操作Multisim；动手能力强。,宏福校区实验楼105,2026-06-30,MO_20260518_EE_1,OPEN,Year2,EE
+POS_IOT_001,嵌入式系统设计,Full-Time,Zhang San,协助老师完成嵌入式系统的实验环境搭建；批改C语言和STM32代码；为学生答疑。,IOT专业有嵌入式底层开发经验；精通C语言；具备较强排错与debug能力。,宏福校区教三405,2026-06-30,MO_20260518_IOT_1,OPEN,Year3,IOT
