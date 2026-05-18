@@ -150,7 +150,12 @@ public class Home2 extends JFrame {
             if (link.equals("HOME")) {
                 mainAction = this::showHomeView;
             } else if (link.equals("FORUM")) {
-                mainAction = () -> TA_Recruitment_software.forum.ForumUI.showForum(this, context, currentToken);
+                if (currentRole == TA_Recruitment_software.admin_system.model.Role.ADMIN) {
+                    subItems.put("Forum Area", () -> TA_Recruitment_software.forum.ForumUI.showForum(this, context, currentToken));
+                    subItems.put("View Poll Results", () -> TA_Recruitment_software.admin_system.AdminUI.showPollResultsDialog(this));
+                } else {
+                    mainAction = () -> TA_Recruitment_software.forum.ForumUI.showForum(this, context, currentToken);
+                }
             } else if (link.equals("USERS")) {
                 subItems.put("Approve Registration", () -> TA_Recruitment_software.admin_system.AdminUI.showPendingUsersDialog(this, context, currentToken));
                 subItems.put("Manage Users", () -> TA_Recruitment_software.admin_system.AdminUI.showManageUsersDialog(this, context, currentToken));
@@ -180,6 +185,7 @@ public class Home2 extends JFrame {
                 subItems.put("Approve Registration", () -> TA_Recruitment_software.admin_system.AdminUI.showPendingUsersDialog(this, context, currentToken));
                 subItems.put("Manage Users", () -> TA_Recruitment_software.admin_system.AdminUI.showManageUsersDialog(this, context, currentToken));
                 subItems.put("TA Workload", () -> TA_Recruitment_software.admin_system.AdminUI.showTaWorkloadDialog(this, context, currentToken));
+                subItems.put("View Poll Results", () -> TA_Recruitment_software.admin_system.AdminUI.showPollResultsDialog(this));
                 subItems.put("Post a Job", () -> TA_Recruitment_software.mo_publish.MoPublishUI.showPublishDialog(this, context, currentToken));
                 subItems.put("Manage Positions", () -> TA_Recruitment_software.mo_publish.MoPublishUI.showMyPositionsDialog(this, context, currentToken));
                 subItems.put("Review Applications", () -> TA_Recruitment_software.mo_review.MoReviewUI.showReviewDialog(this, context, currentToken));

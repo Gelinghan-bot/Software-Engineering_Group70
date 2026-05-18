@@ -334,4 +334,40 @@ public class AdminUI {
             JOptionPane.showMessageDialog(parent, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+
+    public static void showPollResultsDialog(JFrame parent) {
+        TA_Recruitment_software.forum.PollRepository pollRepo = new TA_Recruitment_software.forum.PollRepository();
+        java.util.Map<String, String> votes = pollRepo.loadVotes();
+        if (votes.isEmpty()) {
+            JOptionPane.showMessageDialog(parent, "No votes have been cast yet for the Poll of the Week.");
+            return;
+        }
+
+        java.util.Map<String, Integer> counts = new java.util.HashMap<>();
+        for (String subject : votes.values()) {
+            counts.put(subject, counts.getOrDefault(subject, 0) + 1);
+        }
+
+        DefaultTableModel model = new DefaultTableModel(new Object[]{"Subject", "Votes Cast"}, 0) {
+            @Override public boolean isCellEditable(int row, int column) { return false; }
+        };
+
+        for (java.util.Map.Entry<String, Integer> entry : counts.entrySet()) {
+            model.addRow(new Object[]{entry.getKey(), entry.getValue()});
+        }
+
+        JTable table = new JTable(model);
+        table.setRowHeight(25);
+        table.setFont(new Font("Arial", Font.PLAIN, 14));
+        table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));
+
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        panel.add(new JLabel("Poll of the Week: Which subject needs more TAs?"), BorderLayout.NORTH);
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setPreferredSize(new Dimension(400, 200));
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        JOptionPane.showMessageDialog(parent, panel, "Poll Results", JOptionPane.PLAIN_MESSAGE);
+    }
 }
