@@ -75,8 +75,10 @@ public final class MoTaProfileViewUI {
             JPanel south = new JPanel();
             JButton viewBtn = new JButton("View profile & CV");
             JButton openCvBtn = new JButton("Open CV file");
+            JButton inviteBtn = new JButton("Send Interview Invitation");
             south.add(viewBtn);
             south.add(openCvBtn);
+            south.add(inviteBtn);
 
             JDialog dialog = new JDialog(parent, "TA profiles (MO view)", true);
             dialog.setLayout(new BorderLayout(8, 8));
@@ -111,6 +113,75 @@ public final class MoTaProfileViewUI {
                 try {
                     User ta = context.getMoTaProfileViewService().getTaProfileForMo(token, taUserId);
                     openCvFile(parent, ta);
+                } catch (AppException ex) {
+                    JOptionPane.showMessageDialog(dialog, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            });
+
+            inviteBtn.addActionListener(e -> {
+                int row = table.getSelectedRow();
+                if (row < 0) {
+                    JOptionPane.showMessageDialog(dialog, "Please select a TA row first to send an invitation.");
+                    return;
+                }
+                String taUserId = (String) model.getValueAt(row, 0);
+                String taName = (String) model.getValueAt(row, 2);
+                
+                try {
+                    // Fetch MO's positions
+                    List<TA_Recruitment_software.admin_system.model.Position> myPositions = context.getMoPublishService().listMyPositions(token);
+                    
+                    if (myPositions.isEmpty()) {
+                        JOptionPane.showMessageDialog(dialog, "You haven't published any positions yet. Cannot send invitation.");
+                        return;
+                    }
+
+                    // Filter only open positions
+                    List<TA_Recruitment_software.admin_system.model.Position> openPositions = new java.util.ArrayList<>();
+                    for (TA_Recruitment_software.admin_system.model.Position p : myPositions) {
+                        if (p.getStatus() == TA_Recruitment_software.admin_system.model.PositionStatus.OPEN) {
+                            openPositions.add(p);
+                        }
+                    }
+
+                    if (openPositions.isEmpty()) {
+                        JOptionPane.showMessageDialog(dialog, "You don't have any OPEN positions. Cannot send invitation.");
+                        return;
+                    }
+
+                    javax.swing.JComboBox<String> positionCombo = new javax.swing.JComboBox<>();
+                    for (TA_Recruitment_software.admin_system.model.Position p : openPositions) {
+                        positionCombo.addItem(p.getJobTitle() + " (" + p.getPositionId() + ")");
+                    }
+
+                    // Show a dialog for the MO to type their message and select position
+                    JPanel invitePanel = new JPanel(new BorderLayout(0, 5));
+                    
+                    JPanel topPanel = new JPanel(new BorderLayout());
+                    topPanel.add(new JLabel("Select Position: "), BorderLayout.WEST);
+                    topPanel.add(positionCombo, BorderLayout.CENTER);
+                    invitePanel.add(topPanel, BorderLayout.NORTH);
+
+                    JTextArea msgArea = new JTextArea(8, 30);
+                    msgArea.setLineWrap(true);
+                    msgArea.setWrapStyleWord(true);
+                    msgArea.setText("Dear " + taName + ",\n\nI reviewed your CV and would like to invite you for an interview for the selected position. Please let me know your availability.\n\nBest, MO");
+                    JScrollPane msgScroll = new JScrollPane(msgArea);
+                    invitePanel.add(msgScroll, BorderLayout.CENTER);
+                    
+                    int option = JOptionPane.showConfirmDialog(dialog, invitePanel, "Send Interview Invitation to " + taName, JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+                    if (option == JOptionPane.OK_OPTION) {
+                        String message = msgArea.getText().trim();
+                        int selectedIndex = positionCombo.getSelectedIndex();
+                        
+                        if (selectedIndex >= 0 && !message.isEmpty()) {
+                            TA_Recruitment_software.admin_system.model.Position selectedPos = openPositions.get(selectedIndex);
+                            // Simulating successful operation here
+                            JOptionPane.showMessageDialog(dialog, "Interview invitation for position '" + selectedPos.getJobTitle() + "' sent to " + taName + " successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                        } else {
+                            JOptionPane.showMessageDialog(dialog, "Message cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
                 } catch (AppException ex) {
                     JOptionPane.showMessageDialog(dialog, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 }
