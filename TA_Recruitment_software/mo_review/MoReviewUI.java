@@ -63,7 +63,7 @@ public class MoReviewUI {
             populateTable(model, applications, service);
 
             JTable table = new JTable(model);
-            table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
             table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
             table.getColumnModel().getColumn(0).setPreferredWidth(120);
             table.getColumnModel().getColumn(1).setPreferredWidth(130);
@@ -84,11 +84,13 @@ public class MoReviewUI {
             JButton viewDetailBtn = new JButton("View Details");
             JButton updateStatusBtn = new JButton("Update Status");
             JButton viewHistoryBtn = new JButton("View Status History");
+            JButton aiCompareBtn = new JButton("✨ AI Compare Candidates");
             JButton closeBtn = new JButton("Close");
 
             btnPanel.add(viewDetailBtn);
             btnPanel.add(updateStatusBtn);
             btnPanel.add(viewHistoryBtn);
+            btnPanel.add(aiCompareBtn);
             btnPanel.add(closeBtn);
             reviewPanel.add(btnPanel, BorderLayout.SOUTH);
 
@@ -137,6 +139,71 @@ public class MoReviewUI {
                 }
                 Application app = applications.get(row);
                 showStatusHistory(parent, app);
+            });
+
+            // --- AI Compare action ---
+            aiCompareBtn.addActionListener(e -> {
+                int[] rows = table.getSelectedRows();
+                if (rows.length < 2) {
+                    JOptionPane.showMessageDialog(parent, "Please select at least two candidates to compare (use Ctrl/Cmd + click).", "Info", JOptionPane.INFORMATION_MESSAGE);
+                    return;
+                }
+                
+                List<Application> selectedApps = new java.util.ArrayList<>();
+                for (int row : rows) {
+                    selectedApps.add(applications.get(row));
+                }
+                
+                // 1. 创建一个加载提示弹窗
+                JDialog loadingDialog = new JDialog(parent, "AI 助手工作正在努力中...", true);
+                JPanel p = new JPanel(new BorderLayout(10, 10));
+                p.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+                p.add(new JLabel("✨ AI 小助理正在深度阅读简历与岗位信息，请稍候..."), BorderLayout.NORTH);
+                JProgressBar progressBar = new JProgressBar();
+                progressBar.setIndeterminate(true); // 让进度条来回滚动
+                p.add(progressBar, BorderLayout.CENTER);
+                loadingDialog.add(p);
+                loadingDialog.pack();
+                loadingDialog.setLocationRelativeTo(parent);
+                loadingDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE); // 防止用户手动关闭打断
+
+                // 2. 利用 SwingWorker 开启后台线程，不卡死界面
+                SwingWorker<String, Void> worker = new SwingWorker<String, Void>() {
+                    @Override
+                    protected String doInBackground() throws Exception {
+                        return service.simulateAIComparison(selectedApps);
+                    }
+
+                    @Override
+                    protected void done() {
+                        loadingDialog.dispose(); // 请求完成，关掉加载动画
+                        try {
+                            String result = get(); // 获取 doInBackground 的返回值
+                            
+                            JTextArea textArea = new JTextArea(result);
+                            textArea.setEditable(false);
+                            textArea.setFont(new Font("Monospaced", Font.PLAIN, 13));
+                            textArea.setLineWrap(true);
+                            textArea.setWrapStyleWord(true);
+                            textArea.setCaretPosition(0);
+
+                            JScrollPane resultScrollPane = new JScrollPane(textArea);
+                            resultScrollPane.setPreferredSize(new Dimension(650, 500));
+
+                            JOptionPane.showMessageDialog(parent, resultScrollPane, "✨ AI Candidate Comparison Report", JOptionPane.PLAIN_MESSAGE);
+                        } catch (Exception ex) {
+                            String errorMsg = ex.getMessage();
+                            if (ex.getCause() != null) {
+                                errorMsg = ex.getCause().getMessage();
+                            }
+                            JOptionPane.showMessageDialog(parent, "Error during AI comparison: " + errorMsg, "Error", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                };
+                
+                // 3. 执行后台任务，并展示加载弹窗（由于弹窗是模态的，它会阻塞在这里等待）
+                worker.execute();
+                loadingDialog.setVisible(true);
             });
 
             closeBtn.setText("Back");

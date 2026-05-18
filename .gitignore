@@ -38,3 +38,5 @@ data/
 *.iml
 *.iws
 *.ipr
+# Ignore local AI credentials
+TA_Recruitment_software/data/ai-config.properties
