@@ -128,6 +128,9 @@ public class AuthUI {
                 JOptionPane.showMessageDialog(parent,
                     "Login successful!\nWelcome, " + u.getFullName() + " (" + u.getRole().name() + ")",
                     "Success", JOptionPane.INFORMATION_MESSAGE);
+                if (u.getRole() == TA_Recruitment_software.admin_system.model.Role.TA) {
+                    TaPortalUI.onTaLogin(parent, context, token);
+                }
             } catch (AppException ex) {
                 statusLabel.setText(ex.getMessage());
             }
@@ -497,6 +500,14 @@ public class AuthUI {
 
         dialog.setContentPane(mainPanel);
         dialog.setVisible(true);
+    }
+
+    /**
+     * Open TA portal (notifications, limits, history, PDF export).
+     * Wire this from Home PERSONAL menu: AuthUI.showTaPortal(parent, context, token)
+     */
+    public static void showTaPortal(JFrame parent, RecruitmentSystemContext context, String token) {
+        TaPortalUI.showTaHub(parent, context, token);
     }
 
     // ========================= Logout =========================
