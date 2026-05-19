@@ -18,6 +18,7 @@ public class ForumPanel extends JPanel {
     private String token;
     private Component previousCenterComponent;
     private TopicRepository topicRepository;
+    private CommentRepository commentRepository;
     private JPanel leftPanel; 
     private JPanel mainAreaWrapper; // Wrapper to switch between list and detail views
     private JPanel contentWrapper; // The original list wrapper
@@ -30,6 +31,7 @@ public class ForumPanel extends JPanel {
         this.token = token;
         this.previousCenterComponent = prev;
         this.topicRepository = new TopicRepository();
+        this.commentRepository = new CommentRepository();
         
         setLayout(new BorderLayout());
         setBackground(new Color(245, 245, 245));
@@ -314,8 +316,18 @@ public class ForumPanel extends JPanel {
         
         detailView.add(topBar, BorderLayout.NORTH);
 
+        // Define unified scrollable container making text wrap height properly
+        class ScrollablePanel extends JPanel implements Scrollable {
+            public ScrollablePanel(LayoutManager l) { super(l); }
+            @Override public Dimension getPreferredScrollableViewportSize() { return getPreferredSize(); }
+            @Override public int getScrollableUnitIncrement(Rectangle r, int o, int d) { return 16; }
+            @Override public int getScrollableBlockIncrement(Rectangle r, int o, int d) { return r.height; }
+            @Override public boolean getScrollableTracksViewportWidth() { return true; }
+            @Override public boolean getScrollableTracksViewportHeight() { return false; }
+        }
+
         // Main content
-        JPanel contentCard = new JPanel(new BorderLayout(15, 20));
+        JPanel contentCard = new ScrollablePanel(new BorderLayout(15, 20));
         contentCard.setBackground(Color.WHITE);
         contentCard.setBorder(new CompoundBorder(
             new LineBorder(new Color(220, 220, 220), 1),
@@ -343,6 +355,11 @@ public class ForumPanel extends JPanel {
         header.add(headerInfo, BorderLayout.CENTER);
         contentCard.add(header, BorderLayout.NORTH);
 
+        // We will stack bodyArea, ActionFooter, and CommentsPanel together without separate scroll bars
+        JPanel centerContainer = new JPanel();
+        centerContainer.setLayout(new BoxLayout(centerContainer, BoxLayout.Y_AXIS));
+        centerContainer.setBackground(Color.WHITE);
+
         // Body
         JTextArea bodyArea = new JTextArea(topic.getContent());
         bodyArea.setFont(new Font("Arial", Font.PLAIN, 15));
@@ -351,7 +368,8 @@ public class ForumPanel extends JPanel {
         bodyArea.setWrapStyleWord(true);
         bodyArea.setEditable(false);
         bodyArea.setBorder(new EmptyBorder(10, 0, 10, 0));
-        contentCard.add(new JScrollPane(bodyArea), BorderLayout.CENTER);
+        
+        centerContainer.add(bodyArea);
 
         // Interaction Footer
         JPanel actionFooter = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
@@ -411,11 +429,12 @@ public class ForumPanel extends JPanel {
             if (result == JOptionPane.OK_OPTION) {
                 String input = textArea.getText();
                 if (input != null && !input.trim().isEmpty()) {
+                    Comment nc = new Comment(topic.getId(), loggedInUser, input);
+                    commentRepository.addComment(nc);
                     topic.incrementComments();
                     topicRepository.updateTopic(topic);
-                    commentBtn.setText("💬 Comment (" + topic.getComments() + ")");
-                    // Here you would optimally add logic to save the explicit comment text in a Comment object/file,
-                    // but for this UI interaction logic we increment the numeric interaction immediately.
+                    mainAreaWrapper.remove(detailView);
+                    showTopicDetail(topic);
                     JOptionPane.showMessageDialog(this, "Comment successfully posted!", "Success", JOptionPane.INFORMATION_MESSAGE);
                 }
             }
@@ -435,9 +454,20 @@ public class ForumPanel extends JPanel {
         actionFooter.add(commentBtn);
         actionFooter.add(favBtn);
 
-        contentCard.add(actionFooter, BorderLayout.SOUTH);
+        centerContainer.add(actionFooter);
 
-        detailView.add(contentCard, BorderLayout.CENTER);
+        JPanel commentsPanel = buildCommentsPanel(topic);
+        centerContainer.add(commentsPanel);
+
+        contentCard.add(centerContainer, BorderLayout.CENTER);
+
+        // Add contentCard to a unifying ScrollPane
+        JScrollPane masterScroll = new JScrollPane(contentCard);
+        masterScroll.setBorder(null);
+        masterScroll.getVerticalScrollBar().setUnitIncrement(16);
+        masterScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+
+        detailView.add(masterScroll, BorderLayout.CENTER);
         
         // Add to main layout and flip
         mainAreaWrapper.add(detailView, "Detail");
@@ -1040,6 +1070,65 @@ public class ForumPanel extends JPanel {
             thxPanel.add(thxLbl);
             pollCardContainer.add(thxPanel);
         }
+    }
+
+    private JPanel buildCommentsPanel(Topic topic) {
+        JPanel commentsContainer = new JPanel();
+        commentsContainer.setLayout(new BoxLayout(commentsContainer, BoxLayout.Y_AXIS));
+        commentsContainer.setBackground(Color.WHITE);
+        commentsContainer.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        JLabel titleLbl = new JLabel("Comments (" + topic.getComments() + ")");
+        titleLbl.setFont(new Font("Arial", Font.BOLD, 14));
+        titleLbl.setForeground(new Color(100, 100, 100));
+        JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 10));
+        titlePanel.setBackground(Color.WHITE);
+        titlePanel.add(titleLbl);
+        commentsContainer.add(titlePanel);
+
+        List<Comment> comments = commentRepository.getCommentsByTopicId(topic.getId());
+        if (comments.isEmpty()) {
+            JLabel noComm = new JLabel("No comments yet. Be the first to comment!");
+            noComm.setFont(new Font("Arial", Font.ITALIC, 13));
+            noComm.setForeground(new Color(170, 170, 170));
+            JPanel temp = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            temp.setBackground(Color.WHITE);
+            temp.add(noComm);
+            commentsContainer.add(temp);
+        } else {
+            for (Comment c : comments) {
+                JPanel item = new JPanel(new BorderLayout(5, 5));
+                item.setBackground(new Color(250, 250, 250));
+                item.setBorder(new CompoundBorder(
+                    new MatteBorder(0, 0, 1, 0, new Color(230,230,230)),
+                    new EmptyBorder(10, 10, 10, 10)
+                ));
+
+                JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+                top.setBackground(new Color(250, 250, 250));
+                JLabel authorLbl = new JLabel(c.getAuthorName());
+                authorLbl.setFont(new Font("Arial", Font.BOLD, 12));
+                authorLbl.setForeground(new Color(51, 51, 51));
+                JLabel dateLbl = new JLabel(c.getDateStr());
+                dateLbl.setFont(new Font("Arial", Font.PLAIN, 11));
+                dateLbl.setForeground(new Color(150, 150, 150));
+                top.add(authorLbl);
+                top.add(dateLbl);
+
+                JTextArea cText = new JTextArea(c.getContent());
+                cText.setFont(new Font("Arial", Font.PLAIN, 13));
+                cText.setForeground(new Color(80,80,80));
+                cText.setEditable(false);
+                cText.setBackground(new Color(250, 250, 250));
+                cText.setLineWrap(true);
+                cText.setWrapStyleWord(true);
+
+                item.add(top, BorderLayout.NORTH);
+                item.add(cText, BorderLayout.CENTER);
+                commentsContainer.add(item);
+            }
+        }
+        return commentsContainer;
     }
 
     // Custom Component drawing the Avatar initials
