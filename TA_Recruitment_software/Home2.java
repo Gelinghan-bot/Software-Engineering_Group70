@@ -15,6 +15,7 @@ public class Home2 extends JFrame {
 
     private JLabel sessionLabel = new JLabel("");
     private BackgroundPanel bgPanel;
+    private JButton aiDiagnosisHomeButton;
 
     public Home2() {
         this.context = new RecruitmentSystemContext();
@@ -24,9 +25,6 @@ public class Home2 extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
-
-        // Top Navigation Bar
-        refreshHeaderPanel();
 
         // Main Background Panel
         bgPanel = new BackgroundPanel("HomeBackGround.png"); 
@@ -94,10 +92,14 @@ public class Home2 extends JFrame {
         contentPanel.add(titleLabel);
         contentPanel.add(Box.createVerticalStrut(30));
         contentPanel.add(searchPanel);
+        contentPanel.add(Box.createVerticalStrut(16));
+        aiDiagnosisHomeButton = TA_Recruitment_software.ta_jobs.TAJobsUI.createAiDiagnosisHomeButton(this, context, () -> currentToken, () -> currentRole);
+        contentPanel.add(aiDiagnosisHomeButton);
 
         bgPanel.add(contentPanel);
         
         add(bgPanel, BorderLayout.CENTER);
+        refreshHeaderPanel();
     }
 
     private void refreshHeaderPanel() {
@@ -108,6 +110,7 @@ public class Home2 extends JFrame {
         }
         JPanel headerPanel = createHeaderPanel();
         getContentPane().add(headerPanel, BorderLayout.NORTH);
+        TA_Recruitment_software.ta_jobs.TAJobsUI.updateAiDiagnosisHomeButton(aiDiagnosisHomeButton, currentRole, currentToken);
         revalidate();
         repaint();
     }

@@ -4,11 +4,13 @@ import TA_Recruitment_software.RecruitmentSystemContext;
 import TA_Recruitment_software.admin_system.foundation.AppException;
 import TA_Recruitment_software.admin_system.model.Application;
 import TA_Recruitment_software.admin_system.model.Position;
+import TA_Recruitment_software.admin_system.model.Role;
 import java.awt.*;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
@@ -201,5 +203,43 @@ public class TAJobsUI {
         } catch (AppException ex) {
             JOptionPane.showMessageDialog(parent, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    /**
+     * TA homepage "AI Diagnosis" control (visibility updated after login/logout).
+     */
+    public static JButton createAiDiagnosisHomeButton(
+        JFrame parent,
+        RecruitmentSystemContext context,
+        Supplier<String> tokenSupplier,
+        Supplier<Role> roleSupplier
+    ) {
+        JButton btn = new JButton("AI Diagnosis");
+        btn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        btn.setBackground(new Color(39, 174, 96));
+        btn.setForeground(Color.WHITE);
+        btn.setFocusPainted(false);
+        btn.setBorderPainted(false);
+        btn.setFont(new Font("Arial", Font.BOLD, 14));
+        btn.setMaximumSize(new Dimension(220, 45));
+        btn.setPreferredSize(new Dimension(220, 45));
+        btn.setVisible(false);
+        btn.addActionListener(e -> {
+            Role r = roleSupplier.get();
+            String t = tokenSupplier.get();
+            if (r != Role.TA || t == null) {
+                JOptionPane.showMessageDialog(parent, "Please login as TA to use AI Diagnosis.", "AI Diagnosis", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            AiDiagnosisUI.show(parent, context, t);
+        });
+        return btn;
+    }
+
+    public static void updateAiDiagnosisHomeButton(JButton btn, Role role, String token) {
+        if (btn == null) {
+            return;
+        }
+        btn.setVisible(role == Role.TA && token != null);
     }
 }

@@ -8,6 +8,7 @@ import TA_Recruitment_software.auth.AuthService;
 import TA_Recruitment_software.auth.SessionManager;
 import TA_Recruitment_software.mo_publish.MOPublishService;
 import TA_Recruitment_software.mo_review.MOReviewService;
+import TA_Recruitment_software.ta_jobs.AiDiagnosisService;
 import TA_Recruitment_software.profile.MoTaProfileViewService;
 import TA_Recruitment_software.profile.ProfileService;
 import TA_Recruitment_software.ta_jobs.TAJobService;
@@ -25,6 +26,7 @@ public class RecruitmentSystemContext {
     private final MOPublishService moPublishService;
     private final MOReviewService moReviewService;
     private final AdminService adminService;
+    private final AiDiagnosisService aiDiagnosisService;
 
     public RecruitmentSystemContext() {
         this.userRepository = new UserRepository();
@@ -40,6 +42,7 @@ public class RecruitmentSystemContext {
         this.moReviewService = new MOReviewService(positionRepository, applicationRepository, userRepository, sessionManager);
         this.adminService = new AdminService(userRepository, positionRepository, applicationRepository, sessionManager);
         this.adminService.seedDefaultAdmin();
+        this.aiDiagnosisService = new AiDiagnosisService(profileService, taJobService);
     }
 
     public AuthService getAuthService() {
@@ -72,5 +75,9 @@ public class RecruitmentSystemContext {
 
     public SessionManager getSessionManager() {
         return sessionManager;
+    }
+
+    public AiDiagnosisService getAiDiagnosisService() {
+        return aiDiagnosisService;
     }
 }
