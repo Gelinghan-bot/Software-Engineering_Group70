@@ -3,6 +3,7 @@ package TA_Recruitment_software.forum;
 import TA_Recruitment_software.admin_system.foundation.FileStorageUtil;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,8 +28,8 @@ public class TopicRepository {
     public List<Topic> getAllTopics() {
         List<Topic> topics = new ArrayList<>();
         try {
-            // 默认情况下这里在Win中文系统上容易和FileWriter（GBK）产生编码冲突，所以显式先使用系统默认编码（GBK）读取
-            List<String> lines = java.nio.file.Files.readAllLines(new File(DATA_FILE).toPath(), java.nio.charset.Charset.defaultCharset());
+            // All writes use UTF-8; prefer UTF-8 to avoid issues on macOS and other UTF-8 systems
+            List<String> lines = java.nio.file.Files.readAllLines(new File(DATA_FILE).toPath(), StandardCharsets.UTF_8);
             for (String line : lines) {
                 Topic t = Topic.fromCsvRow(line);
                 if (t != null) {
@@ -37,8 +38,8 @@ public class TopicRepository {
             }
         } catch (Exception e) {
             try {
-                // 如果GBK失败，则退回到纯 UTF-8 尝试读取
-                List<String> lines = java.nio.file.Files.readAllLines(new File(DATA_FILE).toPath(), java.nio.charset.StandardCharsets.UTF_8);
+                // Fall back to system default charset (e.g. GBK on Chinese Windows) for legacy files
+                List<String> lines = java.nio.file.Files.readAllLines(new File(DATA_FILE).toPath(), java.nio.charset.Charset.defaultCharset());
                 for (String line : lines) {
                     Topic t = Topic.fromCsvRow(line);
                     if (t != null) {
@@ -53,7 +54,7 @@ public class TopicRepository {
     }
 
     public void addTopic(Topic topic) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(DATA_FILE, true))) {
+        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(DATA_FILE, true), StandardCharsets.UTF_8))) {
             writer.write(topic.toCsvRow());
             writer.newLine();
         } catch (IOException e) {
@@ -63,7 +64,7 @@ public class TopicRepository {
 
     public void updateTopic(Topic updatedTopic) {
         List<Topic> topics = getAllTopics();
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(DATA_FILE))) { // Overwrite to update
+        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(DATA_FILE, false), StandardCharsets.UTF_8))) { // Overwrite to update
             for (Topic t : topics) {
                 if (t.getId().equals(updatedTopic.getId())) {
                     writer.write(updatedTopic.toCsvRow());

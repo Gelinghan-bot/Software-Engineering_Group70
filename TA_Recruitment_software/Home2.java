@@ -69,6 +69,7 @@ public class Home2 extends JFrame {
         JButton searchBtn = new JButton("SEARCH");
         searchBtn.setBackground(new Color(39, 174, 96));
         searchBtn.setForeground(Color.WHITE);
+        searchBtn.setOpaque(true);
         searchBtn.setFocusPainted(false);
         searchBtn.setBorderPainted(false);
         searchBtn.setFont(new Font("Arial", Font.BOLD, 14));
@@ -242,6 +243,7 @@ public class Home2 extends JFrame {
         JButton loginBtn = new JButton("Login");
         loginBtn.setBackground(new Color(39, 174, 96));
         loginBtn.setForeground(Color.WHITE);
+        loginBtn.setOpaque(true);
         loginBtn.setFocusPainted(false);
         loginBtn.setBorderPainted(false);
         loginBtn.setPreferredSize(new Dimension(95, 40));
@@ -290,10 +292,21 @@ public class Home2 extends JFrame {
         private Image backgroundImage;
 
         public BackgroundPanel(String imagePath) {
-            try {
-                backgroundImage = ImageIO.read(new File(imagePath));
-            } catch (IOException e) {
-                // If image not found, we use a fallback gradient or solid color
+            // Try the given path first (works when CWD is TA_Recruitment_software, e.g. Windows RunApp.bat)
+            // then try prefixed with the subdirectory (works when CWD is project root, e.g. Mac/PyCharm)
+            String[] candidates = {imagePath, "TA_Recruitment_software/" + imagePath};
+            for (String path : candidates) {
+                File f = new File(path);
+                if (f.exists()) {
+                    try {
+                        backgroundImage = ImageIO.read(f);
+                        break;
+                    } catch (IOException e) {
+                        // try next candidate
+                    }
+                }
+            }
+            if (backgroundImage == null) {
                 setBackground(new Color(113, 203, 202));
             }
         }
@@ -301,12 +314,14 @@ public class Home2 extends JFrame {
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
+            Graphics2D g2d = (Graphics2D) g;
+            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             if (backgroundImage != null) {
-                g.drawImage(backgroundImage, 0, 0, this.getWidth(), this.getHeight(), this);
+                g2d.drawImage(backgroundImage, 0, 0, this.getWidth(), this.getHeight(), this);
             } else {
-                // Draw a fallback semi-transparent color if image is not loaded
-                Graphics2D g2d = (Graphics2D) g;
-                g2d.setColor(new Color(113, 203, 202)); 
+                g2d.setColor(new Color(113, 203, 202));
                 g2d.fillRect(0, 0, getWidth(), getHeight());
             }
         }
@@ -555,6 +570,13 @@ public class Home2 extends JFrame {
     }
 
     public static void main(String[] args) {
+        if (System.getProperty("os.name", "").toLowerCase().contains("mac")) {
+            System.setProperty("apple.laf.useScreenMenuBar", "true");
+            System.setProperty("apple.awt.application.name", "JobHere");
+            System.setProperty("apple.awt.application.appearance", "system");
+            System.setProperty("awt.useSystemAAFontSettings", "on");
+            System.setProperty("swing.aatext", "true");
+        }
         SwingUtilities.invokeLater(() -> {
             new Home2().setVisible(true);
         });

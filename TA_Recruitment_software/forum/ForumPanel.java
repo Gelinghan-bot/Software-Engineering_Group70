@@ -13,6 +13,10 @@ import TA_Recruitment_software.admin_system.model.User;
 import TA_Recruitment_software.admin_system.repository.UserRepository;
 
 public class ForumPanel extends JPanel {
+    private static final String EMOJI_FONT_NAME =
+        System.getProperty("os.name", "").toLowerCase().contains("mac")
+            ? "Apple Color Emoji" : "Segoe UI Emoji";
+
     private JFrame parent;
     private RecruitmentSystemContext context;
     private String token;
@@ -122,6 +126,7 @@ public class ForumPanel extends JPanel {
         newTopicBtn.setPreferredSize(new Dimension(140, 36));
         newTopicBtn.setFocusPainted(false);
         newTopicBtn.setBorderPainted(false);
+        newTopicBtn.setOpaque(true);
         newTopicBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         newTopicBtn.addActionListener(e -> {
             if (token == null) {
@@ -170,6 +175,7 @@ public class ForumPanel extends JPanel {
         findBtn.setPreferredSize(new Dimension(90, 36));
         findBtn.setFocusPainted(false);
         findBtn.setBorderPainted(false);
+        findBtn.setOpaque(true);
         findBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         findBtn.addActionListener(e -> {
             String q = searchBox.getText().trim();
@@ -303,6 +309,7 @@ public class ForumPanel extends JPanel {
         backBtn.setBackground(new Color(230, 230, 230));
         backBtn.setForeground(new Color(60, 60, 60));
         backBtn.setFocusPainted(false);
+        backBtn.setOpaque(true);
         backBtn.setBorder(new EmptyBorder(8, 15, 8, 15));
         backBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         backBtn.addActionListener(e -> {
@@ -385,7 +392,7 @@ public class ForumPanel extends JPanel {
         JButton commentBtn = new JButton("💬 Comment (" + topic.getComments() + ")");
         JButton favBtn = new JButton(topic.getFavoritedByUsers().contains(loggedInUser) && isLoggedIn() ? "🌟 Favorited (" + topic.getFavorites() + ")" : "⭐ Favorite (" + topic.getFavorites() + ")");
 
-        Font actionFont = new Font("Segoe UI Emoji", Font.PLAIN, 14);
+        Font actionFont = new Font(EMOJI_FONT_NAME, Font.PLAIN, 14);
         likeBtn.setFont(actionFont);
         commentBtn.setFont(actionFont);
         favBtn.setFont(actionFont);
@@ -396,6 +403,7 @@ public class ForumPanel extends JPanel {
         
         for (JButton b : new JButton[]{likeBtn, commentBtn, favBtn}) {
             b.setFocusPainted(false);
+            b.setOpaque(true);
             b.setCursor(new Cursor(Cursor.HAND_CURSOR));
             b.setBorder(new CompoundBorder(new LineBorder(new Color(220, 220, 220)), new EmptyBorder(8, 15, 8, 15)));
         }
@@ -504,6 +512,7 @@ public class ForumPanel extends JPanel {
         JButton postBtn = new JButton("Post Topic");
         postBtn.setBackground(new Color(39, 174, 96));
         postBtn.setForeground(Color.WHITE);
+        postBtn.setOpaque(true);
         postBtn.setFocusPainted(false);
         postBtn.addActionListener(e -> {
             String title = titleField.getText().trim();
@@ -607,17 +616,17 @@ public class ForumPanel extends JPanel {
         String loggedInUser = getLoggedInUsername();
 
         JLabel likesLbl = new JLabel(topic.getLikedByUsers().contains(loggedInUser) && isLoggedIn() ? "❤️ " + topic.getLikes() : "👍 " + topic.getLikes());
-        likesLbl.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 13));
+        likesLbl.setFont(new Font(EMOJI_FONT_NAME, Font.PLAIN, 13));
         likesLbl.setForeground(new Color(39, 174, 96));
         likesLbl.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         JLabel commentsLbl = new JLabel("💬 " + topic.getComments());
-        commentsLbl.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 13));
+        commentsLbl.setFont(new Font(EMOJI_FONT_NAME, Font.PLAIN, 13));
         commentsLbl.setForeground(new Color(150, 150, 150));
         commentsLbl.setCursor(new Cursor(Cursor.HAND_CURSOR));
         
         JLabel favLbl = new JLabel(topic.getFavoritedByUsers().contains(loggedInUser) && isLoggedIn() ? "🌟 " + topic.getFavorites() : "⭐ " + topic.getFavorites());
-        favLbl.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 13));
+        favLbl.setFont(new Font(EMOJI_FONT_NAME, Font.PLAIN, 13));
         favLbl.setForeground(new Color(243, 156, 18));
         favLbl.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
@@ -698,6 +707,7 @@ public class ForumPanel extends JPanel {
             if (pageNum == currentPage) {
                 btn.setBackground(new Color(39, 174, 96));
                 btn.setForeground(Color.WHITE);
+                btn.setOpaque(true);
             }
             btn.addActionListener(e -> { 
                 currentPage = pageNum; 
@@ -789,7 +799,7 @@ public class ForumPanel extends JPanel {
             JMenuItem favItem = new JMenuItem("⭐ My Favorites");
             JMenuItem commentsItem = new JMenuItem("💬 My Comments");
             
-            Font itemFont = new Font("Segoe UI Emoji", Font.PLAIN, 13);
+            Font itemFont = new Font(EMOJI_FONT_NAME, Font.PLAIN, 13);
             msgItem.setFont(itemFont); msgItem.setBackground(Color.WHITE);
             allTopicsItem.setFont(itemFont); allTopicsItem.setBackground(Color.WHITE);
             postItem.setFont(itemFont); postItem.setBackground(Color.WHITE);
@@ -914,7 +924,7 @@ public class ForumPanel extends JPanel {
         
         JLabel badge = new JLabel(iconStr, SwingConstants.CENTER);
         badge.setForeground(new Color(100, 100, 100));
-        badge.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 14));
+        badge.setFont(new Font(EMOJI_FONT_NAME, Font.PLAIN, 14));
         badge.setPreferredSize(new Dimension(30, 20));
         
         panel.add(title, BorderLayout.CENTER);
@@ -1033,6 +1043,7 @@ public class ForumPanel extends JPanel {
             voteBtn.setFont(new Font("Arial", Font.BOLD, 12));
             voteBtn.setFocusPainted(false);
             voteBtn.setBorderPainted(false);
+            voteBtn.setOpaque(true);
             
             voteBtn.addActionListener(e -> {
                 if (!isLoggedIn()) {
@@ -1148,7 +1159,9 @@ public class ForumPanel extends JPanel {
             super.paintComponent(g);
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            
+            g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+            g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+
             // Draw Circle
             g2.setColor(bgColor);
             g2.fillOval(0, 0, 48, 48);
