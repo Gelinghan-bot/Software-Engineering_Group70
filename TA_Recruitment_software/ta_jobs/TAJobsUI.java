@@ -41,8 +41,16 @@ public class TAJobsUI {
                 return;
             }
 
-            Set<String> alreadyApplied = new HashSet<>();
+            TA_Recruitment_software.admin_system.model.Role userRole = null;
             if (token != null) {
+                try {
+                    userRole = context.getSessionManager().requireSession(token).getRole();
+                } catch (AppException ignored) {}
+            }
+            final boolean isTA = (userRole == TA_Recruitment_software.admin_system.model.Role.TA);
+
+            Set<String> alreadyApplied = new HashSet<>();
+            if (isTA && token != null) {
                 try {
                     for (Application a : context.getTaJobService().listMyApplications(token)) {
                         alreadyApplied.add(a.getPositionId());
@@ -52,14 +60,26 @@ public class TAJobsUI {
                 }
             }
 
-            DefaultTableModel model = new DefaultTableModel(
-                new Object[]{"Position ID", "Job Title", "Grade", "Major", "Job Type", "Semester", "Deadline", "Status", "Already applied"}, 0) {
+            java.util.Map<String, Long> hiredCountMap = new TA_Recruitment_software.admin_system.repository.ApplicationRepository().findAll().stream()
+                .filter(a -> a.getStatus() == TA_Recruitment_software.admin_system.model.ApplicationStatus.HIRED)
+                .collect(java.util.stream.Collectors.groupingBy(Application::getPositionId, java.util.stream.Collectors.counting()));
+
+            java.util.List<String> colNames = new java.util.ArrayList<>(java.util.Arrays.asList(
+                "Position ID", "Job Title", "Grade", "Major", "Job Type", "Semester", "Deadline", "Status", "Headcount"
+            ));
+            if (isTA) {
+                colNames.add("Already applied");
+            }
+
+            DefaultTableModel model = new DefaultTableModel(colNames.toArray(), 0) {
                 @Override public boolean isCellEditable(int row, int column) { return false; }
             };
+            
             for (Position p : positions) {
-                String applied = alreadyApplied.contains(p.getPositionId()) ? "Yes" : "No";
+                long hiredCount = hiredCountMap.getOrDefault(p.getPositionId(), 0L);
+                String headcountDisplay = hiredCount + "/" + p.getHeadcount();
                 String semLabel = PositionSemesterStore.labelFor(p.getPositionId(), semesterByPositionId);
-                model.addRow(new Object[]{
+                java.util.List<Object> rowData = new java.util.ArrayList<>(java.util.Arrays.asList(
                     p.getPositionId(),
                     p.getJobTitle(),
                     p.getGrade(),
@@ -68,8 +88,12 @@ public class TAJobsUI {
                     semLabel,
                     p.getDeadline(),
                     p.getStatus(),
-                    applied
-                });
+                    headcountDisplay
+                ));
+                if (isTA) {
+                    rowData.add(alreadyApplied.contains(p.getPositionId()) ? "Yes" : "No");
+                }
+                model.addRow(rowData.toArray());
             }
 
             JTable table = new JTable(model);
@@ -87,13 +111,6 @@ public class TAJobsUI {
             JButton applyBtn = new JButton("Apply for Selected Job");
             JButton backBtn = new JButton("Back");
 
-            TA_Recruitment_software.admin_system.model.Role userRole = null;
-            if (token != null) {
-                try {
-                    userRole = context.getSessionManager().requireSession(token).getRole();
-                } catch (AppException ignored) {}
-            }
-
             applyBtn.addActionListener(e -> {
                 if (token == null) {
                     JOptionPane.showMessageDialog(parent, "Please login as TA first.");
@@ -102,7 +119,7 @@ public class TAJobsUI {
                 int row = table.getSelectedRow();
                 if (row >= 0) {
                     String posId = (String) model.getValueAt(row, 0);
-                    if ("Yes".equals(model.getValueAt(row, 8))) {
+                    if (alreadyApplied.contains(posId)) {
                         JOptionPane.showMessageDialog(
                             parent,
                             "You have already applied for this position.",
@@ -113,7 +130,10 @@ public class TAJobsUI {
                     }
                     try {
                         context.getTaJobService().applyForJob(token, posId);
-                        model.setValueAt("Yes", row, 8);
+                        alreadyApplied.add(posId);
+                        if (isTA) {
+                            model.setValueAt("Yes", row, colNames.indexOf("Already applied"));
+                        }
                         JOptionPane.showMessageDialog(parent, "Applied successfully!");
                     } catch (AppException ex) {
                         JOptionPane.showMessageDialog(parent, ex.getMessage(), "Apply failed", JOptionPane.ERROR_MESSAGE);
@@ -121,7 +141,7 @@ public class TAJobsUI {
                 }
             });
 
-            if (userRole == null || userRole == TA_Recruitment_software.admin_system.model.Role.TA) {
+            if (userRole == null || isTA) {
                 btnPanel.add(applyBtn);
             }
             btnPanel.add(backBtn);

@@ -1,33 +1,33 @@
-positionId,jobTitle,jobType,responsibleMO,jobDescription,requirements,interviewLocation,deadline,publishedByUserId,status,grade,major
-POS_1775833355110_2,213,Full-Time,123,12312,213123,3123,2099-11-23,MO_1775833260502_1,OPEN,Year1,IOT
-POS_1775895765244_1,IOT Assistant,assistant,LGL,sssssssssssssss,aaaaaaaaaaaaaaaaaaa,TB3,2026-08-15,MO_1775665335271_1,CLOSED,Year2,IOT
-POS_1775896933901_2,12312,31231231,LGL,23123123,123123123123,123123123,2099-11-11,MO_1775665335271_1,OPEN,Year3,IOT
-POS_1775902164118_1,TEST3,grading,LGL,nsbgfd,sDSSS,TB3,2026-11-10,MO_1775665335271_1,OPEN,Year3,IOT
-POS_2026041100000_01,Intro to IOT TA,grading,LGL,Grade weekly assignments,Familiar with basic IOT concepts,Room 101,2026-09-01,MO_1775665335271_1,OPEN,Year1,IOT
-POS_2026041100000_02,Circuit Lab Assistant,Daily attendance,LGL,Check attendance for Lab sessions,Responsible and punctual,Lab 2,2026-09-05,MO_1775665335271_1,OPEN,Year1,EE
-POS_2026041100000_03,Programming Fundamentals TA,Assess,LGL,Assess student mini-projects,Proficient in Python/Java,Room 205,2026-09-10,MO_1775665335271_1,OPEN,Year1,IST
-POS_2026041100000_04,Telecom Basics Invigilator,invigilation,LGL,Invigilate mid-term exams,Punctual,Room 303,2026-10-15,MO_1775665335271_1,OPEN,Year1,TEM
-POS_2026041100000_05,Advanced IOT Systems TA,and other tasks,LGL,Help with lab setup and Q&A,Good hands-on skills,TB3,2026-09-01,MO_1775665335271_1,OPEN,Year2,IOT
-POS_2026041100000_06,Signals and Systems Grader,grading,LGL,Grade homeworks and quizzes,Strong math background,Room 102,2026-09-01,MO_1775665335271_1,OPEN,Year2,EE
-POS_2026041100000_07,Data Structures TA,Assess,LGL,Assess coding logic and style,Excellent C++ skills,Online,2026-09-15,MO_1775665335271_1,OPEN,Year2,IST
-POS_2026041100000_08,Network Protocols Assistant,Daily attendance,LGL,Manage classroom attendance,Good communication,Room 404,2026-09-20,MO_1775665335271_1,OPEN,Year2,TEM
-POS_2026041100000_09,IOT Project Mentor,Assess,LGL,Mentor junior students on projects,Experience with Arduino/Raspberry Pi,Lab 5,2026-09-01,MO_1775665335271_1,OPEN,Year3,IOT
-POS_2026041100000_10,Electromagnetics Grader,grading,LGL,Grade complex assignments,Solid understanding of EM fields,Room 105,2026-09-10,MO_1775665335271_1,OPEN,Year3,EE
-POS_2026041100000_11,Algorithms Invigilator,invigilation,LGL,Invigilate final exams,Strict and fair,Exam Hall A,2026-12-01,MO_1775665335271_1,OPEN,Year3,IST
-POS_2026041100000_12,Wireless Comms TA,Daily attendance,LGL,Record attendance and participation,Reliable,Room 210,2026-09-05,MO_1775665335271_1,OPEN,Year3,TEM
-POS_2026041100000_13,IOT Security Grader,grading,LGL,Grade security lab reports,Knowledge of network security,TB3,2026-10-01,MO_1775665335271_1,OPEN,Year4,IOT
-POS_2026041100000_14,Power Systems Assistant,and other tasks,LGL,Help prepare lab materials,Experience with high voltage equipment,Power Lab,2026-09-15,MO_1775665335271_1,OPEN,Year4,EE
-POS_2026041100000_15,Machine Learning TA,Assess,LGL,Review ML models and code,Proficient in PyTorch/TensorFlow,Room 308,2026-09-20,MO_1775665335271_1,OPEN,Year4,IST
-POS_2026041100000_16,Optical Networks Invigilator,invigilation,LGL,Invigilate term exams,Punctual,Exam Hall B,2026-11-15,MO_1775665335271_1,OPEN,Year4,TEM
-POS_2026041100000_17,General IOT Helpdesk,and other tasks,LGL,Answer general questions for IOT courses,Patient and knowledgeable,Library,2026-10-10,MO_1775665335271_1,OPEN,Year1,IOT
-POS_2026041100000_18,EE Freshman Mentor,Daily attendance,LGL,Track attendance for EE seminars,Friendly attitude,Room 110,2026-09-05,MO_1775665335271_1,OPEN,Year1,EE
-POS_2026041100000_19,IST Java Grader,grading,LGL,Grade Java intro assignments,Familiar with Java syntax,Online,2026-09-25,MO_1775665335271_1,OPEN,Year2,IST
-POS_2026041100000_20,TEM Lab Assistant,Assess,LGL,Assess basic telecom setups,Experience with oscilloscopes,Lab 3,2026-10-05,MO_1775665335271_1,OPEN,Year2,TEM
-POS_2026041100000_21,Embedded Systems TA,invigilation,LGL,Invigilate embedded systems exam,Strict,Room 401,2026-11-20,MO_1775665335271_1,OPEN,Year3,IOT
-POS_2026041100000_22,Analog Circuits TA,grading,LGL,Grade analog circuit designs,Detail-oriented,Room 102,2026-09-30,MO_1775665335271_1,OPEN,Year3,EE
-POS_2026041100000_23,Database Systems TA,and other tasks,LGL,Assist with SQL queries,Familiar with MySQL,Room 205,2026-10-10,MO_1775665335271_1,OPEN,Year4,IST
-POS_2026041100000_24,Satellite Comms Grader,grading,LGL,Grade theoretical assignments,Good math skills,Room 312,2026-10-15,MO_1775665335271_1,OPEN,Year4,TEM
-POS_IST_001,机器学习基础,Part-Time,Wang Wei,协助主讲老师批改作业解答学生疑问；每周需坐班辅导2次。,优先IST专业且成绩90分以上；熟练掌握Python和PyTorch；英语四六级成绩优异者优先。,宏福校区教学楼201,2026-06-30,MO_20260518_IST_1,OPEN,Year3,IST
-POS_IST_002,面向对象编程(Java),Part-Time,Wang Wei,批改Java编程作业引导学生完成大作业设计；收集学生平时的代码疑问并汇总解答。,计算机类相关专业；Java成绩优异了解设计模式；能够熟练使用GitHub；有耐心。,宏福校区实验楼302,2026-06-30,MO_20260518_IST_1,OPEN,Year2,IST
-POS_EE_001,电路分析基础,Part-Time,Liu Yang,负责配合主讲教师批改电路分析理论题作业；指导实验课帮助学生排除电路板实验故障。,EE专业且核心专业课全优；熟练使用示波器实验仪器能熟练操作Multisim；动手能力强。,宏福校区实验楼105,2026-06-30,MO_20260518_EE_1,OPEN,Year2,EE
-POS_IOT_001,嵌入式系统设计,Full-Time,Zhang San,协助老师完成嵌入式系统的实验环境搭建；批改C语言和STM32代码；为学生答疑。,IOT专业有嵌入式底层开发经验；精通C语言；具备较强排错与debug能力。,宏福校区教三405,2026-06-30,MO_20260518_IOT_1,OPEN,Year3,IOT
+positionId,jobTitle,jobType,responsibleMO,jobDescription,requirements,interviewLocation,deadline,publishedByUserId,status,grade,major,headcount
+POS_1775833355110_2,213,Full-Time,123,12312,213123,3123,2099-11-23,MO_1775833260502_1,OPEN,Year1,IOT,2
+POS_1775895765244_1,IOT Assistant,assistant,LGL,sssssssssssssss,aaaaaaaaaaaaaaaaaaa,TB3,2026-08-15,MO_1775665335271_1,CLOSED,Year2,IOT,2
+POS_1775896933901_2,12312,31231231,LGL,23123123,123123123123,123123123,2099-11-11,MO_1775665335271_1,OPEN,Year3,IOT,2
+POS_1775902164118_1,TEST3,grading,LGL,nsbgfd,sDSSS,TB3,2026-11-10,MO_1775665335271_1,OPEN,Year3,IOT,3
+POS_2026041100000_01,Intro to IOT TA,grading,LGL,Grade weekly assignments,Familiar with basic IOT concepts,Room 101,2026-09-01,MO_1775665335271_1,OPEN,Year1,IOT,2
+POS_2026041100000_02,Circuit Lab Assistant,Daily attendance,LGL,Check attendance for Lab sessions,Responsible and punctual,Lab 2,2026-09-05,MO_1775665335271_1,OPEN,Year1,EE,2
+POS_2026041100000_03,Programming Fundamentals TA,Assess,LGL,Assess student mini-projects,Proficient in Python/Java,Room 205,2026-09-10,MO_1775665335271_1,OPEN,Year1,IST,2
+POS_2026041100000_04,Telecom Basics Invigilator,invigilation,LGL,Invigilate mid-term exams,Punctual,Room 303,2026-10-15,MO_1775665335271_1,OPEN,Year1,TEM,3
+POS_2026041100000_05,Advanced IOT Systems TA,and other tasks,LGL,Help with lab setup and Q&A,Good hands-on skills,TB3,2026-09-01,MO_1775665335271_1,OPEN,Year2,IOT,2
+POS_2026041100000_06,Signals and Systems Grader,grading,LGL,Grade homeworks and quizzes,Strong math background,Room 102,2026-09-01,MO_1775665335271_1,OPEN,Year2,EE,2
+POS_2026041100000_07,Data Structures TA,Assess,LGL,Assess coding logic and style,Excellent C++ skills,Online,2026-09-15,MO_1775665335271_1,OPEN,Year2,IST,2
+POS_2026041100000_08,Network Protocols Assistant,Daily attendance,LGL,Manage classroom attendance,Good communication,Room 404,2026-09-20,MO_1775665335271_1,OPEN,Year2,TEM,3
+POS_2026041100000_09,IOT Project Mentor,Assess,LGL,Mentor junior students on projects,Experience with Arduino/Raspberry Pi,Lab 5,2026-09-01,MO_1775665335271_1,OPEN,Year3,IOT,2
+POS_2026041100000_10,Electromagnetics Grader,grading,LGL,Grade complex assignments,Solid understanding of EM fields,Room 105,2026-09-10,MO_1775665335271_1,OPEN,Year3,EE,2
+POS_2026041100000_11,Algorithms Invigilator,invigilation,LGL,Invigilate final exams,Strict and fair,Exam Hall A,2026-12-01,MO_1775665335271_1,OPEN,Year3,IST,2
+POS_2026041100000_12,Wireless Comms TA,Daily attendance,LGL,Record attendance and participation,Reliable,Room 210,2026-09-05,MO_1775665335271_1,OPEN,Year3,TEM,3
+POS_2026041100000_13,IOT Security Grader,grading,LGL,Grade security lab reports,Knowledge of network security,TB3,2026-10-01,MO_1775665335271_1,OPEN,Year4,IOT,2
+POS_2026041100000_14,Power Systems Assistant,and other tasks,LGL,Help prepare lab materials,Experience with high voltage equipment,Power Lab,2026-09-15,MO_1775665335271_1,OPEN,Year4,EE,2
+POS_2026041100000_15,Machine Learning TA,Assess,LGL,Review ML models and code,Proficient in PyTorch/TensorFlow,Room 308,2026-09-20,MO_1775665335271_1,OPEN,Year4,IST,4
+POS_2026041100000_16,Optical Networks Invigilator,invigilation,LGL,Invigilate term exams,Punctual,Exam Hall B,2026-11-15,MO_1775665335271_1,OPEN,Year4,TEM,2,2
+POS_2026041100000_17,General IOT Helpdesk,and other tasks,LGL,Answer general questions for IOT courses,Patient and knowledgeable,Library,2026-10-10,MO_1775665335271_1,OPEN,Year1,IOT,2
+POS_2026041100000_18,EE Freshman Mentor,Daily attendance,LGL,Track attendance for EE seminars,Friendly attitude,Room 110,2026-09-05,MO_1775665335271_1,OPEN,Year1,EE,3
+POS_2026041100000_19,IST Java Grader,grading,LGL,Grade Java intro assignments,Familiar with Java syntax,Online,2026-09-25,MO_1775665335271_1,OPEN,Year2,IST,2
+POS_2026041100000_20,TEM Lab Assistant,Assess,LGL,Assess basic telecom setups,Experience with oscilloscopes,Lab 3,2026-10-05,MO_1775665335271_1,OPEN,Year2,TEM,2
+POS_2026041100000_21,Embedded Systems TA,invigilation,LGL,Invigilate embedded systems exam,Strict,Room 401,2026-11-20,MO_1775665335271_1,OPEN,Year3,IOT,2
+POS_2026041100000_22,Analog Circuits TA,grading,LGL,Grade analog circuit designs,Detail-oriented,Room 102,2026-09-30,MO_1775665335271_1,OPEN,Year3,EE,2
+POS_2026041100000_23,Database Systems TA,and other tasks,LGL,Assist with SQL queries,Familiar with MySQL,Room 205,2026-10-10,MO_1775665335271_1,OPEN,Year4,IST,3
+POS_2026041100000_24,Satellite Comms Grader,grading,LGL,Grade theoretical assignments,Good math skills,Room 312,2026-10-15,MO_1775665335271_1,OPEN,Year4,TEM,2
+POS_IST_001,机器学习基础,Part-Time,Wang Wei,协助主讲老师批改作业解答学生疑问；每周需坐班辅导2次。,优先IST专业且成绩90分以上；熟练掌握Python和PyTorch；英语四六级成绩优异者优先。,宏福校区教学楼201,2026-06-30,MO_20260518_IST_1,OPEN,Year3,IST,3,3
+POS_IST_002,面向对象编程(Java),Part-Time,Wang Wei,批改Java编程作业引导学生完成大作业设计；收集学生平时的代码疑问并汇总解答。,计算机类相关专业；Java成绩优异了解设计模式；能够熟练使用GitHub；有耐心。,宏福校区实验楼302,2026-06-30,MO_20260518_IST_1,OPEN,Year2,IST,2,2
+POS_EE_001,电路分析基础,Part-Time,Liu Yang,负责配合主讲教师批改电路分析理论题作业；指导实验课帮助学生排除电路板实验故障。,EE专业且核心专业课全优；熟练使用示波器实验仪器能熟练操作Multisim；动手能力强。,宏福校区实验楼105,2026-06-30,MO_20260518_EE_1,OPEN,Year2,EE,2,2
+POS_IOT_001,嵌入式系统设计,Full-Time,Zhang San,协助老师完成嵌入式系统的实验环境搭建；批改C语言和STM32代码；为学生答疑。,IOT专业有嵌入式底层开发经验；精通C语言；具备较强排错与debug能力。,宏福校区教三405,2026-06-30,MO_20260518_IOT_1,OPEN,Year3,IOT,2,2

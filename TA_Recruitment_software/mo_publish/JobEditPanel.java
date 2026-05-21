@@ -102,6 +102,7 @@ public class JobEditPanel extends JPanel {
         JScrollPane jobReqScroll = createTextAreaScroll(position.getRequirements(), jobReqArea);
         JTextField interviewLocField = createTextField(position.getInterviewLocation());
         JTextField closingDateField = createTextField(position.getDeadline());
+        JTextField headcountField = createTextField(String.valueOf(position.getHeadcount()));
 
         int row = 0;
         addFormField(formCenter, "JOB TITLE", jobTitleField, gbc, row++);
@@ -111,8 +112,7 @@ public class JobEditPanel extends JPanel {
         addTextAreaField(formCenter, "JOB DESCRIPTION", jobDescScroll, gbc, row++);
         addTextAreaField(formCenter, "Job Requirements", jobReqScroll, gbc, row++);
         addFormField(formCenter, "Interview Location", interviewLocField, gbc, row++);
-        addFormField(formCenter, "CLOSING DATE", closingDateField, gbc, row++);
-
+        addFormField(formCenter, "CLOSING DATE", closingDateField, gbc, row++);        addFormField(formCenter, "HEADCOUNT", headcountField, gbc, row++);
         // Submit Button & Cancel Button
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
         buttonPanel.setBackground(Color.WHITE);
@@ -136,6 +136,13 @@ public class JobEditPanel extends JPanel {
                 String safeReq = jobReqArea.getText().trim().replaceAll("[\\r\\n]+", "  ");
                 String interviewLoc = interviewLocField.getText().trim();
                 
+                int headcount = 0;
+                try {
+                    headcount = Integer.parseInt(headcountField.getText().trim());
+                } catch (NumberFormatException nfe) {
+                    throw new AppException("Invalid headcount format. Must be an integer.");
+                }
+
                 context.getMoPublishService().updatePositionDetails(
                     token,
                     position.getPositionId(),
@@ -146,8 +153,14 @@ public class JobEditPanel extends JPanel {
                     safeDesc,
                     safeReq,
                     interviewLoc,
-                    closingDateField.getText().trim()
+                    closingDateField.getText().trim(),
+                    headcount
                 );
+                
+                // Update the bound position object internally so table reflects correctly
+                position.setJobTitle(jobTitleField.getText().trim());
+                position.setDeadline(closingDateField.getText().trim());
+                position.setHeadcount(headcount);
 
                 JOptionPane.showMessageDialog(this, "Job details modified successfully!");
                 if (onSaved != null) {

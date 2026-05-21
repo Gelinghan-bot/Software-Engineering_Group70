@@ -5,6 +5,7 @@ import TA_Recruitment_software.admin_system.foundation.ValidationUtil;
 import TA_Recruitment_software.admin_system.model.Application;
 import TA_Recruitment_software.admin_system.model.ApplicationStatus;
 import TA_Recruitment_software.admin_system.model.Position;
+import TA_Recruitment_software.admin_system.model.PositionStatus;
 import TA_Recruitment_software.admin_system.model.Role;
 import TA_Recruitment_software.admin_system.model.User;
 import TA_Recruitment_software.admin_system.repository.ApplicationRepository;
@@ -170,7 +171,44 @@ public class MOReviewService {
         }
 
         applicationRepository.save(app);
+
+        // Auto-close position and reject remaining TAs if hired headcount reached limit
+        if (newStatus == ApplicationStatus.HIRED && position.getHeadcount() > 0) {
+            checkAndClosePosition(token, position, now);
+        }
+
         return app;
+    }
+
+    private void checkAndClosePosition(String token, Position position, String now) {
+        List<Application> allApps = applicationRepository.findByPosition(position.getPositionId());
+        long hiredCount = allApps.stream().filter(a -> a.getStatus() == ApplicationStatus.HIRED).count();
+
+        if (hiredCount >= position.getHeadcount()) {
+            // Reached capacity. Close position.
+            position.setStatus(PositionStatus.CLOSED);
+            positionRepository.save(position);
+
+            // Reject all remaining pending/shortlisted/interviewed/offered
+            for (Application a : allApps) {
+                if (a.getStatus() != ApplicationStatus.HIRED && a.getStatus() != ApplicationStatus.REJECTED) {
+                    List<ApplicationStatus> validNext = getValidNextStatuses(a.getStatus());
+                    if (validNext.contains(ApplicationStatus.REJECTED)) {
+                        String historyEntry = now + " | " + a.getStatus() + " -> " + ApplicationStatus.REJECTED + " | Note: Position Filled";
+                        String existingHistory = a.getStatusHistory();
+                        if (existingHistory == null || existingHistory.isEmpty()) {
+                            a.setStatusHistory(historyEntry);
+                        } else {
+                            a.setStatusHistory(existingHistory + " ;; " + historyEntry);
+                        }
+                        a.setStatus(ApplicationStatus.REJECTED);
+                        a.setStatusNote("Position Filled");
+                        a.setUpdatedTime(now);
+                        applicationRepository.save(a);
+                    }
+                }
+            }
+        }
     }
 
     public Application updateApplicationStatus(String token, String applicationId,
