@@ -742,6 +742,125 @@ public class ForumPanel extends JPanel {
         return btn;
     }
 
+        class NotificationItem {
+        String type;
+        String byUser;
+        String topicId;
+        String topicTitle;
+        String detailText;
+        String dateStr;
+        NotificationItem(String type, String byUser, String topicId, String topicTitle, String detailText, String dateStr) {
+            this.type = type; this.byUser = byUser; this.topicId = topicId; this.topicTitle = topicTitle; this.detailText = detailText; this.dateStr = dateStr;
+        }
+    }
+
+    private java.util.List<NotificationItem> getNotifications(String loggedInUser) {
+        java.util.List<NotificationItem> notifs = new java.util.ArrayList<>();
+        if (loggedInUser == null || loggedInUser.equals("Guest")) return notifs;
+        
+        java.util.List<Topic> allTopics = topicRepository.getAllTopics();
+        for (Topic t : allTopics) {
+            if (t.getAuthorName().equals(loggedInUser)) {
+                for (String liker : t.getLikedByUsers()) {
+                    if (!liker.equals(loggedInUser)) {
+                        notifs.add(new NotificationItem("Like", liker, t.getId(), t.getTitle(), liker + " liked your topic.", t.getDateStr()));
+                    }
+                }
+                java.util.List<Comment> comments = commentRepository.getCommentsByTopicId(t.getId());
+                for (Comment c : comments) {
+                    if (!c.getAuthorName().equals(loggedInUser)) {
+                        notifs.add(new NotificationItem("Comment", c.getAuthorName(), t.getId(), t.getTitle(), c.getContent(), c.getDateStr()));
+                    }
+                }
+            }
+        }
+        
+        java.util.Collections.reverse(notifs);
+        return notifs;
+    }
+
+    private void showMyMessagesDialog(java.util.List<NotificationItem> notifications) {
+        JDialog dialog = new JDialog((java.awt.Frame)SwingUtilities.getWindowAncestor(this), "My Messages", true);
+        dialog.setSize(500, 600);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout());
+        
+        JPanel header = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        header.setBackground(new Color(250, 250, 250));
+        JLabel title = new JLabel("📬 Notifications (" + notifications.size() + ")");
+        title.setFont(new Font("Arial", Font.BOLD, 18));
+        header.add(title);
+        dialog.add(header, BorderLayout.NORTH);
+        
+        JPanel listPanel = new JPanel();
+        listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
+        listPanel.setBackground(Color.WHITE);
+        
+        if (notifications.isEmpty()) {
+            JLabel empty = new JLabel("No new messages yet.");
+            empty.setBorder(new EmptyBorder(20, 20, 20, 20));
+            listPanel.add(empty);
+        } else {
+            for (NotificationItem n : notifications) {
+                JPanel item = new JPanel(new BorderLayout(10, 5));
+                item.setBackground(Color.WHITE);
+                item.setBorder(new CompoundBorder(
+                    new MatteBorder(0, 0, 1, 0, new Color(230, 230, 230)),
+                    new EmptyBorder(15, 15, 15, 15)
+                ));
+                
+                String icon = n.type.equals("Like") ? "❤️ " : "💬 ";
+                JLabel topLbl = new JLabel("<html><b>" + icon + n.byUser + "</b> " + 
+                                         (n.type.equals("Like") ? "liked your topic:" : "commented on your topic:") + "</html>");
+                topLbl.setFont(new Font(EMOJI_FONT_NAME, Font.PLAIN, 14));
+                
+                JLabel topicLbl = new JLabel("Topic: " + n.topicTitle);
+                topicLbl.setFont(new Font("Arial", Font.ITALIC, 12));
+                topicLbl.setForeground(new Color(150, 150, 150));
+                
+                JTextArea detail = new JTextArea(n.detailText);
+                detail.setLineWrap(true);
+                detail.setWrapStyleWord(true);
+                detail.setEditable(false);
+                detail.setForeground(new Color(80, 80, 80));
+                detail.setFont(new Font("Arial", Font.PLAIN, 13));
+                detail.setBorder(BorderFactory.createEmptyBorder(5, 20, 0, 0));
+                
+                JLabel timeLbl = new JLabel(n.dateStr);
+                timeLbl.setFont(new Font("Arial", Font.PLAIN, 11));
+                timeLbl.setForeground(new Color(180, 180, 180));
+                
+                JPanel pNorth = new JPanel(new GridLayout(2, 1));
+                pNorth.setBackground(Color.WHITE);
+                pNorth.add(topLbl);
+                pNorth.add(topicLbl);
+                
+                item.add(pNorth, BorderLayout.NORTH);
+                item.add(detail, BorderLayout.CENTER);
+                item.add(timeLbl, BorderLayout.SOUTH);
+                
+                item.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                item.addMouseListener(new java.awt.event.MouseAdapter() {
+                    public void mouseClicked(java.awt.event.MouseEvent e) {
+                        dialog.dispose();
+                        Topic t = topicRepository.getAllTopics().stream().filter(tx -> tx.getId().equals(n.topicId)).findFirst().orElse(null);
+                        if (t != null) {
+                            showTopicDetail(t);
+                        }
+                    }
+                });
+                
+                listPanel.add(item);
+            }
+        }
+        
+        JScrollPane scroll = new JScrollPane(listPanel);
+        scroll.getVerticalScrollBar().setUnitIncrement(16);
+        dialog.add(scroll, BorderLayout.CENTER);
+        
+        dialog.setVisible(true);
+    }
+
     private JPanel createUserDashboardCard() {
         JPanel cardWrapper = new JPanel(new BorderLayout());
         cardWrapper.setBackground(new Color(245, 245, 245));
@@ -792,7 +911,10 @@ public class ForumPanel extends JPanel {
             popupMenu.setBorder(new LineBorder(new Color(210, 210, 210), 1));
             popupMenu.setBackground(Color.WHITE);
             
-            JMenuItem msgItem = new JMenuItem("📬 My Messages (0)");
+            java.util.List<NotificationItem> notifs = getNotifications(username);
+            int msgCount = notifs.size();
+            JMenuItem msgItem = new JMenuItem("📬 My Messages (" + msgCount + ")");
+            msgItem.addActionListener(e -> showMyMessagesDialog(notifs));
             JMenuItem allTopicsItem = new JMenuItem("🌐 All Topics (Reset Filter)");
             JMenuItem postItem = new JMenuItem("📝 My Published Topics");
             JMenuItem likesItem = new JMenuItem("❤️ Topics I Liked");
@@ -1184,3 +1306,5 @@ public class ForumPanel extends JPanel {
         }
     }
 }
+
+

@@ -31,7 +31,10 @@ bin/
 # 团队统一规则
 *.class
 TA_Recruitment_software/data/
-data/
+# 忽略不需要上传的动态运行缓存数据和敏感配置
+data/sessions.csv
+data/login_history.txt
+data/ai-config.properties
 # 学期配置文件需要跨平台共享，排除忽略（须先解除目录忽略）
 !TA_Recruitment_software/ta_jobs/data/
 !TA_Recruitment_software/ta_jobs/data/position_semesters.csv
