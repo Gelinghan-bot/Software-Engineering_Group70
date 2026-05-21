@@ -180,7 +180,8 @@ public class ConsoleMain {
                         read("Requirements: "),
                         read("Interview Location: "),
                         read("Deadline (YYYY-MM-DD): "),
-                        read("Semester (e.g. 2026-Spring): ")
+                        read("Semester (e.g. 2026-Spring): "),
+                        Integer.parseInt(read("Headcount (e.g. 2): "))
                     );
                     System.out.println("Published: " + position);
                 } else if ("2".equals(choice)) {
@@ -295,7 +296,8 @@ public class ConsoleMain {
                         read("Requirements: "),
                         read("Interview Location: "),
                         read("Deadline (YYYY-MM-DD): "),
-                        read("Semester (e.g. 2026-Spring): ")
+                        read("Semester (e.g. 2026-Spring): "),
+                        Integer.parseInt(read("Headcount (e.g. 2): "))
                     );
                     System.out.println("Published: " + position);
                 } else if ("9".equals(choice)) {

@@ -96,6 +96,7 @@ public class JobPublishPanel extends JPanel {
         JScrollPane jobReqScroll = createTextAreaScroll("Enter your job requirements", jobReqArea);
         JTextField interviewLocField = createTextField("Enter your interview location");
         JTextField closingDateField = createTextField("yyyy-mm-dd");
+        JTextField headcountField = createTextField("Enter headcount (e.g. 2)");
 
         String currentYear = String.valueOf(java.time.LocalDate.now().getYear());
         String nextYear = String.valueOf(java.time.LocalDate.now().getYear() + 1);
@@ -120,8 +121,7 @@ public class JobPublishPanel extends JPanel {
         addTextAreaField(formCenter, "JOB DESCRIPTION", jobDescScroll, gbc, row++);
         addTextAreaField(formCenter, "Job Requirements", jobReqScroll, gbc, row++);
         addFormField(formCenter, "Interview Location", interviewLocField, gbc, row++);
-        addFormField(formCenter, "CLOSING DATE", closingDateField, gbc, row++);
-
+        addFormField(formCenter, "CLOSING DATE", closingDateField, gbc, row++);        addFormField(formCenter, "HEADCOUNT", headcountField, gbc, row++);
         // Semester selector
         gbc.gridy = row;
         gbc.gridx = 0;
@@ -176,6 +176,15 @@ public class JobPublishPanel extends JPanel {
                 String deadline = closingDateField.getText().trim();
                 if (deadline.equals("yyyy-mm-dd")) deadline = "";
 
+                String hcStr = headcountField.getText().trim();
+                if (hcStr.equals("Enter headcount (e.g. 2)")) hcStr = "";
+                int headcount = 0;
+                try {
+                    headcount = Integer.parseInt(hcStr);
+                } catch (NumberFormatException nfe) {
+                    throw new AppException("Invalid headcount format. Must be an integer.");
+                }
+
                 // Map fields to our backend structure referenced in MOPublishService.java
                 Position position = context.getMoPublishService().publishPosition(
                     token,
@@ -187,7 +196,8 @@ public class JobPublishPanel extends JPanel {
                     safeReq,
                     interviewLoc,
                     deadline,
-                    (String) semesterBox.getSelectedItem()
+                    (String) semesterBox.getSelectedItem(),
+                    headcount
                 );
                 JOptionPane.showMessageDialog(parent, "Published successfully! ID: " + position.getPositionId(), "Success", JOptionPane.INFORMATION_MESSAGE);
                 goBack();

@@ -3,6 +3,7 @@ package TA_Recruitment_software.mo_review;
 import TA_Recruitment_software.admin_system.foundation.AppException;
 import TA_Recruitment_software.admin_system.foundation.IdGenerator;
 import TA_Recruitment_software.admin_system.model.ApplicationStatus;
+import TA_Recruitment_software.admin_system.model.ApprovalStatus;
 import TA_Recruitment_software.admin_system.model.Position;
 import TA_Recruitment_software.admin_system.model.Role;
 import TA_Recruitment_software.admin_system.model.User;
@@ -74,6 +75,15 @@ public class MoInvitationService {
         List<EligibleTA> result = new ArrayList<>();
         for (User user : userRepository.findAll()) {
             if (user.getRole() != Role.TA) continue;
+            
+            // Check Approval and Enabled status
+            if (user.getApprovalStatus() != ApprovalStatus.APPROVED || !user.isEnabled()) continue;
+            
+            // Filter out TAs who already applied for the given position
+            if (applicationRepository.findByApplicantAndPosition(user.getUserId(), positionId).isPresent()) {
+                continue;
+            }
+
             int hired = hiredCounts.getOrDefault(user.getUserId(), 0);
             if (hired < MAX_HIRED_PER_SEMESTER) {
                 result.add(new EligibleTA(user, hired));

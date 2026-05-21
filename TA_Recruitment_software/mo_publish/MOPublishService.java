@@ -41,7 +41,8 @@ public class MOPublishService {
         String requirements,
         String interviewLocation,
         String deadline,
-        String semester
+        String semester,
+        int headcount
     ) {
         SessionContext session = sessionManager.requireSession(token);
         if (session.getRole() != Role.MO && session.getRole() != Role.ADMIN) {
@@ -61,6 +62,10 @@ public class MOPublishService {
         LocalDate checkedDeadline = ValidationUtil.validateDate(deadline, "Deadline");
         ValidationUtil.ensureTodayOrFuture(checkedDeadline, "Deadline");
 
+        if (headcount <= 0) {
+            throw new AppException("Headcount must be positive.");
+        }
+
         Position position = new Position();
         position.setPositionId(IdGenerator.nextId("POS"));
         position.setJobTitle(checkedTitle);
@@ -74,6 +79,7 @@ public class MOPublishService {
         position.setDeadline(checkedDeadline.toString());
         position.setPublishedByUserId(publisher.getUserId());
         position.setStatus(PositionStatus.OPEN);
+        position.setHeadcount(headcount);
 
         positionRepository.save(position);
         String sem = (semester != null && !semester.trim().isEmpty()) ? semester.trim() : CurrentSemesterStore.readCurrentSemester();
@@ -109,7 +115,8 @@ public class MOPublishService {
         String jobDescription,
         String requirements,
         String interviewLocation,
-        String deadline
+        String deadline,
+        int headcount
     ) {
         SessionContext session = sessionManager.requireSession(token);
         if (session.getRole() != Role.MO && session.getRole() != Role.ADMIN) {
@@ -133,6 +140,10 @@ public class MOPublishService {
         String checkedLoc = ValidationUtil.sanitizeText(interviewLocation, "Interview location", 100);
         LocalDate checkedDeadline = ValidationUtil.validateDate(deadline, "Deadline");
         ValidationUtil.ensureTodayOrFuture(checkedDeadline, "Deadline");
+        
+        if (headcount <= 0) {
+            throw new AppException("Headcount must be positive.");
+        }
 
         position.setJobTitle(checkedTitle);
         position.setGrade(checkedGrade);
@@ -142,6 +153,7 @@ public class MOPublishService {
         position.setRequirements(checkedReq);
         position.setInterviewLocation(checkedLoc);
         position.setDeadline(checkedDeadline.toString());
+        position.setHeadcount(headcount);
 
         positionRepository.save(position);
         return position;
@@ -168,9 +180,28 @@ public class MOPublishService {
         if (session.getRole() != Role.MO && session.getRole() != Role.ADMIN) {
             throw new AppException("Permission denied. Only MO and ADMIN can manage positions.");
         }
+        
+        List<Position> positions;
         if (session.getRole() == Role.ADMIN) {
-            return positionRepository.findAll();
+            positions = positionRepository.findAll();
+        } else {
+            positions = positionRepository.findByPublisher(session.getUserId());
         }
-        return positionRepository.findByPublisher(session.getUserId());
+
+        // Dynamically check and update expired positions
+        LocalDate today = LocalDate.now();
+        boolean changed = false;
+        for (Position p : positions) {
+            if (p.getStatus() == PositionStatus.OPEN) {
+                LocalDate dl = LocalDate.parse(p.getDeadline());
+                if (dl.isBefore(today)) {
+                    p.setStatus(PositionStatus.EXPIRED);
+                    positionRepository.save(p);
+                    changed = true;
+                }
+            }
+        }
+        
+        return positions;
     }
 }

@@ -56,11 +56,17 @@ public class MoPublishUI {
                 throw new AppException("Permission denied. Only MO and ADMIN can manage positions.");
             }
             List<Position> positions = context.getMoPublishService().listMyPositions(token);
-            DefaultTableModel model = new DefaultTableModel(new Object[]{"Position ID", "Job Title", "Deadline", "Status"}, 0) {
+            java.util.Map<String, Long> hiredCountMap = new TA_Recruitment_software.admin_system.repository.ApplicationRepository().findAll().stream()
+                .filter(a -> a.getStatus() == TA_Recruitment_software.admin_system.model.ApplicationStatus.HIRED)
+                .collect(java.util.stream.Collectors.groupingBy(TA_Recruitment_software.admin_system.model.Application::getPositionId, java.util.stream.Collectors.counting()));
+
+            DefaultTableModel model = new DefaultTableModel(new Object[]{"Position ID", "Job Title", "Deadline", "Status", "Headcount"}, 0) {
                 @Override public boolean isCellEditable(int row, int column) { return false; }
             };
             for (Position p : positions) {
-                model.addRow(new Object[]{p.getPositionId(), p.getJobTitle(), p.getDeadline(), p.getStatus()});
+                long hiredCount = hiredCountMap.getOrDefault(p.getPositionId(), 0L);
+                String headcountDisplay = hiredCount + "/" + p.getHeadcount();
+                model.addRow(new Object[]{p.getPositionId(), p.getJobTitle(), p.getDeadline(), p.getStatus(), headcountDisplay});
             }
 
             JTable table = new JTable(model);
@@ -88,6 +94,11 @@ public class MoPublishUI {
                         // This callback updates the table row with potentially new data (like Title and Deadline)
                         model.setValueAt(selectedPos.getJobTitle(), row, 1);
                         model.setValueAt(selectedPos.getDeadline(), row, 2);
+                        
+                        long updatedHiredCount = new TA_Recruitment_software.admin_system.repository.ApplicationRepository().findAll().stream()
+                            .filter(a -> a.getStatus() == TA_Recruitment_software.admin_system.model.ApplicationStatus.HIRED && a.getPositionId().equals(selectedPos.getPositionId()))
+                            .count();
+                        model.setValueAt(updatedHiredCount + "/" + selectedPos.getHeadcount(), row, 4);
                     });
                     
                     contentPane.remove(panel);

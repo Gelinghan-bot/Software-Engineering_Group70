@@ -13,6 +13,10 @@ public class Position {
     private String deadline;
     private String publishedByUserId;
     private PositionStatus status;
+    private int headcount;
+
+    public int getHeadcount() { return headcount; }
+    public void setHeadcount(int headcount) { this.headcount = headcount; }
 
     public String getPositionId() { return positionId; }
     public void setPositionId(String positionId) { this.positionId = positionId; }
@@ -61,6 +65,7 @@ public class Position {
             + ", responsibleMO='" + responsibleMO + '\''
             + ", deadline='" + deadline + '\''
             + ", status=" + status
+            + ", headcount=" + headcount
             + '}';
     }
 }
