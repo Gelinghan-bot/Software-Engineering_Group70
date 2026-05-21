@@ -7,6 +7,7 @@ import TA_Recruitment_software.admin_system.model.ApplicationStatus;
 import TA_Recruitment_software.admin_system.model.Position;
 import TA_Recruitment_software.admin_system.model.User;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import javax.swing.*;
@@ -40,15 +41,23 @@ public class MoReviewUI {
 
             JPanel reviewPanel = new JPanel(new BorderLayout(5, 5));
 
-            // --- Top: Sort controls ---
+            // --- Top: Sort controls + Note search ---
             JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
             topPanel.add(new JLabel("Sort by:"));
             JButton sortTimeNewBtn = new JButton("Time (Newest)");
             JButton sortTimeOldBtn = new JButton("Time (Oldest)");
             JButton sortMajorBtn = new JButton("Major");
+            JButton resetFilterBtn = new JButton("Show All");
             topPanel.add(sortTimeNewBtn);
             topPanel.add(sortTimeOldBtn);
             topPanel.add(sortMajorBtn);
+            topPanel.add(new JSeparator(SwingConstants.VERTICAL));
+            topPanel.add(new JLabel("Search Notes:"));
+            JTextField noteSearchField = new JTextField(12);
+            JButton searchNoteBtn = new JButton("Search");
+            topPanel.add(noteSearchField);
+            topPanel.add(searchNoteBtn);
+            topPanel.add(resetFilterBtn);
             reviewPanel.add(topPanel, BorderLayout.NORTH);
 
             // --- Center: Application table ---
@@ -60,7 +69,9 @@ public class MoReviewUI {
                 }
             };
 
-            populateTable(model, applications, service);
+            // displayedApps tracks the currently visible subset (for row-index lookups)
+            final List<Application> displayedApps = new ArrayList<>(applications);
+            populateTable(model, displayedApps, service);
 
             JTable table = new JTable(model);
             table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -84,12 +95,16 @@ public class MoReviewUI {
             JButton viewDetailBtn = new JButton("View Details");
             JButton updateStatusBtn = new JButton("Update Status");
             JButton viewHistoryBtn = new JButton("View Status History");
-            JButton aiCompareBtn = new JButton("✨ AI Compare Candidates");
-            JButton closeBtn = new JButton("Close");
+            JButton notesBtn = new JButton("Interview Notes");
+            JButton inviteBtn = new JButton("Invite Candidates");
+            JButton aiCompareBtn = new JButton("AI Compare Candidates");
+            JButton closeBtn = new JButton("Back");
 
             btnPanel.add(viewDetailBtn);
             btnPanel.add(updateStatusBtn);
             btnPanel.add(viewHistoryBtn);
+            btnPanel.add(notesBtn);
+            btnPanel.add(inviteBtn);
             btnPanel.add(aiCompareBtn);
             btnPanel.add(closeBtn);
             reviewPanel.add(btnPanel, BorderLayout.SOUTH);
@@ -97,15 +112,47 @@ public class MoReviewUI {
             // --- Sort button actions ---
             sortTimeNewBtn.addActionListener(e -> {
                 service.sortBySubmissionTime(applications, false);
-                refreshTable(model, applications, service);
+                displayedApps.clear();
+                displayedApps.addAll(applications);
+                refreshTable(model, displayedApps, service);
             });
             sortTimeOldBtn.addActionListener(e -> {
                 service.sortBySubmissionTime(applications, true);
-                refreshTable(model, applications, service);
+                displayedApps.clear();
+                displayedApps.addAll(applications);
+                refreshTable(model, displayedApps, service);
             });
             sortMajorBtn.addActionListener(e -> {
                 service.sortByMajor(applications);
-                refreshTable(model, applications, service);
+                displayedApps.clear();
+                displayedApps.addAll(applications);
+                refreshTable(model, displayedApps, service);
+            });
+
+            // --- Note keyword search ---
+            searchNoteBtn.addActionListener(e -> {
+                String keyword = noteSearchField.getText().trim();
+                if (keyword.isEmpty()) {
+                    JOptionPane.showMessageDialog(parent, "Please enter a keyword to search.");
+                    return;
+                }
+                List<String> matchedIds = context.getInterviewNoteService().searchByKeyword(token, keyword);
+                displayedApps.clear();
+                for (Application app : applications) {
+                    if (matchedIds.contains(app.getApplicationId())) {
+                        displayedApps.add(app);
+                    }
+                }
+                refreshTable(model, displayedApps, service);
+                if (displayedApps.isEmpty()) {
+                    JOptionPane.showMessageDialog(parent, "No notes found containing: " + keyword);
+                }
+            });
+            resetFilterBtn.addActionListener(e -> {
+                noteSearchField.setText("");
+                displayedApps.clear();
+                displayedApps.addAll(applications);
+                refreshTable(model, displayedApps, service);
             });
 
             // --- View Details action ---
@@ -115,7 +162,7 @@ public class MoReviewUI {
                     JOptionPane.showMessageDialog(parent, "Please select an application first.");
                     return;
                 }
-                Application app = applications.get(row);
+                Application app = displayedApps.get(row);
                 showApplicationDetail(parent, service, app);
             });
 
@@ -126,8 +173,8 @@ public class MoReviewUI {
                     JOptionPane.showMessageDialog(parent, "Please select an application first.");
                     return;
                 }
-                Application app = applications.get(row);
-                handleStatusUpdate(parent, context, token, app, applications, model, service);
+                Application app = displayedApps.get(row);
+                handleStatusUpdate(parent, context, token, app, applications, displayedApps, model, service);
             });
 
             // --- View History action ---
@@ -137,8 +184,30 @@ public class MoReviewUI {
                     JOptionPane.showMessageDialog(parent, "Please select an application first.");
                     return;
                 }
-                Application app = applications.get(row);
+                Application app = displayedApps.get(row);
                 showStatusHistory(parent, app);
+            });
+
+            // --- Interview Notes action ---
+            notesBtn.addActionListener(e -> {
+                int row = table.getSelectedRow();
+                if (row < 0) {
+                    JOptionPane.showMessageDialog(parent, "Please select an application first.");
+                    return;
+                }
+                Application app = displayedApps.get(row);
+                showInterviewNotesDialog(parent, context, token, app);
+            });
+
+            // --- Invite Candidates action ---
+            inviteBtn.addActionListener(e -> {
+                int row = table.getSelectedRow();
+                if (row < 0) {
+                    JOptionPane.showMessageDialog(parent, "Please select an application row first to determine the position.");
+                    return;
+                }
+                Application app = displayedApps.get(row);
+                showInviteCandidatesDialog(parent, context, token, app.getPositionId(), service);
             });
 
             // --- AI Compare action ---
@@ -148,26 +217,22 @@ public class MoReviewUI {
                     JOptionPane.showMessageDialog(parent, "Please select at least two candidates to compare (use Ctrl/Cmd + click).", "Info", JOptionPane.INFORMATION_MESSAGE);
                     return;
                 }
-                
-                List<Application> selectedApps = new java.util.ArrayList<>();
+                List<Application> selectedApps = new ArrayList<>();
                 for (int row : rows) {
-                    selectedApps.add(applications.get(row));
+                    selectedApps.add(displayedApps.get(row));
                 }
-                
-                // 1. 创建一个加载提示弹窗
-                JDialog loadingDialog = new JDialog(parent, "AI 助手工作正在努力中...", true);
+                JDialog loadingDialog = new JDialog(parent, "AI Comparison in Progress...", true);
                 JPanel p = new JPanel(new BorderLayout(10, 10));
                 p.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-                p.add(new JLabel("✨ AI 小助理正在深度阅读简历与岗位信息，请稍候..."), BorderLayout.NORTH);
+                p.add(new JLabel("AI is analysing CVs and position requirements, please wait..."), BorderLayout.NORTH);
                 JProgressBar progressBar = new JProgressBar();
-                progressBar.setIndeterminate(true); // 让进度条来回滚动
+                progressBar.setIndeterminate(true);
                 p.add(progressBar, BorderLayout.CENTER);
                 loadingDialog.add(p);
                 loadingDialog.pack();
                 loadingDialog.setLocationRelativeTo(parent);
-                loadingDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE); // 防止用户手动关闭打断
+                loadingDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
 
-                // 2. 利用 SwingWorker 开启后台线程，不卡死界面
                 SwingWorker<String, Void> worker = new SwingWorker<String, Void>() {
                     @Override
                     protected String doInBackground() throws Exception {
@@ -176,37 +241,29 @@ public class MoReviewUI {
 
                     @Override
                     protected void done() {
-                        loadingDialog.dispose(); // 请求完成，关掉加载动画
+                        loadingDialog.dispose();
                         try {
-                            String result = get(); // 获取 doInBackground 的返回值
-                            
+                            String result = get();
                             JTextArea textArea = new JTextArea(result);
                             textArea.setEditable(false);
                             textArea.setFont(new Font("Monospaced", Font.PLAIN, 13));
                             textArea.setLineWrap(true);
                             textArea.setWrapStyleWord(true);
                             textArea.setCaretPosition(0);
-
                             JScrollPane resultScrollPane = new JScrollPane(textArea);
                             resultScrollPane.setPreferredSize(new Dimension(650, 500));
-
-                            JOptionPane.showMessageDialog(parent, resultScrollPane, "✨ AI Candidate Comparison Report", JOptionPane.PLAIN_MESSAGE);
+                            JOptionPane.showMessageDialog(parent, resultScrollPane, "AI Candidate Comparison Report", JOptionPane.PLAIN_MESSAGE);
                         } catch (Exception ex) {
                             String errorMsg = ex.getMessage();
-                            if (ex.getCause() != null) {
-                                errorMsg = ex.getCause().getMessage();
-                            }
+                            if (ex.getCause() != null) errorMsg = ex.getCause().getMessage();
                             JOptionPane.showMessageDialog(parent, "Error during AI comparison: " + errorMsg, "Error", JOptionPane.ERROR_MESSAGE);
                         }
                     }
                 };
-                
-                // 3. 执行后台任务，并展示加载弹窗（由于弹窗是模态的，它会阻塞在这里等待）
                 worker.execute();
                 loadingDialog.setVisible(true);
             });
 
-            closeBtn.setText("Back");
             closeBtn.addActionListener(e -> {
                 contentPane.remove(reviewPanel);
                 if (previousCenter != null) {
@@ -295,7 +352,7 @@ public class MoReviewUI {
         }
 
         if (app.getStatusNote() != null && !app.getStatusNote().isEmpty()) {
-            sb.append("\n=== Latest Note ===\n");
+            sb.append("\n=== Latest Status Note ===\n");
             sb.append(app.getStatusNote()).append("\n");
         }
 
@@ -314,7 +371,7 @@ public class MoReviewUI {
 
     private static void handleStatusUpdate(Component parent, RecruitmentSystemContext context,
                                             String token, Application app,
-                                            List<Application> applications,
+                                            List<Application> allApps, List<Application> displayedApps,
                                             DefaultTableModel model, MOReviewService service) {
         List<ApplicationStatus> validStatuses = service.getValidNextStatuses(app.getStatus());
         if (validStatuses.isEmpty()) {
@@ -334,34 +391,40 @@ public class MoReviewUI {
             options,
             options[0]
         );
+        if (selected == null) return;
 
-        if (selected == null) {
-            return;
-        }
+        // Confirm before applying change
+        int confirm = JOptionPane.showConfirmDialog(
+            parent,
+            "Change status from " + app.getStatus().name() + " to " + selected.name() + "?",
+            "Confirm Status Change",
+            JOptionPane.YES_NO_OPTION
+        );
+        if (confirm != JOptionPane.YES_OPTION) return;
 
-        String note = null;
-        if (selected == ApplicationStatus.REJECTED || selected == ApplicationStatus.OFFERED) {
-            note = JOptionPane.showInputDialog(parent,
-                "Add a note for " + selected.name() + " (optional):",
-                "Status Note",
-                JOptionPane.PLAIN_MESSAGE);
-        }
+        // Optional note for all transitions
+        String note = JOptionPane.showInputDialog(parent,
+            "Add a note for this status change (optional):",
+            "Status Note",
+            JOptionPane.PLAIN_MESSAGE);
+        if (note != null && note.trim().isEmpty()) note = null;
 
         try {
             Application updated = service.updateApplicationStatus(token, app.getApplicationId(), selected, note);
-
-            int idx = applications.indexOf(app);
-            if (idx >= 0) {
-                applications.set(idx, updated);
-            }
-            refreshTable(model, applications, service);
-
+            replaceInList(allApps, app, updated);
+            replaceInList(displayedApps, app, updated);
+            refreshTable(model, displayedApps, service);
             JOptionPane.showMessageDialog(parent,
                 "Application status updated to " + selected.name(),
                 "Success", JOptionPane.INFORMATION_MESSAGE);
         } catch (AppException ex) {
             JOptionPane.showMessageDialog(parent, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    private static void replaceInList(List<Application> list, Application old, Application updated) {
+        int idx = list.indexOf(old);
+        if (idx >= 0) list.set(idx, updated);
     }
 
     private static void showStatusHistory(Component parent, Application app) {
@@ -390,6 +453,139 @@ public class MoReviewUI {
         scrollPane.setPreferredSize(new Dimension(500, 300));
 
         JOptionPane.showMessageDialog(parent, scrollPane, "Status History", JOptionPane.PLAIN_MESSAGE);
+    }
+
+    private static void showInterviewNotesDialog(Component parent, RecruitmentSystemContext context,
+                                                  String token, Application app) {
+        Optional<InterviewNote> existing = context.getInterviewNoteService().findNote(token, app.getApplicationId());
+
+        JTextArea noteArea = new JTextArea(12, 40);
+        noteArea.setLineWrap(true);
+        noteArea.setWrapStyleWord(true);
+        noteArea.setFont(new Font("Monospaced", Font.PLAIN, 13));
+
+        JLabel timestampLabel = new JLabel(" ");
+        timestampLabel.setFont(new Font("Arial", Font.ITALIC, 11));
+        timestampLabel.setForeground(Color.GRAY);
+
+        if (existing.isPresent()) {
+            noteArea.setText(existing.get().getNoteContent());
+            timestampLabel.setText("Last updated: " + existing.get().getLastUpdatedAt());
+        } else {
+            timestampLabel.setText("No note yet.");
+        }
+
+        JScrollPane noteScroll = new JScrollPane(noteArea);
+
+        JPanel dialogPanel = new JPanel(new BorderLayout(5, 5));
+        dialogPanel.add(new JLabel("Private interview notes for: " + app.getApplicationId()), BorderLayout.NORTH);
+        dialogPanel.add(noteScroll, BorderLayout.CENTER);
+        dialogPanel.add(timestampLabel, BorderLayout.SOUTH);
+        dialogPanel.setPreferredSize(new Dimension(500, 300));
+
+        int result = JOptionPane.showConfirmDialog(parent, dialogPanel,
+            "Interview Notes (Private)", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+        if (result == JOptionPane.OK_OPTION) {
+            try {
+                InterviewNote saved = context.getInterviewNoteService()
+                    .saveOrUpdate(token, app.getApplicationId(), noteArea.getText());
+                JOptionPane.showMessageDialog(parent,
+                    "Note saved at " + saved.getLastUpdatedAt(), "Saved", JOptionPane.INFORMATION_MESSAGE);
+            } catch (AppException ex) {
+                JOptionPane.showMessageDialog(parent, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private static void showInviteCandidatesDialog(Component parent, RecruitmentSystemContext context,
+                                                    String token, String positionId, MOReviewService service) {
+        List<MoInvitationService.EligibleTA> eligible;
+        try {
+            eligible = context.getMoInvitationService().listEligibleTAs(token, positionId);
+        } catch (AppException ex) {
+            JOptionPane.showMessageDialog(parent, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (eligible.isEmpty()) {
+            JOptionPane.showMessageDialog(parent, "No eligible TAs found (all TAs may have reached the 3-course limit).");
+            return;
+        }
+
+        Optional<Position> posOpt = service.getPositionInfo(positionId);
+        String jobTitle = posOpt.map(Position::getJobTitle).orElse(positionId);
+
+        String[] columnNames = {"Select", "Name", "Student ID", "Major", "Hired This Semester"};
+        Object[][] data = new Object[eligible.size()][5];
+        for (int i = 0; i < eligible.size(); i++) {
+            MoInvitationService.EligibleTA et = eligible.get(i);
+            data[i][0] = Boolean.FALSE;
+            data[i][1] = et.user.getFullName();
+            data[i][2] = et.user.getStudentId();
+            data[i][3] = et.user.getMajor() != null ? et.user.getMajor() : "";
+            data[i][4] = et.hiredCount + " / 3";
+        }
+
+        DefaultTableModel tableModel = new DefaultTableModel(data, columnNames) {
+            @Override public Class<?> getColumnClass(int col) {
+                return col == 0 ? Boolean.class : String.class;
+            }
+            @Override public boolean isCellEditable(int row, int col) { return col == 0; }
+        };
+        JTable taTable = new JTable(tableModel);
+        taTable.getColumnModel().getColumn(0).setPreferredWidth(50);
+        taTable.getColumnModel().getColumn(1).setPreferredWidth(120);
+        taTable.getColumnModel().getColumn(2).setPreferredWidth(100);
+        taTable.getColumnModel().getColumn(3).setPreferredWidth(80);
+        taTable.getColumnModel().getColumn(4).setPreferredWidth(100);
+
+        JScrollPane tableScroll = new JScrollPane(taTable);
+        tableScroll.setPreferredSize(new Dimension(500, 200));
+
+        JTextArea msgArea = new JTextArea(4, 40);
+        msgArea.setLineWrap(true);
+        msgArea.setWrapStyleWord(true);
+        msgArea.setFont(new Font("Arial", Font.PLAIN, 13));
+        JScrollPane msgScroll = new JScrollPane(msgArea);
+
+        JPanel dialogPanel = new JPanel(new BorderLayout(5, 8));
+        dialogPanel.add(new JLabel("Invite TAs to apply for: " + jobTitle + " (" + positionId + ")"), BorderLayout.NORTH);
+        dialogPanel.add(tableScroll, BorderLayout.CENTER);
+        JPanel bottomPanel = new JPanel(new BorderLayout(3, 3));
+        bottomPanel.add(new JLabel("Invitation message (optional):"), BorderLayout.NORTH);
+        bottomPanel.add(msgScroll, BorderLayout.CENTER);
+        dialogPanel.add(bottomPanel, BorderLayout.SOUTH);
+
+        int result = JOptionPane.showConfirmDialog(parent, dialogPanel,
+            "Invite Candidates", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+        if (result != JOptionPane.OK_OPTION) return;
+
+        String message = msgArea.getText().trim();
+        int sentCount = 0;
+        List<String> errors = new ArrayList<>();
+        for (int i = 0; i < eligible.size(); i++) {
+            if (Boolean.TRUE.equals(tableModel.getValueAt(i, 0))) {
+                try {
+                    context.getMoInvitationService().sendInvitation(
+                        token, eligible.get(i).user.getUserId(), positionId, message);
+                    sentCount++;
+                } catch (AppException ex) {
+                    errors.add(eligible.get(i).user.getFullName() + ": " + ex.getMessage());
+                }
+            }
+        }
+
+        if (sentCount == 0 && errors.isEmpty()) {
+            JOptionPane.showMessageDialog(parent, "No candidates were selected.");
+        } else if (errors.isEmpty()) {
+            JOptionPane.showMessageDialog(parent, "Invitation sent to " + sentCount + " candidate(s).", "Success", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(parent,
+                "Sent: " + sentCount + "\nFailed:\n" + String.join("\n", errors),
+                "Partial Success", JOptionPane.WARNING_MESSAGE);
+        }
     }
 
     private static String nvl(String value) {

@@ -252,6 +252,7 @@ public class AdminUI {
         JButton saveBtn = new JButton("Save Changes");
         saveBtn.setBackground(new Color(39, 174, 96));
         saveBtn.setForeground(Color.WHITE);
+        saveBtn.setOpaque(true);
         saveBtn.setFont(new Font("Arial", Font.BOLD, 12));
         JButton cancelBtn = new JButton("Cancel");
         cancelBtn.setFont(new Font("Arial", Font.PLAIN, 12));

@@ -218,6 +218,7 @@ public class TAJobsUI {
         btn.setAlignmentX(Component.CENTER_ALIGNMENT);
         btn.setBackground(new Color(39, 174, 96));
         btn.setForeground(Color.WHITE);
+        btn.setOpaque(true);
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
         btn.setFont(new Font("Arial", Font.BOLD, 14));

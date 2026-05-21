@@ -120,6 +120,7 @@ public class JobEditPanel extends JPanel {
         JButton cancelBtn = new JButton("Cancel");
         cancelBtn.setPreferredSize(new Dimension(100, 40));
         cancelBtn.setBackground(new Color(224, 224, 224));
+        cancelBtn.setOpaque(true);
         cancelBtn.setFocusPainted(false);
         cancelBtn.addActionListener(e -> goBack());
 
@@ -127,6 +128,7 @@ public class JobEditPanel extends JPanel {
         submitBtn.setPreferredSize(new Dimension(130, 40));
         submitBtn.setBackground(new Color(52, 152, 219));
         submitBtn.setForeground(Color.WHITE);
+        submitBtn.setOpaque(true);
         submitBtn.setFocusPainted(false);
         submitBtn.addActionListener(e -> {
             try {

@@ -29,10 +29,10 @@ public class CommentRepository {
         List<Comment> comments = new ArrayList<>();
         List<String> lines = null;
         try {
-            lines = Files.readAllLines(new File(DATA_FILE).toPath(), Charset.defaultCharset());
+            lines = Files.readAllLines(new File(DATA_FILE).toPath(), StandardCharsets.UTF_8);
         } catch (Exception e) {
             try {
-                lines = Files.readAllLines(new File(DATA_FILE).toPath(), StandardCharsets.UTF_8);
+                lines = Files.readAllLines(new File(DATA_FILE).toPath(), Charset.defaultCharset());
             } catch (Exception ex) {
                 ex.printStackTrace();
             }

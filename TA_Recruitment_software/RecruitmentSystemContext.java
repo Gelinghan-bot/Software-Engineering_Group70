@@ -6,7 +6,10 @@ import TA_Recruitment_software.admin_system.repository.PositionRepository;
 import TA_Recruitment_software.admin_system.repository.UserRepository;
 import TA_Recruitment_software.auth.AuthService;
 import TA_Recruitment_software.auth.SessionManager;
+import TA_Recruitment_software.auth.TaNotificationService;
 import TA_Recruitment_software.mo_publish.MOPublishService;
+import TA_Recruitment_software.mo_review.InterviewNoteService;
+import TA_Recruitment_software.mo_review.MoInvitationService;
 import TA_Recruitment_software.mo_review.MOReviewService;
 import TA_Recruitment_software.ta_jobs.AiDiagnosisService;
 import TA_Recruitment_software.profile.MoTaProfileViewService;
@@ -27,6 +30,9 @@ public class RecruitmentSystemContext {
     private final MOReviewService moReviewService;
     private final AdminService adminService;
     private final AiDiagnosisService aiDiagnosisService;
+    private final TaNotificationService taNotificationService;
+    private final InterviewNoteService interviewNoteService;
+    private final MoInvitationService moInvitationService;
 
     public RecruitmentSystemContext() {
         this.userRepository = new UserRepository();
@@ -43,6 +49,9 @@ public class RecruitmentSystemContext {
         this.adminService = new AdminService(userRepository, positionRepository, applicationRepository, sessionManager);
         this.adminService.seedDefaultAdmin();
         this.aiDiagnosisService = new AiDiagnosisService(profileService, taJobService);
+        this.taNotificationService = new TaNotificationService(applicationRepository, positionRepository, sessionManager);
+        this.interviewNoteService = new InterviewNoteService(sessionManager);
+        this.moInvitationService = new MoInvitationService(sessionManager, userRepository, applicationRepository, positionRepository, taNotificationService);
     }
 
     public AuthService getAuthService() {
@@ -79,5 +88,17 @@ public class RecruitmentSystemContext {
 
     public AiDiagnosisService getAiDiagnosisService() {
         return aiDiagnosisService;
+    }
+
+    public TaNotificationService getTaNotificationService() {
+        return taNotificationService;
+    }
+
+    public InterviewNoteService getInterviewNoteService() {
+        return interviewNoteService;
+    }
+
+    public MoInvitationService getMoInvitationService() {
+        return moInvitationService;
     }
 }

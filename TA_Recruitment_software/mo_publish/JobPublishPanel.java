@@ -145,6 +145,7 @@ public class JobPublishPanel extends JPanel {
         JButton cancelBtn = new JButton("Cancel");
         cancelBtn.setPreferredSize(new Dimension(100, 40));
         cancelBtn.setBackground(new Color(224, 224, 224));
+        cancelBtn.setOpaque(true);
         cancelBtn.setFocusPainted(false);
         cancelBtn.addActionListener(e -> goBack());
 
@@ -152,28 +153,40 @@ public class JobPublishPanel extends JPanel {
         submitBtn.setPreferredSize(new Dimension(100, 40));
         submitBtn.setBackground(new Color(39, 174, 96));
         submitBtn.setForeground(Color.WHITE);
+        submitBtn.setOpaque(true);
         submitBtn.setFocusPainted(false);
         submitBtn.addActionListener(e -> {
             try {
-                String safeDesc = jobDescArea.getText().trim().replaceAll("[\\r\\n]+", "  ");
-                String safeReq = jobReqArea.getText().trim().replaceAll("[\\r\\n]+", "  ");
+                String title = jobTitleField.getText().trim();
+                if (title.equals("Enter your job title")) title = "";
+
+                String rawDesc = jobDescArea.getText().trim();
+                if (rawDesc.equals("Enter your job description")) rawDesc = "";
+                String safeDesc = rawDesc.replaceAll("[\\r\\n]+", "  ");
+
+                String rawReq = jobReqArea.getText().trim();
+                if (rawReq.equals("Enter your job requirements")) rawReq = "";
+                String safeReq = rawReq.replaceAll("[\\r\\n]+", "  ");
+
                 String interviewLoc = interviewLocField.getText().trim();
-                
                 if (interviewLoc.equals("Enter your interview location")) {
                     interviewLoc = "";
                 }
 
+                String deadline = closingDateField.getText().trim();
+                if (deadline.equals("yyyy-mm-dd")) deadline = "";
+
                 // Map fields to our backend structure referenced in MOPublishService.java
                 Position position = context.getMoPublishService().publishPosition(
                     token,
-                    jobTitleField.getText().trim(),
+                    title,
                     (String) gradeCombo.getSelectedItem(),
                     (String) majorCombo.getSelectedItem(),
                     (String) jobTypeCombo.getSelectedItem(),
                     safeDesc,
                     safeReq,
                     interviewLoc,
-                    closingDateField.getText().trim(),
+                    deadline,
                     (String) semesterBox.getSelectedItem()
                 );
                 JOptionPane.showMessageDialog(parent, "Published successfully! ID: " + position.getPositionId(), "Success", JOptionPane.INFORMATION_MESSAGE);

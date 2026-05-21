@@ -93,7 +93,11 @@ public class ApplicationRepository {
         app.setApplicationId(cell(row, 0));
         app.setApplicantUserId(cell(row, 1));
         app.setPositionId(cell(row, 2));
-        app.setStatus(ApplicationStatus.valueOf(cell(row, 3)));
+        try {
+            app.setStatus(ApplicationStatus.valueOf(cell(row, 3)));
+        } catch (IllegalArgumentException e) {
+            app.setStatus(ApplicationStatus.PENDING);
+        }
         app.setSubmissionTime(cell(row, 4));
         app.setUpdatedTime(cell(row, 5));
         app.setStatusNote(cell(row, 6));
