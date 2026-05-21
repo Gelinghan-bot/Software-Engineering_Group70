@@ -32,6 +32,10 @@ bin/
 *.class
 TA_Recruitment_software/data/
 data/
+# 学期配置文件需要跨平台共享，排除忽略（须先解除目录忽略）
+!TA_Recruitment_software/ta_jobs/data/
+!TA_Recruitment_software/ta_jobs/data/position_semesters.csv
+!TA_Recruitment_software/ta_jobs/data/current_semester.txt
 .idea/vcs.xml
 # IntelliJ IDEA 本地配置文件
 .idea/

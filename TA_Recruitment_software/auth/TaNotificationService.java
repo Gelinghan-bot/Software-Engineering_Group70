@@ -49,6 +49,12 @@ public class TaNotificationService {
 
             String previous = checkpoints.get(appId);
             if (previous == null) {
+                // First sync: if status already advanced beyond PENDING/SUBMITTED,
+                // the TA missed the change while offline — backfill the notification.
+                if (!"PENDING".equals(currentStatus) && !"SUBMITTED".equals(currentStatus)) {
+                    createNotification(userId, app, "PENDING", currentStatus);
+                    created++;
+                }
                 continue;
             }
             if (!previous.equals(currentStatus)) {
@@ -109,6 +115,27 @@ public class TaNotificationService {
                 TaNotificationStore.save(n);
             }
         }
+    }
+
+    public void sendInvitationNotification(String taUserId, String invitationId,
+                                            String positionId, String jobTitle, String customMessage) {
+        TaNotification notification = new TaNotification();
+        notification.setNotificationId(IdGenerator.nextId("NTF"));
+        notification.setUserId(taUserId);
+        notification.setApplicationId(invitationId);
+        notification.setPositionId(positionId);
+        notification.setOldStatus("INVITED");
+        notification.setNewStatus("INVITED");
+        notification.setCreatedAt(LocalDateTime.now().format(FORMAT));
+        notification.setRead(false);
+
+        StringBuilder message = new StringBuilder();
+        message.append("[Invitation] You have been invited to apply for: ").append(jobTitle);
+        if (customMessage != null && !customMessage.isEmpty()) {
+            message.append(". Message: ").append(customMessage);
+        }
+        notification.setMessage(message.toString());
+        TaNotificationStore.save(notification);
     }
 
     private void createNotification(String userId, Application app, String oldStatus, String newStatus) {
