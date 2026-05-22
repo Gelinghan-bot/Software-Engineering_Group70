@@ -7,9 +7,7 @@ import java.awt.BorderLayout;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Font;
 import java.util.List;
-import java.util.Map;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -19,7 +17,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import javax.swing.JTextArea;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingWorker;
 import javax.swing.table.DefaultTableModel;
@@ -112,9 +109,9 @@ public final class AiDiagnosisUI {
         south.add(closeBtn);
         dlg.add(south, BorderLayout.SOUTH);
 
-        JLabel hint = new JLabel("Double-click a row for details and to apply.");
-        hint.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
-        dlg.add(hint, BorderLayout.NORTH);
+        dlg.add(PositionDetailUI.createDoubleClickHintLabel(
+            "Tip: Double-click a recommended job to view details and apply."
+        ), BorderLayout.NORTH);
 
         Runnable openDetail = () -> {
             int row = table.getSelectedRow();
@@ -123,7 +120,29 @@ public final class AiDiagnosisUI {
                 return;
             }
             JobMatchResult match = results.get(row);
-            showDetailAndApply(dlg, context, token, match);
+            dlg.dispose();
+            boolean alreadyApplied = false;
+            try {
+                for (TA_Recruitment_software.admin_system.model.Application a : context.getTaJobService().listMyApplications(token)) {
+                    if (a.getPositionId().equals(match.getPosition().getPositionId())) {
+                        alreadyApplied = true;
+                        break;
+                    }
+                }
+            } catch (AppException ignored) {
+            }
+            PositionDetailUI.show(
+                parent,
+                null,
+                context,
+                token,
+                match.getPosition(),
+                true,
+                alreadyApplied,
+                match.getScorePercent(),
+                match.getReason(),
+                null
+            );
         };
 
         detailBtn.addActionListener(e -> openDetail.run());
@@ -140,67 +159,5 @@ public final class AiDiagnosisUI {
         dlg.pack();
         dlg.setLocationRelativeTo(parent);
         dlg.setVisible(true);
-    }
-
-    private static void showDetailAndApply(JDialog owner, RecruitmentSystemContext context, String token, JobMatchResult match) {
-        Position p = match.getPosition();
-        String currentSemester = CurrentSemesterStore.readCurrentSemester();
-        Map<String, String> semesterByPositionId = PositionSemesterStore.readAll();
-        String semLabel = PositionSemesterStore.labelFor(p.getPositionId(), semesterByPositionId);
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("Match score: ").append(match.getScorePercent()).append("%\n");
-        sb.append("Reason: ").append(match.getReason()).append("\n\n");
-        sb.append("=== Position ===\n");
-        sb.append("Position ID: ").append(p.getPositionId()).append("\n");
-        sb.append("Job Title: ").append(nvl(p.getJobTitle())).append("\n");
-        sb.append("Semester: ").append(semLabel).append(" (current: ").append(currentSemester).append(")\n");
-        sb.append("Grade: ").append(nvl(p.getGrade())).append("\n");
-        sb.append("Major: ").append(nvl(p.getMajor())).append("\n");
-        sb.append("Job Type: ").append(nvl(p.getJobType())).append("\n");
-        sb.append("Deadline: ").append(nvl(p.getDeadline())).append("\n");
-        sb.append("Status: ").append(p.getStatus()).append("\n");
-        sb.append("Interview location: ").append(nvl(p.getInterviewLocation())).append("\n\n");
-        sb.append("Description:\n").append(nvl(p.getJobDescription())).append("\n\n");
-        sb.append("Requirements:\n").append(nvl(p.getRequirements())).append("\n");
-
-        JTextArea area = new JTextArea(sb.toString(), 22, 64);
-        area.setLineWrap(true);
-        area.setWrapStyleWord(true);
-        area.setEditable(false);
-        area.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
-        JScrollPane sp = new JScrollPane(area);
-        sp.getVerticalScrollBar().setUnitIncrement(16);
-
-        JPanel panel = new JPanel(new BorderLayout(8, 8));
-        panel.add(sp, BorderLayout.CENTER);
-        JPanel bp = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton apply = new JButton("Apply for this position");
-        JButton cancel = new JButton("Cancel");
-        bp.add(apply);
-        bp.add(cancel);
-        panel.add(bp, BorderLayout.SOUTH);
-
-        JDialog detail = new JDialog(owner, "Position details", true);
-        detail.setContentPane(panel);
-        detail.pack();
-        detail.setLocationRelativeTo(owner);
-
-        apply.addActionListener(e -> {
-            try {
-                context.getTaJobService().applyForJob(token, p.getPositionId());
-                JOptionPane.showMessageDialog(detail, "Applied successfully!", "Apply", JOptionPane.INFORMATION_MESSAGE);
-                detail.dispose();
-            } catch (AppException ex) {
-                JOptionPane.showMessageDialog(detail, ex.getMessage(), "Apply failed", JOptionPane.ERROR_MESSAGE);
-            }
-        });
-        cancel.addActionListener(e -> detail.dispose());
-
-        detail.setVisible(true);
-    }
-
-    private static String nvl(String s) {
-        return s == null ? "" : s;
     }
 }
