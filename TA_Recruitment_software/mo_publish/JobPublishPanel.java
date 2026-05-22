@@ -15,12 +15,23 @@ public class JobPublishPanel extends JPanel {
     private JFrame parent;
     private Component previousCenterComponent;
 
+    private JTextField jobTitleField;
+    private JComboBox<String> gradeCombo;
+    private JComboBox<String> majorCombo;
+    private JComboBox<String> jobTypeCombo;
+    private JTextArea jobDescArea;
+    private JTextArea jobReqArea;
+    private MOPublishService moPublishService;
+
     public JobPublishPanel(JFrame parent, RecruitmentSystemContext context, String token, Component previousCenterComponent) {
         this.parent = parent;
         this.context = context;
         this.token = token;
         this.previousCenterComponent = previousCenterComponent;
         
+        // initialize service
+        this.moPublishService = context.getMoPublishService();
+
         setLayout(new BorderLayout());
         setBackground(Color.WHITE);
 
@@ -63,23 +74,23 @@ public class JobPublishPanel extends JPanel {
         gbc.anchor = GridBagConstraints.WEST;
         gbc.insets = new Insets(15, 0, 15, 40);
 
-        JTextField jobTitleField = createTextField("Enter your job title");
+        jobTitleField = createTextField("Enter your job title");
         
-        JComboBox<String> gradeCombo = new JComboBox<>(new String[]{
+        gradeCombo = new JComboBox<>(new String[]{
             "Year1", "Year2", "Year3", "Year4"
         });
         gradeCombo.setPreferredSize(new Dimension(800, 40));
         gradeCombo.setFont(new Font("Arial", Font.PLAIN, 14));
         gradeCombo.setBackground(Color.WHITE);
         
-        JComboBox<String> majorCombo = new JComboBox<>(new String[]{
+        majorCombo = new JComboBox<>(new String[]{
             "IOT", "EE", "IST", "TEM"
         });
         majorCombo.setPreferredSize(new Dimension(800, 40));
         majorCombo.setFont(new Font("Arial", Font.PLAIN, 14));
         majorCombo.setBackground(Color.WHITE);
         
-        JComboBox<String> jobTypeCombo = new JComboBox<>(new String[]{
+        jobTypeCombo = new JComboBox<>(new String[]{
             "Daily attendance",
             "grading",
             "invigilation",
@@ -90,9 +101,9 @@ public class JobPublishPanel extends JPanel {
         jobTypeCombo.setFont(new Font("Arial", Font.PLAIN, 14));
         jobTypeCombo.setBackground(Color.WHITE);
 
-        JTextArea jobDescArea = new JTextArea();
+        jobDescArea = new JTextArea();
         JScrollPane jobDescScroll = createTextAreaScroll("Enter your job description", jobDescArea);
-        JTextArea jobReqArea = new JTextArea();
+        jobReqArea = new JTextArea();
         JScrollPane jobReqScroll = createTextAreaScroll("Enter your job requirements", jobReqArea);
         JTextField interviewLocField = createTextField("Enter your interview location");
         JTextField closingDateField = createTextField("yyyy-mm-dd");
@@ -222,6 +233,74 @@ public class JobPublishPanel extends JPanel {
         // Increase the vertical scroll bar sensitivity by returning unit increment
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         add(scrollPane, BorderLayout.CENTER);
+    }
+
+    public void setInitialDataAndTriggerAI(String grade, String major, String jobType, String courseName) {
+        if (grade != null && !grade.equals("All Grades")) gradeCombo.setSelectedItem(grade);
+        if (major != null && !major.equals("All majors")) majorCombo.setSelectedItem(major);
+        if (jobType != null && !jobType.equals("All Categories")) jobTypeCombo.setSelectedItem(jobType);
+
+        generateAITemplate(courseName);
+    }
+
+    private void generateAITemplate(String courseName) {
+        JDialog loadingDialog = new JDialog(parent, "AI Assistant", true);
+        loadingDialog.setLayout(new BorderLayout(10, 10));
+        loadingDialog.setSize(350, 120);
+        loadingDialog.setLocationRelativeTo(this);
+        loadingDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+
+        JLabel msgLabel = new JLabel("AI Assistant is generating the job details, please wait...", SwingConstants.CENTER);
+        msgLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        JProgressBar progressBar = new JProgressBar();
+        progressBar.setIndeterminate(true);
+        
+        JPanel p = new JPanel(new BorderLayout(0, 10));
+        p.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        p.add(msgLabel, BorderLayout.CENTER);
+        p.add(progressBar, BorderLayout.SOUTH);
+        loadingDialog.add(p);
+
+        String selGrade = gradeCombo.getSelectedItem() != null ? gradeCombo.getSelectedItem().toString() : "";
+        String selMajor = majorCombo.getSelectedItem() != null ? majorCombo.getSelectedItem().toString() : "";
+        String selJobType = jobTypeCombo.getSelectedItem() != null ? jobTypeCombo.getSelectedItem().toString() : "";
+
+        SwingWorker<java.util.Map<String, String>, Void> worker = new SwingWorker<>() {
+            @Override
+            protected java.util.Map<String, String> doInBackground() throws Exception {
+                return moPublishService.generateAITemplate(selGrade, selMajor, selJobType, courseName);
+            }
+
+            @Override
+            protected void done() {
+                loadingDialog.dispose();
+                try {
+                    java.util.Map<String, String> result = get();
+                    if (result != null) {
+                        if (result.containsKey("title") && !result.get("title").isEmpty()) {
+                            jobTitleField.setText(result.get("title"));
+                        }
+                        if (result.containsKey("desc") && !result.get("desc").isEmpty()) {
+                            jobDescArea.setText(result.get("desc"));
+                        }
+                        if (result.containsKey("req") && !result.get("req").isEmpty()) {
+                            jobReqArea.setText(result.get("req"));
+                        }
+                        JOptionPane.showMessageDialog(JobPublishPanel.this, 
+                            "AI generation complete. Please review and fill in the remaining details (Headcount, Location, Date).", 
+                            "Success", JOptionPane.INFORMATION_MESSAGE);
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(JobPublishPanel.this, 
+                        "AI generation failed: " + ex.getMessage(), 
+                        "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        };
+
+        worker.execute();
+        loadingDialog.setVisible(true);
     }
 
     private void goBack() {
