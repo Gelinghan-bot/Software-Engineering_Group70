@@ -13,8 +13,18 @@ import TA_Recruitment_software.auth.SessionContext;
 import TA_Recruitment_software.auth.SessionManager;
 import TA_Recruitment_software.ta_jobs.CurrentSemesterStore;
 import TA_Recruitment_software.ta_jobs.PositionSemesterStore;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 public class MOPublishService {
     private final PositionRepository positionRepository;
@@ -51,13 +61,13 @@ public class MOPublishService {
         User publisher = userRepository.findByUserId(session.getUserId())
             .orElseThrow(() -> new AppException("Account not found."));
 
-        String checkedTitle = ValidationUtil.validateName(jobTitle, "Job title");
+        String checkedTitle = ValidationUtil.sanitizeText(jobTitle != null ? jobTitle.replace("\n", " ").replace("\r", "") : "", "Job title", 200);
         String checkedGrade = ValidationUtil.sanitizeText(grade, "Grade", 50);
         String checkedMajor = ValidationUtil.sanitizeText(major, "Major", 50);
         String checkedType = ValidationUtil.sanitizeText(jobType, "Job type", 80);
-        String checkedDesc = ValidationUtil.sanitizeText(jobDescription, "Job description", 800);
+        String checkedDesc = ValidationUtil.sanitizeText(jobDescription != null ? jobDescription.replace("\n", " ").replace("\r", "") : "", "Job description", 3000);
 
-        String checkedReq = ValidationUtil.sanitizeText(requirements, "Requirements", 600);
+        String checkedReq = ValidationUtil.sanitizeText(requirements != null ? requirements.replace("\n", " ").replace("\r", "") : "", "Requirements", 3000);
         String checkedLoc = ValidationUtil.sanitizeText(interviewLocation, "Interview location", 100);
         LocalDate checkedDeadline = ValidationUtil.validateDate(deadline, "Deadline");
         ValidationUtil.ensureTodayOrFuture(checkedDeadline, "Deadline");
@@ -130,13 +140,13 @@ public class MOPublishService {
             throw new AppException("Permission denied. You can only update your own positions.");
         }
 
-        String checkedTitle = ValidationUtil.validateName(jobTitle, "Job title");
+        String checkedTitle = ValidationUtil.sanitizeText(jobTitle != null ? jobTitle.replace("\n", " ").replace("\r", "") : "", "Job title", 200);
         String checkedGrade = ValidationUtil.sanitizeText(grade, "Grade", 50);
         String checkedMajor = ValidationUtil.sanitizeText(major, "Major", 50);
         String checkedType = ValidationUtil.sanitizeText(jobType, "Job type", 80);
-        String checkedDesc = ValidationUtil.sanitizeText(jobDescription, "Job description", 800);
+        String checkedDesc = ValidationUtil.sanitizeText(jobDescription != null ? jobDescription.replace("\n", " ").replace("\r", "") : "", "Job description", 3000);
 
-        String checkedReq = ValidationUtil.sanitizeText(requirements, "Requirements", 600);
+        String checkedReq = ValidationUtil.sanitizeText(requirements != null ? requirements.replace("\n", " ").replace("\r", "") : "", "Requirements", 3000);
         String checkedLoc = ValidationUtil.sanitizeText(interviewLocation, "Interview location", 100);
         LocalDate checkedDeadline = ValidationUtil.validateDate(deadline, "Deadline");
         ValidationUtil.ensureTodayOrFuture(checkedDeadline, "Deadline");
@@ -203,5 +213,107 @@ public class MOPublishService {
         }
         
         return positions;
+    }
+
+    public Map<String, String> generateAITemplate(String grade, String major, String jobType, String courseName) throws Exception {
+        Properties aiConfig = loadAiConfig();
+        String apiKey = aiConfig.getProperty("ALIYUN_API_KEY");
+        String modelName = aiConfig.getProperty("ALIYUN_MODEL", "qwen-plus");
+        if (apiKey == null || apiKey.isEmpty() || apiKey.equals("YOUR_API_KEY_HERE")) {
+            throw new Exception("API KEY 未配置！请在 TA_Recruitment_software/data/ai-config.properties 中填入您的 API KEY。");
+        }
+        
+        String actualCourse = (courseName == null || courseName.trim().isEmpty()) ? "Unknown Course" : courseName.trim();
+
+        String systemPrompt = "You are a professional university HR specializing in Teaching Assistant recruitment. You need to help the Module Organizer (MO) automatically draft a professional and detailed TA job posting.";
+        String userPrompt = String.format("We need to recruit a TA for Course: [%s]. The target students are Grade: [%s], Major: [%s]. The main job type is: [%s].\n" + 
+            "Please help me draft the following three parts:\n" + 
+            "1. Job Title\n2. Job Description\n3. Job Requirements\n\n" + 
+            "Requirement: You MUST strictly follow the format below (return directly without markdown code blocks or extra conversational text):\n" + 
+            "<TITLE>Your generated job title</TITLE>\n" + 
+            "<DESC>Your generated job description...</DESC>\n" + 
+            "<REQ>Your generated job requirements...</REQ>", 
+            actualCourse,
+            "All Grades".equals(grade) ? "Any" : grade, 
+            "All majors".equals(major) ? "Any" : major, 
+            "All Categories".equals(jobType) ? "Daily assistance" : jobType);
+
+        String rawResponse = callAliyunBailianAPI(apiKey, modelName, systemPrompt, userPrompt);
+        
+        Map<String, String> result = new HashMap<>();
+        result.put("title", extractTag(rawResponse, "<TITLE>", "</TITLE>"));
+        result.put("desc", extractTag(rawResponse, "<DESC>", "</DESC>"));
+        result.put("req", extractTag(rawResponse, "<REQ>", "</REQ>"));
+        
+        return result;
+    }
+
+    private Properties loadAiConfig() {
+        Properties prop = new Properties();
+        try (InputStream input = new FileInputStream("data/ai-config.properties")) {
+            prop.load(input);
+        } catch (Exception ex) { }
+        return prop;
+    }
+
+    private String callAliyunBailianAPI(String apiKey, String modelName, String systemPrompt, String userPrompt) throws Exception {
+        URL url = new URL("https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Authorization", "Bearer " + apiKey);
+        conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
+        conn.setDoOutput(true);
+
+        String jsonInputString = String.format(
+            "{\"model\": \"%s\", \"messages\": [{\"role\": \"system\", \"content\": \"%s\"}, {\"role\": \"user\", \"content\": \"%s\"}]}",
+            modelName, escapeJson(systemPrompt), escapeJson(userPrompt)
+        );
+
+        try (OutputStream os = conn.getOutputStream()) {
+            byte[] input = jsonInputString.getBytes("utf-8");
+            os.write(input, 0, input.length);
+        }
+
+        int code = conn.getResponseCode();
+        InputStream is = code >= 200 && code < 300 ? conn.getInputStream() : conn.getErrorStream();
+        
+        StringBuilder response = new StringBuilder();
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(is, "utf-8"))) {
+            String responseLine;
+            while ((responseLine = br.readLine()) != null) {
+                response.append(responseLine.trim());
+            }
+        }
+        
+        if (code >= 200 && code < 300) {
+            String content = extractContentFromJson(response.toString());
+            return content;
+        } else {
+            throw new Exception("API 调用失败 (HTTP " + code + "): " + response.toString());
+        }
+    }
+
+    private String escapeJson(String s) {
+        return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "");
+    }
+
+    private String extractContentFromJson(String json) {
+        String marker = "\"content\":\"";
+        int start = json.indexOf(marker);
+        if (start == -1) return "";
+        start += marker.length();
+        int end = json.indexOf("\"}", start);
+        if (end == -1) return json;
+        String content = json.substring(start, end);
+        return content.replace("\\n", "\n").replace("\\\"", "\"").replace("\\\\", "\\");
+    }
+
+    private String extractTag(String source, String startTag, String endTag) {
+        int start = source.indexOf(startTag);
+        int end = source.indexOf(endTag);
+        if (start != -1 && end != -1 && end > start) {
+            return source.substring(start + startTag.length(), end).trim();
+        }
+        return "";
     }
 }

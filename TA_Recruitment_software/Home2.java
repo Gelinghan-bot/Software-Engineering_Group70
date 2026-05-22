@@ -17,6 +17,16 @@ public class Home2 extends JFrame {
     private BackgroundPanel bgPanel;
     private JButton aiDiagnosisHomeButton;
 
+    private JComboBox<String> gradeCombo;
+    private JComboBox<String> majorCombo;
+    private JComboBox<String> categoryCombo;
+    private JButton searchBtn;
+    private JTextField courseNameField;
+    private JPanel searchPanel;
+    private JPanel aiPublishPanel;
+    private JButton aiPublishBtn;
+    private JLabel moInstructionLabel;
+
     public Home2() {
         this.context = new RecruitmentSystemContext();
 
@@ -47,26 +57,26 @@ public class Home2 extends JFrame {
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         // Search Bar Panel
-        JPanel searchPanel = new JPanel();
+        searchPanel = new JPanel();
         searchPanel.setOpaque(false);
         searchPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 10));
 
         String[] grades = {"All Grades", "Year1", "Year2", "Year3", "Year4"};
-        JComboBox<String> gradeCombo = new JComboBox<>(grades);
+        gradeCombo = new JComboBox<>(grades);
         gradeCombo.setPreferredSize(new Dimension(180, 45));
         gradeCombo.setBackground(Color.WHITE);
 
         String[] majors = {"All majors", "IOT", "EE", "IST", "TEM"};
-        JComboBox<String> majorCombo = new JComboBox<>(majors);
+        majorCombo = new JComboBox<>(majors);
         majorCombo.setPreferredSize(new Dimension(180, 45));
         majorCombo.setBackground(Color.WHITE);
 
         String[] categories = {"All Categories", "Daily attendance", "grading", "invigilation", "Assess", "and other tasks"};
-        JComboBox<String> categoryCombo = new JComboBox<>(categories);
+        categoryCombo = new JComboBox<>(categories);
         categoryCombo.setPreferredSize(new Dimension(180, 45));
         categoryCombo.setBackground(Color.WHITE);
 
-        JButton searchBtn = new JButton("SEARCH");
+        searchBtn = new JButton("SEARCH");
         searchBtn.setBackground(new Color(39, 174, 96));
         searchBtn.setForeground(Color.WHITE);
         searchBtn.setOpaque(true);
@@ -75,24 +85,61 @@ public class Home2 extends JFrame {
         searchBtn.setFont(new Font("Arial", Font.BOLD, 14));
         searchBtn.setPreferredSize(new Dimension(130, 45));
         
-        searchBtn.addActionListener(e -> {
-            String selectedGrade = (String) gradeCombo.getSelectedItem();
-            String selectedMajor = (String) majorCombo.getSelectedItem();
-            String selectedCategory = (String) categoryCombo.getSelectedItem();
-            TA_Recruitment_software.ta_jobs.TAJobsUI.showFilteredJobs(this, context, currentToken, selectedGrade, selectedMajor, selectedCategory);
+        courseNameField = new JTextField("Course Name (e.g. Intro to Java)");
+        courseNameField.setPreferredSize(new Dimension(200, 45));
+        courseNameField.setFont(new Font("Arial", Font.PLAIN, 14));
+        courseNameField.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200)), 
+            BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+        courseNameField.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent e) {
+                if (courseNameField.getText().equals("Course Name (e.g. Intro to Java)")) {
+                    courseNameField.setText("");
+                }
+            }
+            public void focusLost(java.awt.event.FocusEvent e) {
+                if (courseNameField.getText().isEmpty()) {
+                    courseNameField.setText("Course Name (e.g. Intro to Java)");
+                }
+            }
         });
 
         searchPanel.add(gradeCombo);
         searchPanel.add(majorCombo);
         searchPanel.add(categoryCombo);
-        searchPanel.add(searchBtn);
+        searchPanel.add(searchBtn); // added conditionally later
+
+        aiPublishPanel = new JPanel();
+        aiPublishPanel.setOpaque(false);
+        aiPublishPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 10));
+        
+        aiPublishBtn = new JButton("AI-Autofill Publish");
+        aiPublishBtn.setBackground(new Color(108, 92, 231)); 
+        aiPublishBtn.setForeground(Color.WHITE);
+        aiPublishBtn.setOpaque(true);
+        aiPublishBtn.setFocusPainted(false);
+        aiPublishBtn.setBorderPainted(false);
+        aiPublishBtn.setFont(new Font("Arial", Font.BOLD, 14));
+        aiPublishBtn.setPreferredSize(new Dimension(170, 45));
+        
+        aiPublishPanel.add(aiPublishBtn);
+        aiPublishPanel.setVisible(false);
+
+        moInstructionLabel = new JLabel("Quickly Post your Job:");
+        moInstructionLabel.setFont(new Font("Arial", Font.BOLD, 26));
+        moInstructionLabel.setForeground(new Color(0x081236));
+        moInstructionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        moInstructionLabel.setVisible(false);
 
         // Add to content panel
         contentPanel.add(subtitleLabel);
         contentPanel.add(Box.createVerticalStrut(10));
         contentPanel.add(titleLabel);
-        contentPanel.add(Box.createVerticalStrut(30));
+        contentPanel.add(Box.createVerticalStrut(50)); // increased strut to move components down
+        contentPanel.add(moInstructionLabel);
+        contentPanel.add(Box.createVerticalStrut(15));
         contentPanel.add(searchPanel);
+        contentPanel.add(aiPublishPanel);
         contentPanel.add(Box.createVerticalStrut(16));
         aiDiagnosisHomeButton = TA_Recruitment_software.ta_jobs.TAJobsUI.createAiDiagnosisHomeButton(this, context, () -> currentToken, () -> currentRole);
         contentPanel.add(aiDiagnosisHomeButton);
@@ -112,6 +159,68 @@ public class Home2 extends JFrame {
         JPanel headerPanel = createHeaderPanel();
         getContentPane().add(headerPanel, BorderLayout.NORTH);
         TA_Recruitment_software.ta_jobs.TAJobsUI.updateAiDiagnosisHomeButton(aiDiagnosisHomeButton, currentRole, currentToken);
+        
+        // Update Search Panel UI dynamically based on Role
+        for (java.awt.event.ActionListener al : searchBtn.getActionListeners()) {
+            searchBtn.removeActionListener(al);
+        }
+        for (java.awt.event.ActionListener al : aiPublishBtn.getActionListeners()) {
+            aiPublishBtn.removeActionListener(al);
+        }
+
+        if (currentRole == TA_Recruitment_software.admin_system.model.Role.MO) {
+            if ("All Categories".equals(categoryCombo.getItemAt(0))) {
+                categoryCombo.removeItemAt(0);
+                categoryCombo.insertItemAt("Job Type", 0);
+                categoryCombo.setSelectedIndex(0);
+            }
+            moInstructionLabel.setVisible(true);
+            searchPanel.remove(searchBtn);
+            if (courseNameField.getParent() == null) {
+                searchPanel.add(courseNameField);
+            }
+            aiPublishPanel.setVisible(true);
+
+            aiPublishBtn.addActionListener(e -> {
+                String selectedGrade = (String) gradeCombo.getSelectedItem();
+                String selectedMajor = (String) majorCombo.getSelectedItem();
+                String selectedCategory = (String) categoryCombo.getSelectedItem();
+                String courseName = courseNameField.getText().equals("Course Name (e.g. Intro to Java)") ? "" : courseNameField.getText();
+                
+                Component center = ((BorderLayout) getContentPane().getLayout()).getLayoutComponent(BorderLayout.CENTER);
+                TA_Recruitment_software.mo_publish.JobPublishPanel publishPanel = 
+                        new TA_Recruitment_software.mo_publish.JobPublishPanel(this, context, currentToken, center);
+                
+                getContentPane().remove(center);
+                getContentPane().add(publishPanel, BorderLayout.CENTER);
+                revalidate();
+                repaint();
+                
+                publishPanel.setInitialDataAndTriggerAI(selectedGrade, selectedMajor, selectedCategory, courseName);
+            });
+        } else {
+            if ("Job Type".equals(categoryCombo.getItemAt(0))) {
+                categoryCombo.removeItemAt(0);
+                categoryCombo.insertItemAt("All Categories", 0);
+                categoryCombo.setSelectedIndex(0);
+            }
+            moInstructionLabel.setVisible(false);
+            searchPanel.remove(courseNameField);
+            if (searchBtn.getParent() == null) {
+                searchPanel.add(searchBtn);
+            }
+            aiPublishPanel.setVisible(false);
+
+            searchBtn.addActionListener(e -> {
+                String selectedGrade = (String) gradeCombo.getSelectedItem();
+                String selectedMajor = (String) majorCombo.getSelectedItem();
+                String selectedCategory = (String) categoryCombo.getSelectedItem();
+                TA_Recruitment_software.ta_jobs.TAJobsUI.showFilteredJobs(this, context, currentToken, selectedGrade, selectedMajor, selectedCategory);
+            });
+        }
+
+        searchPanel.revalidate();
+        searchPanel.repaint();
         revalidate();
         repaint();
     }
