@@ -1,1 +1,4 @@
 notificationId,userId,applicationId,positionId,oldStatus,newStatus,message,createdAt,read
+NTF_1779441228631_3,TA_1775977712119_1,INV_1779441228616_2,POS_2026041100000_09,INVITED,INVITED,[Invitation] You have been invited to apply for: IOT Project Mentor,2026-05-22 17:13:48,false
+NTF_1779441228665_5,TA_2026051600003_1,INV_1779441228647_4,POS_2026041100000_09,INVITED,INVITED,[Invitation] You have been invited to apply for: IOT Project Mentor,2026-05-22 17:13:48,false
+NTF_1779441228707_7,TA_2026051600004_1,INV_1779441228691_6,POS_2026041100000_09,INVITED,INVITED,[Invitation] You have been invited to apply for: IOT Project Mentor,2026-05-22 17:13:48,false
