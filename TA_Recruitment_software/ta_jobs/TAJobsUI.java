@@ -6,6 +6,7 @@ import TA_Recruitment_software.admin_system.model.Application;
 import TA_Recruitment_software.admin_system.model.Position;
 import TA_Recruitment_software.admin_system.model.Role;
 import java.awt.*;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -75,7 +76,9 @@ public class TAJobsUI {
                 @Override public boolean isCellEditable(int row, int column) { return false; }
             };
             
+            Map<String, Position> positionById = new HashMap<>();
             for (Position p : positions) {
+                positionById.put(p.getPositionId(), p);
                 long hiredCount = hiredCountMap.getOrDefault(p.getPositionId(), 0L);
                 String headcountDisplay = hiredCount + "/" + p.getHeadcount();
                 String semLabel = PositionSemesterStore.labelFor(p.getPositionId(), semesterByPositionId);
@@ -98,6 +101,9 @@ public class TAJobsUI {
 
             JTable table = new JTable(model);
             JPanel panel = new JPanel(new BorderLayout());
+            panel.add(PositionDetailUI.createDoubleClickHintLabel(
+                "Tip: Double-click a job row to view full position details."
+            ), BorderLayout.NORTH);
             JScrollPane scrollPane = new JScrollPane(table);
             scrollPane.getVerticalScrollBar().setUnitIncrement(16);
             scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
@@ -146,6 +152,43 @@ public class TAJobsUI {
             }
             btnPanel.add(backBtn);
             panel.add(btnPanel, BorderLayout.SOUTH);
+
+            final int appliedColIndex = colNames.indexOf("Already applied");
+            table.addMouseListener(new java.awt.event.MouseAdapter() {
+                @Override
+                public void mouseClicked(java.awt.event.MouseEvent e) {
+                    if (e.getClickCount() != 2) {
+                        return;
+                    }
+                    int row = table.rowAtPoint(e.getPoint());
+                    if (row < 0) {
+                        return;
+                    }
+                    String posId = (String) model.getValueAt(row, 0);
+                    Position pos = positionById.get(posId);
+                    if (pos == null) {
+                        return;
+                    }
+                    boolean applied = alreadyApplied.contains(posId);
+                    PositionDetailUI.show(
+                        parent,
+                        panel,
+                        context,
+                        token,
+                        pos,
+                        isTA,
+                        applied,
+                        null,
+                        null,
+                        () -> {
+                            alreadyApplied.add(posId);
+                            if (isTA && appliedColIndex >= 0) {
+                                model.setValueAt("Yes", row, appliedColIndex);
+                            }
+                        }
+                    );
+                }
+            });
 
             backBtn.addActionListener(e -> {
                 contentPane.remove(panel);
