@@ -128,7 +128,7 @@ public class AdminUI {
             filterPanel.add(new JLabel("Keyword:"), g);
             g.gridx = 1; g.gridwidth = 3;
             JTextField keywordField = UIStyle.createTextField(25);
-            keywordField.setPreferredSize(new Dimension(280, 34));
+            keywordField.setPreferredSize(new Dimension(280, 32));
             filterPanel.add(keywordField, g);
 
             g.gridx = 4; g.gridwidth = 1;
@@ -324,6 +324,7 @@ public class AdminUI {
                 if (matchField(u.getFullName(), kw)) match = true;
                 else if (matchField(u.getAccountId(), kw)) match = true;
                 else if (matchField(u.getEmail(), kw)) match = true;
+                else if (matchField(u.getPhone(), kw)) match = true;
                 else if (matchField(u.getMajor(), kw)) match = true;
                 else if (matchField(u.getDepartment(), kw)) match = true;
                 else if (matchField(u.getStudentId(), kw)) match = true;
@@ -553,7 +554,7 @@ public class AdminUI {
                 }
                 int approvedCount = 0;
                 for (String[] row : data) {
-                    if ("APPROVED".equals(row[4]) || "HIRED".equals(row[4])) approvedCount++;
+                    if ("APPROVED".equals(row[4]) || "HIRED".equals(row[4]) || "OFFERED".equals(row[4])) approvedCount++;
                 }
                 summaryHtml = "<html><b style='color:#27ae60'>TA</b> | "
                     + data.size() + " assigned position(s) | "

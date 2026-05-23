@@ -68,7 +68,7 @@ public final class UIStyle {
     public static Border inputBorder() {
         return new CompoundBorder(
             new RoundedBorder(BORDER, RADIUS),
-            new EmptyBorder(7, 12, 7, 12)
+            new EmptyBorder(4, 10, 4, 10)
         );
     }
 
@@ -76,7 +76,7 @@ public final class UIStyle {
     public static Border inputBorderFocused() {
         return new CompoundBorder(
             new RoundedBorder(BORDER_FOCUS, RADIUS),
-            new EmptyBorder(7, 12, 7, 12)
+            new EmptyBorder(4, 10, 4, 10)
         );
     }
 
