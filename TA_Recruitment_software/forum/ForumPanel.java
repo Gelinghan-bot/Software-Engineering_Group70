@@ -201,7 +201,7 @@ public class ForumPanel extends JPanel {
     private enum SortStrategy { DEFAULT, LIKES, FAVORITES, COMMENTS, DATE }
     private SortStrategy currentSortStrategy = SortStrategy.DEFAULT;
 
-    private enum FilterStrategy { ALL, MY_POSTS, LIKED, FAVORITES }
+    private enum FilterStrategy { ALL, MY_POSTS, LIKED, FAVORITES, COMMENTED }
     private FilterStrategy currentFilterStrategy = FilterStrategy.ALL;
 
     private void loadTopics() {
@@ -236,6 +236,19 @@ public class ForumPanel extends JPanel {
             }
             if (currentFilterStrategy == FilterStrategy.FAVORITES && !t.getFavoritedByUsers().contains(loggedInUser)) {
                 continue;
+            }
+            if (currentFilterStrategy == FilterStrategy.COMMENTED) {
+                boolean hasCommented = false;
+                java.util.List<Comment> topicComments = commentRepository.getCommentsByTopicId(t.getId());
+                for (Comment c : topicComments) {
+                    if (c.getAuthorName().equals(loggedInUser)) {
+                        hasCommented = true;
+                        break;
+                    }
+                }
+                if (!hasCommented) {
+                    continue;
+                }
             }
 
             filtered.add(t);
@@ -788,15 +801,51 @@ public class ForumPanel extends JPanel {
         return btn;
     }
 
-        class NotificationItem {
+        private static class ForumReadManager {
+        private static final java.io.File READ_FILE = new java.io.File("data/forum_read_state.csv");
+        static String getLastRead(String user) {
+            try {
+                if (READ_FILE.exists()) {
+                    for (String line : java.nio.file.Files.readAllLines(READ_FILE.toPath(), java.nio.charset.StandardCharsets.UTF_8)) {
+                        String[] p = line.split(",", 2);
+                        if (p.length == 2 && p[0].equals(user)) {
+                            return p[1];
+                        }
+                    }
+                }
+            } catch (Exception e) {}
+            return "0000-00-00 00:00:00";
+        }
+        static void updateLastRead(String user) {
+            try {
+                java.util.Map<String, String> map = new java.util.HashMap<>();
+                if (READ_FILE.exists()) {
+                    for (String line : java.nio.file.Files.readAllLines(READ_FILE.toPath(), java.nio.charset.StandardCharsets.UTF_8)) {
+                        String[] p = line.split(",", 2);
+                        if (p.length == 2) map.put(p[0], p[1]);
+                    }
+                }
+                map.put(user, new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date()));
+                java.util.List<String> list = new java.util.ArrayList<>();
+                for (java.util.Map.Entry<String, String> e : map.entrySet()) {
+                    list.add(e.getKey() + "," + e.getValue());
+                }
+                java.nio.file.Files.write(READ_FILE.toPath(), list, java.nio.charset.StandardCharsets.UTF_8);
+            } catch (Exception e) {}
+        }
+    }
+
+    class NotificationItem {
         String type;
         String byUser;
         String topicId;
         String topicTitle;
         String detailText;
         String dateStr;
+        boolean isRead;
         NotificationItem(String type, String byUser, String topicId, String topicTitle, String detailText, String dateStr) {
             this.type = type; this.byUser = byUser; this.topicId = topicId; this.topicTitle = topicTitle; this.detailText = detailText; this.dateStr = dateStr;
+            this.isRead = false;
         }
     }
 
@@ -804,18 +853,23 @@ public class ForumPanel extends JPanel {
         java.util.List<NotificationItem> notifs = new java.util.ArrayList<>();
         if (loggedInUser == null || loggedInUser.equals("Guest")) return notifs;
         
+        String lastRead = ForumReadManager.getLastRead(loggedInUser);
         java.util.List<Topic> allTopics = topicRepository.getAllTopics();
         for (Topic t : allTopics) {
             if (t.getAuthorName().equals(loggedInUser)) {
                 for (String liker : t.getLikedByUsers()) {
                     if (!liker.equals(loggedInUser)) {
-                        notifs.add(new NotificationItem("Like", liker, t.getId(), t.getTitle(), liker + " liked your topic.", t.getDateStr()));
+                        NotificationItem n = new NotificationItem("Like", liker, t.getId(), t.getTitle(), liker + " liked your topic.", t.getDateStr());
+                        n.isRead = n.dateStr.compareTo(lastRead) <= 0;
+                        notifs.add(n);
                     }
                 }
                 java.util.List<Comment> comments = commentRepository.getCommentsByTopicId(t.getId());
                 for (Comment c : comments) {
                     if (!c.getAuthorName().equals(loggedInUser)) {
-                        notifs.add(new NotificationItem("Comment", c.getAuthorName(), t.getId(), t.getTitle(), c.getContent(), c.getDateStr()));
+                        NotificationItem n = new NotificationItem("Comment", c.getAuthorName(), t.getId(), t.getTitle(), c.getContent(), c.getDateStr());
+                        n.isRead = n.dateStr.compareTo(lastRead) <= 0;
+                        notifs.add(n);
                     }
                 }
             }
@@ -825,7 +879,10 @@ public class ForumPanel extends JPanel {
         return notifs;
     }
 
-    private void showMyMessagesDialog(java.util.List<NotificationItem> notifications) {
+    private void showMyMessagesDialog(String username) {
+        java.util.List<NotificationItem> notifications = getNotifications(username);
+        ForumReadManager.updateLastRead(username);
+        
         JDialog dialog = new JDialog((java.awt.Frame)SwingUtilities.getWindowAncestor(this), "My Messages", true);
         dialog.setSize(500, 600);
         dialog.setLocationRelativeTo(this);
@@ -957,10 +1014,12 @@ public class ForumPanel extends JPanel {
             popupMenu.setBorder(new LineBorder(new Color(210, 210, 210), 1));
             popupMenu.setBackground(Color.WHITE);
             
-            java.util.List<NotificationItem> notifs = getNotifications(username);
-            int msgCount = notifs.size();
-            JMenuItem msgItem = new JMenuItem("📬 My Messages (" + msgCount + ")");
-            msgItem.addActionListener(e -> showMyMessagesDialog(notifs));
+            final String finalUsername = username;
+            java.util.List<NotificationItem> notifs = getNotifications(finalUsername);
+            int unreadCount = 0;
+            for (NotificationItem n : notifs) { if (!n.isRead) unreadCount++; }
+            JMenuItem msgItem = new JMenuItem("📬 My Messages (" + unreadCount + ")");
+            msgItem.addActionListener(e -> showMyMessagesDialog(finalUsername));
             JMenuItem allTopicsItem = new JMenuItem("🌐 All Topics (Reset Filter)");
             JMenuItem postItem = new JMenuItem("📝 My Published Topics");
             JMenuItem likesItem = new JMenuItem("❤️ Topics I Liked");
@@ -1004,9 +1063,18 @@ public class ForumPanel extends JPanel {
                 currentPage = 1;
                 loadTopics();
             });
+            commentsItem.addActionListener(e -> {
+                currentFilterStrategy = FilterStrategy.COMMENTED;
+                currentPage = 1;
+                loadTopics();
+            });
 
             myHubLbl.addMouseListener(new java.awt.event.MouseAdapter() {
                 public void mouseEntered(java.awt.event.MouseEvent e) {
+                    java.util.List<NotificationItem> currentNotifs = getNotifications(finalUsername);
+                    int currentUnread = 0;
+                    for (NotificationItem n : currentNotifs) { if (!n.isRead) currentUnread++; }
+                    msgItem.setText("📬 My Messages (" + currentUnread + ")");
                     popupMenu.show(myHubLbl, 0, myHubLbl.getHeight());
                 }
             });
