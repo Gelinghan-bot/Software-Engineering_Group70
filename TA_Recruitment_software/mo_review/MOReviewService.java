@@ -13,6 +13,7 @@ import TA_Recruitment_software.admin_system.repository.PositionRepository;
 import TA_Recruitment_software.admin_system.repository.UserRepository;
 import TA_Recruitment_software.auth.SessionContext;
 import TA_Recruitment_software.auth.SessionManager;
+import TA_Recruitment_software.auth.TaNotificationService;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -39,6 +40,7 @@ public class MOReviewService {
     private final ApplicationRepository applicationRepository;
     private final UserRepository userRepository;
     private final SessionManager sessionManager;
+    private final TaNotificationService taNotificationService;
 
     private static final Map<ApplicationStatus, List<ApplicationStatus>> VALID_TRANSITIONS;
 
@@ -64,12 +66,14 @@ public class MOReviewService {
         PositionRepository positionRepository,
         ApplicationRepository applicationRepository,
         UserRepository userRepository,
-        SessionManager sessionManager
+        SessionManager sessionManager,
+        TaNotificationService taNotificationService
     ) {
         this.positionRepository = positionRepository;
         this.applicationRepository = applicationRepository;
         this.userRepository = userRepository;
         this.sessionManager = sessionManager;
+        this.taNotificationService = taNotificationService;
     }
 
     public List<Application> listApplicationsForPosition(String token, String positionId) {
@@ -150,6 +154,7 @@ public class MOReviewService {
                 + ". Allowed: " + validNext);
         }
 
+        ApplicationStatus oldStatus = app.getStatus();
         String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
         String historyEntry = now + " | " + app.getStatus() + " -> " + newStatus;
@@ -171,6 +176,8 @@ public class MOReviewService {
         }
 
         applicationRepository.save(app);
+        taNotificationService.pushStatusChangeNotification(
+            app.getApplicantUserId(), app, oldStatus.name(), newStatus.name(), note);
 
         // Auto-close position and reject remaining TAs if hired headcount reached limit
         if (newStatus == ApplicationStatus.HIRED && position.getHeadcount() > 0) {
@@ -194,6 +201,7 @@ public class MOReviewService {
                 if (a.getStatus() != ApplicationStatus.HIRED && a.getStatus() != ApplicationStatus.REJECTED) {
                     List<ApplicationStatus> validNext = getValidNextStatuses(a.getStatus());
                     if (validNext.contains(ApplicationStatus.REJECTED)) {
+                        ApplicationStatus prevStatus = a.getStatus();
                         String historyEntry = now + " | " + a.getStatus() + " -> " + ApplicationStatus.REJECTED + " | Note: Position Filled";
                         String existingHistory = a.getStatusHistory();
                         if (existingHistory == null || existingHistory.isEmpty()) {
@@ -205,6 +213,8 @@ public class MOReviewService {
                         a.setStatusNote("Position Filled");
                         a.setUpdatedTime(now);
                         applicationRepository.save(a);
+                        taNotificationService.pushStatusChangeNotification(
+                            a.getApplicantUserId(), a, prevStatus.name(), ApplicationStatus.REJECTED.name(), "Position Filled");
                     }
                 }
             }

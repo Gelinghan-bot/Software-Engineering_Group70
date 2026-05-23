@@ -44,12 +44,12 @@ public class RecruitmentSystemContext {
         this.profileService = new ProfileService(userRepository, sessionManager);
         this.moTaProfileViewService = new MoTaProfileViewService(userRepository, sessionManager);
         this.taJobService = new TAJobService(positionRepository, applicationRepository, userRepository, sessionManager);
-        this.moPublishService = new MOPublishService(positionRepository, userRepository, sessionManager);
-        this.moReviewService = new MOReviewService(positionRepository, applicationRepository, userRepository, sessionManager);
+        this.taNotificationService = new TaNotificationService(applicationRepository, positionRepository, sessionManager);
+        this.moPublishService = new MOPublishService(positionRepository, userRepository, sessionManager, taNotificationService, applicationRepository);
+        this.moReviewService = new MOReviewService(positionRepository, applicationRepository, userRepository, sessionManager, taNotificationService);
         this.adminService = new AdminService(userRepository, positionRepository, applicationRepository, sessionManager);
         this.adminService.seedDefaultAdmin();
         this.aiDiagnosisService = new AiDiagnosisService(profileService, taJobService);
-        this.taNotificationService = new TaNotificationService(applicationRepository, positionRepository, sessionManager);
         this.interviewNoteService = new InterviewNoteService(sessionManager);
         this.moInvitationService = new MoInvitationService(sessionManager, userRepository, applicationRepository, positionRepository, taNotificationService);
     }

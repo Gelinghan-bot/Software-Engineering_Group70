@@ -1,4 +1,28 @@
-notificationId,userId,applicationId,positionId,oldStatus,newStatus,message,createdAt,read
-NTF_1779441228631_3,TA_1775977712119_1,INV_1779441228616_2,POS_2026041100000_09,INVITED,INVITED,[Invitation] You have been invited to apply for: IOT Project Mentor,2026-05-22 17:13:48,false
-NTF_1779441228665_5,TA_2026051600003_1,INV_1779441228647_4,POS_2026041100000_09,INVITED,INVITED,[Invitation] You have been invited to apply for: IOT Project Mentor,2026-05-22 17:13:48,false
-NTF_1779441228707_7,TA_2026051600004_1,INV_1779441228691_6,POS_2026041100000_09,INVITED,INVITED,[Invitation] You have been invited to apply for: IOT Project Mentor,2026-05-22 17:13:48,false
+notificationId,userId,applicationId,positionId,oldStatus,newStatus,message,createdAt,read,note,jobTitle
+NTF_1779441228631_3,TA_1775977712119_1,INV_1779441228616_2,POS_2026041100000_09,INVITED,INVITED,[Invitation] You have been invited to apply for: IOT Project Mentor,2026-05-22 17:13:48,false,,
+NTF_1779441228665_5,TA_2026051600003_1,INV_1779441228647_4,POS_2026041100000_09,INVITED,INVITED,[Invitation] You have been invited to apply for: IOT Project Mentor,2026-05-22 17:13:48,false,,
+NTF_1779441228707_7,TA_2026051600004_1,INV_1779441228691_6,POS_2026041100000_09,INVITED,INVITED,[Invitation] You have been invited to apply for: IOT Project Mentor,2026-05-22 17:13:48,false,,
+NTF_1779533704498_1,TA_1775661872788_2,APP_1778763698972_1,POS_2026041100000_09,PENDING,SHORTLISTED,Your application for IOT Project Mentor has been shortlisted.,2026-05-23 18:55:04,true,first success,IOT Project Mentor
+NTF_1779533725407_2,TA_1775661872788_2,APP_1778763698972_1,POS_2026041100000_09,SHORTLISTED,INTERVIEWED,You have been selected for an interview for IOT Project Mentor.,2026-05-23 18:55:25,true,congratulations,IOT Project Mentor
+NTF_1779533748355_3,TA_1775661872788_2,APP_1778763698972_1,POS_2026041100000_09,INTERVIEWED,OFFERED,Congratulations! You have been offered a position: IOT Project Mentor.,2026-05-23 18:55:48,true,good,IOT Project Mentor
+NTF_1779533761115_4,TA_1775661872788_2,APP_1778763698972_1,POS_2026041100000_09,OFFERED,REJECTED,Your application for IOT Project Mentor was not successful.,2026-05-23 18:56:01,true,sorry,IOT Project Mentor
+NTF_1779533772293_5,TA_1775661872788_2,APP_1775896839778_1,POS_1775895765244_1,OFFERED,HIRED,You have been hired for IOT Assistant. Congratulations!,2026-05-23 18:56:12,true,nice,IOT Assistant
+NTF_1779533788220_6,TA_1775661872788_2,APP_1775896957625_3,POS_1775896933901_2,PENDING,REJECTED,Your application for 12312 was not successful.,2026-05-23 18:56:28,true,sorry,12312
+NTF_1779533788221_7,TA_1775661872788_2,APP_1775978212796_2,POS_1775902164118_1,PENDING,HIRED,You have been hired for TEST3. Congratulations!,2026-05-23 18:56:28,true,confirm,TEST3
+NTF_1779533888842_9,TA_20260518_IOT_1,INV_1779533888840_8,POS_1775895765244_1,INVITED,INVITED,"You have been invited to apply for: ""IOT Assistant"".",2026-05-23 18:58:08,true,,IOT Assistant
+NTF_1779533922752_11,TA_20260518_IOT_1,INV_1779533922751_10,POS_1775902164118_1,INVITED,INVITED,"You have been invited to apply for: ""TEST3"".",2026-05-23 18:58:42,true,,TEST3
+NTF_1779534206523_13,TA_20260518_IOT_1,,POS_2026041100000_19,OPEN,CLOSED,"The position ""IST Java Grader"" that you applied for has been closed.",2026-05-23 19:03:26,true,,IST Java Grader
+NTF_1779534750224_1,TA_20260518_IOT_1,,POS_2026041100000_11,OPEN,OPEN,"The application deadline for ""Algorithms Invigilator"" has been extended.",2026-05-23 19:12:30,true,New deadline: 2029-12-01,Algorithms Invigilator
+NTF_1779535015228_1,TA_20260518_IOT_1,,POS_2026041100000_11,OPEN,OPEN,"The details for position ""Algorithms Invigilator"" have been updated.",2026-05-23 19:16:55,true,Deadline: 2029-12-02; Requirements updated,Algorithms Invigilator
+NTF_1779535790993_1,TA_20260518_IOT_1,,POS_2026041100000_11,OPEN,OPEN,"The details for position ""Algorithms Invigilator"" have been updated.",2026-05-23 19:29:50,true,Deadline: 2028-12-01; Requirements updated,Algorithms Invigilator
+NTF_1779535798866_2,TA_20260518_IOT_1,,POS_2026041100000_11,OPEN,CLOSED,"The position ""Algorithms Invigilator"" that you applied for has been closed.",2026-05-23 19:29:58,true,,Algorithms Invigilator
+NTF_1779535838350_3,TA_20260518_IOT_1,APP_1779534243377_14,POS_2026041100000_13,PENDING,SHORTLISTED,Your application for IOT Security Grader has been shortlisted.,2026-05-23 19:30:38,true,shortlisted success,IOT Security Grader
+NTF_1779535851494_4,TA_20260518_IOT_1,APP_1779534243377_14,POS_2026041100000_13,SHORTLISTED,INTERVIEWED,You have been selected for an interview for IOT Security Grader.,2026-05-23 19:30:51,true,good,IOT Security Grader
+NTF_1779535862018_5,TA_20260518_IOT_1,APP_1779534243377_14,POS_2026041100000_13,INTERVIEWED,OFFERED,Congratulations! You have been offered a position: IOT Security Grader.,2026-05-23 19:31:02,true,nice,IOT Security Grader
+NTF_1779535874518_6,TA_20260518_IOT_1,APP_1779534243377_14,POS_2026041100000_13,OFFERED,REJECTED,Your application for IOT Security Grader was not successful.,2026-05-23 19:31:14,true,sorry,IOT Security Grader
+NTF_1779535898357_7,TA_20260518_IOT_1,APP_1779534252355_15,POS_2026041100000_11,PENDING,REJECTED,Your application for Algorithms Invigilator was not successful.,2026-05-23 19:31:38,true,not qualified,Algorithms Invigilator
+NTF_1779535912244_9,TA_1775661872788_2,INV_1779535912242_8,POS_2026041100000_19,INVITED,INVITED,"You have been invited to apply for: ""IST Java Grader"".",2026-05-23 19:31:52,true,,IST Java Grader
+NTF_1779535920667_10,TA_20260518_IOT_1,APP_1779534170609_12,POS_2026041100000_19,PENDING,SHORTLISTED,Your application for IST Java Grader has been shortlisted.,2026-05-23 19:32:00,true,,IST Java Grader
+NTF_1779535926083_11,TA_20260518_IOT_1,APP_1779534170609_12,POS_2026041100000_19,SHORTLISTED,INTERVIEWED,You have been selected for an interview for IST Java Grader.,2026-05-23 19:32:06,true,,IST Java Grader
+NTF_1779535934291_12,TA_20260518_IOT_1,APP_1779534170609_12,POS_2026041100000_19,INTERVIEWED,OFFERED,Congratulations! You have been offered a position: IST Java Grader.,2026-05-23 19:32:14,true,,IST Java Grader
+NTF_1779535939400_13,TA_20260518_IOT_1,APP_1779534170609_12,POS_2026041100000_19,OFFERED,HIRED,You have been hired for IST Java Grader. Congratulations!,2026-05-23 19:32:19,true,,IST Java Grader

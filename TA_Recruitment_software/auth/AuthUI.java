@@ -511,6 +511,10 @@ public class AuthUI {
         TaPortalUI.showTaHub(parent, context, token);
     }
 
+    public static void showNotificationsDialog(JFrame parent, RecruitmentSystemContext context, String token) {
+        TaPortalUI.showNotificationsDialog(parent, context, token);
+    }
+
     // ========================= Logout =========================
 
     /**

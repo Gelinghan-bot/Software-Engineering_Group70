@@ -7,10 +7,14 @@ import TA_Recruitment_software.admin_system.model.Position;
 import TA_Recruitment_software.admin_system.model.PositionStatus;
 import TA_Recruitment_software.admin_system.model.Role;
 import TA_Recruitment_software.admin_system.model.User;
+import TA_Recruitment_software.admin_system.model.Application;
+import TA_Recruitment_software.admin_system.model.ApplicationStatus;
+import TA_Recruitment_software.admin_system.repository.ApplicationRepository;
 import TA_Recruitment_software.admin_system.repository.PositionRepository;
 import TA_Recruitment_software.admin_system.repository.UserRepository;
 import TA_Recruitment_software.auth.SessionContext;
 import TA_Recruitment_software.auth.SessionManager;
+import TA_Recruitment_software.auth.TaNotificationService;
 import TA_Recruitment_software.ta_jobs.CurrentSemesterStore;
 import TA_Recruitment_software.ta_jobs.PositionSemesterStore;
 import java.io.BufferedReader;
@@ -30,15 +34,21 @@ public class MOPublishService {
     private final PositionRepository positionRepository;
     private final UserRepository userRepository;
     private final SessionManager sessionManager;
+    private final TaNotificationService taNotificationService;
+    private final ApplicationRepository applicationRepository;
 
     public MOPublishService(
         PositionRepository positionRepository,
         UserRepository userRepository,
-        SessionManager sessionManager
+        SessionManager sessionManager,
+        TaNotificationService taNotificationService,
+        ApplicationRepository applicationRepository
     ) {
         this.positionRepository = positionRepository;
         this.userRepository = userRepository;
         this.sessionManager = sessionManager;
+        this.taNotificationService = taNotificationService;
+        this.applicationRepository = applicationRepository;
     }
 
     public Position publishPosition(
@@ -112,6 +122,13 @@ public class MOPublishService {
         ValidationUtil.ensureTodayOrFuture(checkedDate, "Deadline");
         position.setDeadline(checkedDate.toString());
         positionRepository.save(position);
+
+        String jobTitle = position.getJobTitle();
+        String deadlineStr = checkedDate.toString();
+        for (Application app : applicationRepository.findByPosition(positionId)) {
+            taNotificationService.pushDeadlineExtendedNotification(
+                app.getApplicantUserId(), positionId, jobTitle, deadlineStr);
+        }
         return position;
     }
 
@@ -150,10 +167,20 @@ public class MOPublishService {
         String checkedLoc = ValidationUtil.sanitizeText(interviewLocation, "Interview location", 100);
         LocalDate checkedDeadline = ValidationUtil.validateDate(deadline, "Deadline");
         ValidationUtil.ensureTodayOrFuture(checkedDeadline, "Deadline");
-        
+
         if (headcount <= 0) {
             throw new AppException("Headcount must be positive.");
         }
+
+        // Track what changed to build a human-readable summary for the notification note
+        java.util.List<String> changes = new java.util.ArrayList<>();
+        if (!checkedTitle.equals(position.getJobTitle())) changes.add("Title: \"" + checkedTitle + "\"");
+        LocalDate oldDeadline = LocalDate.parse(position.getDeadline());
+        if (!checkedDeadline.equals(oldDeadline)) changes.add("Deadline: " + checkedDeadline);
+        if (!checkedDesc.equals(position.getJobDescription())) changes.add("Description updated");
+        if (!checkedReq.equals(position.getRequirements())) changes.add("Requirements updated");
+        if (!checkedLoc.equals(position.getInterviewLocation())) changes.add("Location: \"" + checkedLoc + "\"");
+        if (headcount != position.getHeadcount()) changes.add("Headcount: " + headcount);
 
         position.setJobTitle(checkedTitle);
         position.setGrade(checkedGrade);
@@ -166,6 +193,14 @@ public class MOPublishService {
         position.setHeadcount(headcount);
 
         positionRepository.save(position);
+
+        if (!changes.isEmpty()) {
+            String summary = String.join("; ", changes);
+            for (Application app : applicationRepository.findByPosition(positionId)) {
+                taNotificationService.pushPositionUpdatedNotification(
+                    app.getApplicantUserId(), positionId, checkedTitle, summary);
+            }
+        }
         return position;
     }
 
@@ -182,6 +217,16 @@ public class MOPublishService {
         }
         position.setStatus(PositionStatus.CLOSED);
         positionRepository.save(position);
+
+        String jobTitle = position.getJobTitle();
+        for (Application app : applicationRepository.findByPosition(positionId)) {
+            ApplicationStatus s = app.getStatus();
+            if (s == ApplicationStatus.PENDING || s == ApplicationStatus.SUBMITTED
+                    || s == ApplicationStatus.SHORTLISTED || s == ApplicationStatus.INTERVIEWED
+                    || s == ApplicationStatus.OFFERED) {
+                taNotificationService.pushPositionClosedNotification(app.getApplicantUserId(), positionId, jobTitle);
+            }
+        }
         return position;
     }
 

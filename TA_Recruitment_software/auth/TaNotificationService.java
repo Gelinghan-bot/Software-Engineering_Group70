@@ -49,84 +49,47 @@ class TaNotification {
     private String message;
     private String createdAt;
     private boolean read;
+    private String note;
+    private String jobTitle;
 
-    String getNotificationId() {
-        return notificationId;
-    }
+    String getNotificationId() { return notificationId; }
+    void setNotificationId(String notificationId) { this.notificationId = notificationId; }
 
-    void setNotificationId(String notificationId) {
-        this.notificationId = notificationId;
-    }
+    String getUserId() { return userId; }
+    void setUserId(String userId) { this.userId = userId; }
 
-    String getUserId() {
-        return userId;
-    }
+    String getApplicationId() { return applicationId; }
+    void setApplicationId(String applicationId) { this.applicationId = applicationId; }
 
-    void setUserId(String userId) {
-        this.userId = userId;
-    }
+    String getPositionId() { return positionId; }
+    void setPositionId(String positionId) { this.positionId = positionId; }
 
-    String getApplicationId() {
-        return applicationId;
-    }
+    String getOldStatus() { return oldStatus; }
+    void setOldStatus(String oldStatus) { this.oldStatus = oldStatus; }
 
-    void setApplicationId(String applicationId) {
-        this.applicationId = applicationId;
-    }
+    String getNewStatus() { return newStatus; }
+    void setNewStatus(String newStatus) { this.newStatus = newStatus; }
 
-    String getPositionId() {
-        return positionId;
-    }
+    String getMessage() { return message; }
+    void setMessage(String message) { this.message = message; }
 
-    void setPositionId(String positionId) {
-        this.positionId = positionId;
-    }
+    String getCreatedAt() { return createdAt; }
+    void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
 
-    String getOldStatus() {
-        return oldStatus;
-    }
+    boolean isRead() { return read; }
+    void setRead(boolean read) { this.read = read; }
 
-    void setOldStatus(String oldStatus) {
-        this.oldStatus = oldStatus;
-    }
+    String getNote() { return note != null ? note : ""; }
+    void setNote(String note) { this.note = note; }
 
-    String getNewStatus() {
-        return newStatus;
-    }
-
-    void setNewStatus(String newStatus) {
-        this.newStatus = newStatus;
-    }
-
-    String getMessage() {
-        return message;
-    }
-
-    void setMessage(String message) {
-        this.message = message;
-    }
-
-    String getCreatedAt() {
-        return createdAt;
-    }
-
-    void setCreatedAt(String createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    boolean isRead() {
-        return read;
-    }
-
-    void setRead(boolean read) {
-        this.read = read;
-    }
+    String getJobTitle() { return jobTitle != null ? jobTitle : ""; }
+    void setJobTitle(String jobTitle) { this.jobTitle = jobTitle; }
 }
 
 final class TaNotificationStore {
     private static final String FILE_NAME = "ta_notifications.csv";
     private static final String HEADER =
-        "notificationId,userId,applicationId,positionId,oldStatus,newStatus,message,createdAt,read";
+        "notificationId,userId,applicationId,positionId,oldStatus,newStatus,message,createdAt,read,note,jobTitle";
 
     private TaNotificationStore() {
     }
@@ -185,6 +148,8 @@ final class TaNotificationStore {
         row.add(nvl(n.getMessage()));
         row.add(nvl(n.getCreatedAt()));
         row.add(n.isRead() ? "true" : "false");
+        row.add(nvl(n.getNote()));
+        row.add(nvl(n.getJobTitle()));
         return row;
     }
 
@@ -199,6 +164,8 @@ final class TaNotificationStore {
         n.setMessage(cell(row, 6));
         n.setCreatedAt(cell(row, 7));
         n.setRead("true".equalsIgnoreCase(cell(row, 8)));
+        n.setNote(cell(row, 9));
+        n.setJobTitle(cell(row, 10));
         return n;
     }
 
@@ -339,51 +306,86 @@ public class TaNotificationService {
         }
     }
 
+    private static String buildStatusMessage(String newStatus, String jobTitle, String oldStatus) {
+        switch (newStatus) {
+            case "SHORTLISTED": return "Your application for " + jobTitle + " has been shortlisted.";
+            case "INTERVIEWED": return "You have been selected for an interview for " + jobTitle + ".";
+            case "OFFERED":     return "Congratulations! You have been offered a position: " + jobTitle + ".";
+            case "REJECTED":    return "Your application for " + jobTitle + " was not successful.";
+            case "HIRED":       return "You have been hired for " + jobTitle + ". Congratulations!";
+            default:            return "Your application for " + jobTitle + " has been updated: " + oldStatus + " → " + newStatus + ".";
+        }
+    }
+
+    private TaNotification buildNotification(String userId, String applicationId,
+                                              String positionId, String jobTitle,
+                                              String oldStatus, String newStatus,
+                                              String message, String note) {
+        TaNotification n = new TaNotification();
+        n.setNotificationId(IdGenerator.nextId("NTF"));
+        n.setUserId(userId);
+        n.setApplicationId(applicationId != null ? applicationId : "");
+        n.setPositionId(positionId != null ? positionId : "");
+        n.setJobTitle(jobTitle != null ? jobTitle : "");
+        n.setOldStatus(oldStatus != null ? oldStatus : "");
+        n.setNewStatus(newStatus != null ? newStatus : "");
+        n.setMessage(message);
+        n.setNote(note != null ? note.trim() : "");
+        n.setCreatedAt(LocalDateTime.now().format(FORMAT));
+        n.setRead(false);
+        return n;
+    }
+
+    public void pushStatusChangeNotification(String taUserId, Application app,
+                                              String oldStatus, String newStatus, String note) {
+        Optional<Position> position = positionRepository.findById(app.getPositionId());
+        String jobTitle = position.map(Position::getJobTitle).orElse(app.getPositionId());
+
+        String message = buildStatusMessage(newStatus, jobTitle, oldStatus);
+        TaNotificationStore.save(buildNotification(
+            taUserId, app.getApplicationId(), app.getPositionId(), jobTitle,
+            oldStatus, newStatus, message, note));
+
+        Map<String, String> checkpoints = TaApplicationStatusCheckpointStore.readForUser(taUserId);
+        checkpoints.put(app.getApplicationId(), newStatus);
+        TaApplicationStatusCheckpointStore.writeForUser(taUserId, checkpoints);
+    }
+
+    public void pushPositionClosedNotification(String taUserId, String positionId, String jobTitle) {
+        String message = "The position \"" + jobTitle + "\" that you applied for has been closed.";
+        TaNotificationStore.save(buildNotification(
+            taUserId, "", positionId, jobTitle, "OPEN", "CLOSED", message, ""));
+    }
+
+    public void pushDeadlineExtendedNotification(String taUserId, String positionId, String jobTitle, String newDeadline) {
+        String message = "The application deadline for \"" + jobTitle + "\" has been extended.";
+        TaNotificationStore.save(buildNotification(
+            taUserId, "", positionId, jobTitle, "OPEN", "OPEN", message, "New deadline: " + newDeadline));
+    }
+
+    public void pushPositionUpdatedNotification(String taUserId, String positionId, String jobTitle, String changesSummary) {
+        String message = "The details for position \"" + jobTitle + "\" have been updated.";
+        TaNotificationStore.save(buildNotification(
+            taUserId, "", positionId, jobTitle, "OPEN", "OPEN", message, changesSummary));
+    }
+
     public void sendInvitationNotification(String taUserId, String invitationId,
                                             String positionId, String jobTitle, String customMessage) {
-        TaNotification notification = new TaNotification();
-        notification.setNotificationId(IdGenerator.nextId("NTF"));
-        notification.setUserId(taUserId);
-        notification.setApplicationId(invitationId);
-        notification.setPositionId(positionId);
-        notification.setOldStatus("INVITED");
-        notification.setNewStatus("INVITED");
-        notification.setCreatedAt(LocalDateTime.now().format(FORMAT));
-        notification.setRead(false);
-
-        StringBuilder message = new StringBuilder();
-        message.append("[Invitation] You have been invited to apply for: ").append(jobTitle);
-        if (customMessage != null && !customMessage.isEmpty()) {
-            message.append(". Message: ").append(customMessage);
-        }
-        notification.setMessage(message.toString());
-        TaNotificationStore.save(notification);
+        String message = "You have been invited to apply for: \"" + jobTitle + "\".";
+        TaNotificationStore.save(buildNotification(
+            taUserId, invitationId, positionId, jobTitle, "INVITED", "INVITED", message,
+            customMessage != null ? customMessage : ""));
     }
 
     private void createNotification(String userId, Application app, String oldStatus, String newStatus) {
         Optional<Position> position = positionRepository.findById(app.getPositionId());
         String jobTitle = position.map(Position::getJobTitle).orElse(app.getPositionId());
 
-        TaNotification notification = new TaNotification();
-        notification.setNotificationId(IdGenerator.nextId("NTF"));
-        notification.setUserId(userId);
-        notification.setApplicationId(app.getApplicationId());
-        notification.setPositionId(app.getPositionId());
-        notification.setOldStatus(oldStatus);
-        notification.setNewStatus(newStatus);
-        notification.setCreatedAt(LocalDateTime.now().format(FORMAT));
-        notification.setRead(false);
-
+        String message = buildStatusMessage(newStatus, jobTitle, oldStatus);
         String note = app.getStatusNote();
-        StringBuilder message = new StringBuilder();
-        message.append("Application ").append(app.getApplicationId());
-        message.append(" (").append(jobTitle).append("): ");
-        message.append(oldStatus).append(" → ").append(newStatus);
-        if (note != null && !note.trim().isEmpty()) {
-            message.append(". Note: ").append(note.trim());
-        }
-        notification.setMessage(message.toString());
-        TaNotificationStore.save(notification);
+        TaNotificationStore.save(buildNotification(
+            userId, app.getApplicationId(), app.getPositionId(), jobTitle,
+            oldStatus, newStatus, message, note));
     }
 }
 
