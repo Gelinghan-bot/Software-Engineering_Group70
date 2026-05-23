@@ -2,11 +2,12 @@ package TA_Recruitment_software.profile;
 
 import TA_Recruitment_software.RecruitmentSystemContext;
 import TA_Recruitment_software.admin_system.foundation.AppException;
+import TA_Recruitment_software.admin_system.foundation.UIStyle;
 import TA_Recruitment_software.admin_system.model.User;
 import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.Desktop;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -66,23 +67,27 @@ public final class MoTaProfileViewUI {
                 });
             }
 
-            JTable table = new JTable(model);
-            table.setFont(new Font("Arial", Font.PLAIN, 13));
-            table.setRowHeight(22);
-            JScrollPane scroll = new JScrollPane(table);
+            JTable table = UIStyle.createStyledTable(model);
+            JScrollPane scroll = UIStyle.wrapTableInScrollPane(table);
             scroll.setPreferredSize(new Dimension(880, 320));
 
-            JPanel south = new JPanel();
-            JButton viewBtn = new JButton("View profile & CV");
-            JButton openCvBtn = new JButton("Open CV file");
-            JButton inviteBtn = new JButton("Send Interview Invitation");
+            JPanel south = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 10));
+            south.setBackground(UIStyle.BG_PAGE);
+            JButton viewBtn = UIStyle.createPrimaryButton("View profile & CV");
+            JButton openCvBtn = UIStyle.createAccentButton("Open CV file");
+            JButton inviteBtn = UIStyle.createSecondaryButton("Send Interview Invitation");
             south.add(viewBtn);
             south.add(openCvBtn);
             south.add(inviteBtn);
 
             JDialog dialog = new JDialog(parent, "TA profiles (MO view)", true);
+            dialog.getContentPane().setBackground(UIStyle.BG_PAGE);
             dialog.setLayout(new BorderLayout(8, 8));
-            dialog.add(new JLabel("Approved TAs — select a row, then choose an action."), BorderLayout.NORTH);
+            JLabel headerLbl = new JLabel("Approved TAs — select a row, then choose an action.");
+            headerLbl.setFont(UIStyle.FONT_BODY_BOLD);
+            headerLbl.setForeground(UIStyle.TEXT_PRIMARY);
+            headerLbl.setBorder(BorderFactory.createEmptyBorder(8, 12, 0, 12));
+            dialog.add(headerLbl, BorderLayout.NORTH);
             dialog.add(scroll, BorderLayout.CENTER);
             dialog.add(south, BorderLayout.SOUTH);
             dialog.pack();
@@ -213,8 +218,9 @@ public final class MoTaProfileViewUI {
             ? "No CV uploaded"
             : "Path recorded but file missing on disk"));
 
-        JPanel form = new JPanel(new java.awt.GridLayout(0, 2, 6, 6));
-        form.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        JPanel form = new JPanel(new java.awt.GridLayout(0, 2, 8, 8));
+        form.setBackground(UIStyle.BG_CARD);
+        form.setBorder(BorderFactory.createEmptyBorder(12, 14, 12, 14));
         addRow(form, "User ID", userIdF);
         addRow(form, "Account", accountF);
         addRow(form, "Full name", nameF);
@@ -222,17 +228,22 @@ public final class MoTaProfileViewUI {
         addRow(form, "Major", majorF);
         addRow(form, "Email", emailF);
         addRow(form, "Phone", phoneF);
-        form.add(new JLabel("Skills:"));
-        form.add(new JScrollPane(skillsA));
+        JLabel skillsLabel = UIStyle.createFieldLabel("Skills");
+        form.add(skillsLabel);
+        JScrollPane skillsPane = new JScrollPane(skillsA);
+        UIStyle.styleScrollPane(skillsPane);
+        form.add(skillsPane);
         addRow(form, "CV path", cvPathF);
         addRow(form, "CV status", cvStatusF);
 
-        JPanel south = new JPanel();
-        JButton openBtn = new JButton("Open CV with system viewer");
+        JPanel south = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 8));
+        south.setBackground(UIStyle.BG_PAGE);
+        JButton openBtn = UIStyle.createAccentButton("Open CV with system viewer");
         south.add(openBtn);
         openBtn.addActionListener(e -> openCvFile(parent, ta));
 
         JDialog d = new JDialog(parent, "TA profile — " + ta.getFullName(), true);
+        d.getContentPane().setBackground(UIStyle.BG_PAGE);
         d.setLayout(new BorderLayout());
         d.add(form, BorderLayout.CENTER);
         d.add(south, BorderLayout.SOUTH);
@@ -242,14 +253,13 @@ public final class MoTaProfileViewUI {
     }
 
     private static void addRow(JPanel form, String label, JTextField field) {
-        form.add(new JLabel(label + ":"));
+        JLabel lbl = UIStyle.createFieldLabel(label);
+        form.add(lbl);
         form.add(field);
     }
 
     private static JTextField ro(String text) {
-        JTextField f = new JTextField(text == null ? "" : text);
-        f.setEditable(false);
-        return f;
+        return UIStyle.createReadOnlyField(text);
     }
 
     private static String n(String s) {

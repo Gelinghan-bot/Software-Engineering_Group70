@@ -2,9 +2,9 @@ package TA_Recruitment_software.mo_publish;
 
 import TA_Recruitment_software.RecruitmentSystemContext;
 import TA_Recruitment_software.admin_system.foundation.AppException;
+import TA_Recruitment_software.admin_system.foundation.UIStyle;
 import TA_Recruitment_software.admin_system.model.Position;
 import java.awt.*;
-import java.awt.geom.RoundRectangle2D;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
@@ -33,42 +33,16 @@ public class JobPublishPanel extends JPanel {
         this.moPublishService = context.getMoPublishService();
 
         setLayout(new BorderLayout());
-        setBackground(Color.WHITE);
+        setBackground(UIStyle.BG_PAGE);
 
-        // Header
-        JPanel headerPanel = new JPanel();
-        headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
-        headerPanel.setBackground(Color.WHITE);
-        headerPanel.setBorder(new EmptyBorder(40, 100, 0, 100));
-
-        JLabel titleLabel = new JLabel("Job Details");
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 22));
-        titleLabel.setForeground(new Color(60, 60, 60));
-        titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JPanel titleLine = new JPanel();
-        titleLine.setBackground(new Color(39, 174, 96)); // Green underline
-        titleLine.setPreferredSize(new Dimension(120, 3));
-        titleLine.setMaximumSize(new Dimension(120, 3));
-        titleLine.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JPanel fullLine = new JPanel();
-        fullLine.setBackground(new Color(224, 224, 224));
-        fullLine.setPreferredSize(new Dimension(3000, 1));
-        fullLine.setMaximumSize(new Dimension(3000, 1));
-        fullLine.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        headerPanel.add(titleLabel);
-        headerPanel.add(Box.createVerticalStrut(10));
-        headerPanel.add(titleLine);
-        headerPanel.add(fullLine);
-
+        // Header using UIStyle
+        JPanel headerPanel = UIStyle.createPageHeader("Job Details", UIStyle.PRIMARY);
         add(headerPanel, BorderLayout.NORTH);
 
         // Form Area
         JPanel formCenter = new JPanel(new GridBagLayout());
-        formCenter.setBackground(Color.WHITE);
-        formCenter.setBorder(new EmptyBorder(20, 100, 40, 100));
+        formCenter.setBackground(UIStyle.BG_CARD);
+        formCenter.setBorder(UIStyle.pagePadding());
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.anchor = GridBagConstraints.WEST;
@@ -76,30 +50,16 @@ public class JobPublishPanel extends JPanel {
 
         jobTitleField = createTextField("Enter your job title");
         
-        gradeCombo = new JComboBox<>(new String[]{
-            "Year1", "Year2", "Year3", "Year4"
-        });
-        gradeCombo.setPreferredSize(new Dimension(800, 40));
-        gradeCombo.setFont(new Font("Arial", Font.PLAIN, 14));
-        gradeCombo.setBackground(Color.WHITE);
+        gradeCombo = new JComboBox<>(new String[]{"Year1", "Year2", "Year3", "Year4"});
+        styleCombo(gradeCombo);
         
-        majorCombo = new JComboBox<>(new String[]{
-            "IOT", "EE", "IST", "TEM"
-        });
-        majorCombo.setPreferredSize(new Dimension(800, 40));
-        majorCombo.setFont(new Font("Arial", Font.PLAIN, 14));
-        majorCombo.setBackground(Color.WHITE);
+        majorCombo = new JComboBox<>(new String[]{"IOT", "EE", "IST", "TEM"});
+        styleCombo(majorCombo);
         
         jobTypeCombo = new JComboBox<>(new String[]{
-            "Daily attendance",
-            "grading",
-            "invigilation",
-            "Assess",
-            "and other tasks"
+            "Daily attendance", "grading", "invigilation", "Assess", "and other tasks"
         });
-        jobTypeCombo.setPreferredSize(new Dimension(800, 40));
-        jobTypeCombo.setFont(new Font("Arial", Font.PLAIN, 14));
-        jobTypeCombo.setBackground(Color.WHITE);
+        styleCombo(jobTypeCombo);
 
         jobDescArea = new JTextArea();
         JScrollPane jobDescScroll = createTextAreaScroll("Enter your job description", jobDescArea);
@@ -121,8 +81,7 @@ public class JobPublishPanel extends JPanel {
             nextNextYear + "-Fall"
         });
         semesterBox.setSelectedItem(TA_Recruitment_software.ta_jobs.CurrentSemesterStore.readCurrentSemester());
-        semesterBox.setPreferredSize(new Dimension(800, 40));
-        semesterBox.setFont(new Font("Arial", Font.PLAIN, 14));
+        styleCombo(semesterBox);
 
         int row = 0;
         addFormField(formCenter, "JOB TITLE", jobTitleField, gbc, row++);
@@ -139,9 +98,7 @@ public class JobPublishPanel extends JPanel {
         gbc.weightx = 0.0;
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.WEST;
-        JLabel semLabel = new JLabel("SEMESTER");
-        semLabel.setFont(new Font("Arial", Font.BOLD, 14));
-        semLabel.setForeground(new Color(80, 80, 80));
+        JLabel semLabel = UIStyle.createFieldLabel("SEMESTER");
         formCenter.add(semLabel, gbc);
         gbc.gridx = 1;
         gbc.weightx = 1.0;
@@ -151,21 +108,12 @@ public class JobPublishPanel extends JPanel {
 
         // Submit Button & Cancel Button
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
-        buttonPanel.setBackground(Color.WHITE);
+        buttonPanel.setBackground(UIStyle.BG_CARD);
         
-        JButton cancelBtn = new JButton("Cancel");
-        cancelBtn.setPreferredSize(new Dimension(100, 40));
-        cancelBtn.setBackground(new Color(224, 224, 224));
-        cancelBtn.setOpaque(true);
-        cancelBtn.setFocusPainted(false);
+        JButton cancelBtn = UIStyle.createSecondaryButton("Cancel");
         cancelBtn.addActionListener(e -> goBack());
 
-        JButton submitBtn = new JButton("Submit");
-        submitBtn.setPreferredSize(new Dimension(100, 40));
-        submitBtn.setBackground(new Color(39, 174, 96));
-        submitBtn.setForeground(Color.WHITE);
-        submitBtn.setOpaque(true);
-        submitBtn.setFocusPainted(false);
+        JButton submitBtn = UIStyle.createPrimaryButton("Submit");
         submitBtn.addActionListener(e -> {
             try {
                 String title = jobTitleField.getText().trim();
@@ -226,12 +174,7 @@ public class JobPublishPanel extends JPanel {
         gbc.anchor = GridBagConstraints.EAST;
         formCenter.add(buttonPanel, gbc);
 
-        JScrollPane scrollPane = new JScrollPane(formCenter);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-        scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
-        scrollPane.setBorder(null);
-        // Increase the vertical scroll bar sensitivity by returning unit increment
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        JScrollPane scrollPane = createFormScrollPane(formCenter);
         add(scrollPane, BorderLayout.CENTER);
     }
 
@@ -323,9 +266,7 @@ public class JobPublishPanel extends JPanel {
         gbc.weightx = 0.0;
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.WEST;
-        JLabel label = new JLabel(labelText);
-        label.setFont(new Font("Arial", Font.BOLD, 14));
-        label.setForeground(new Color(80, 80, 80));
+        JLabel label = UIStyle.createFieldLabel(labelText);
         panel.add(label, gbc);
 
         gbc.gridx = 1;
@@ -340,9 +281,7 @@ public class JobPublishPanel extends JPanel {
         gbc.weightx = 0.0;
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.NORTHWEST;
-        JLabel label = new JLabel(labelText);
-        label.setFont(new Font("Arial", Font.BOLD, 14));
-        label.setForeground(new Color(80, 80, 80));
+        JLabel label = UIStyle.createFieldLabel(labelText);
         panel.add(label, gbc);
 
         gbc.gridx = 1;
@@ -351,26 +290,26 @@ public class JobPublishPanel extends JPanel {
         panel.add(scrollPane, gbc);
     }
 
+    private void styleCombo(JComboBox<?> combo) {
+        combo.setPreferredSize(new Dimension(800, 38));
+        combo.setFont(UIStyle.FONT_BODY);
+        combo.setBackground(UIStyle.BG_CARD);
+    }
+
     private JTextField createTextField(String placeholder) {
-        JTextField field = new JTextField();
-        field.setPreferredSize(new Dimension(800, 40));
-        field.setBorder(BorderFactory.createCompoundBorder(
-            new LineBorder(new Color(220, 220, 220), 1, true),
-            new EmptyBorder(5, 15, 5, 15)
-        ));
-        field.setFont(new Font("Arial", Font.PLAIN, 14));
-        field.setForeground(new Color(150, 150, 150));
+        JTextField field = UIStyle.createTextField(30);
+        field.setForeground(UIStyle.TEXT_SECONDARY);
         field.setText(placeholder);
         field.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
                 if (field.getText().equals(placeholder)) {
                     field.setText("");
-                    field.setForeground(Color.BLACK);
+                    field.setForeground(UIStyle.TEXT_PRIMARY);
                 }
             }
             public void focusLost(java.awt.event.FocusEvent evt) {
                 if (field.getText().isEmpty()) {
-                    field.setForeground(new Color(150, 150, 150));
+                    field.setForeground(UIStyle.TEXT_SECONDARY);
                     field.setText(placeholder);
                 }
             }
@@ -381,20 +320,20 @@ public class JobPublishPanel extends JPanel {
     private JScrollPane createTextAreaScroll(String placeholder, JTextArea area) {
         area.setLineWrap(true);
         area.setWrapStyleWord(true);
-        area.setFont(new Font("Arial", Font.PLAIN, 14));
-        area.setForeground(new Color(150, 150, 150));
+        area.setFont(UIStyle.FONT_BODY);
+        area.setForeground(UIStyle.TEXT_SECONDARY);
         area.setText(placeholder);
         
         area.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
                 if (area.getText().equals(placeholder)) {
                     area.setText("");
-                    area.setForeground(Color.BLACK);
+                    area.setForeground(UIStyle.TEXT_PRIMARY);
                 }
             }
             public void focusLost(java.awt.event.FocusEvent evt) {
                 if (area.getText().isEmpty()) {
-                    area.setForeground(new Color(150, 150, 150));
+                    area.setForeground(UIStyle.TEXT_SECONDARY);
                     area.setText(placeholder);
                 }
             }
@@ -403,9 +342,17 @@ public class JobPublishPanel extends JPanel {
         JScrollPane scroll = new JScrollPane(area);
         scroll.setPreferredSize(new Dimension(800, 120));
         scroll.setBorder(BorderFactory.createCompoundBorder(
-            new LineBorder(new Color(220, 220, 220), 1, true),
+            new LineBorder(UIStyle.BORDER, 1, true),
             new EmptyBorder(5, 15, 5, 15)
         ));
+        UIStyle.styleScrollPane(scroll);
         return scroll;
+    }
+
+    private JScrollPane createFormScrollPane(JPanel formCenter) {
+        JScrollPane scrollPane = new JScrollPane(formCenter);
+        UIStyle.styleScrollPane(scrollPane);
+        scrollPane.setBorder(null);
+        return scrollPane;
     }
 }

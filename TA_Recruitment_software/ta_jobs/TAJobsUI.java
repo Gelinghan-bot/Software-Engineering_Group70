@@ -2,6 +2,7 @@ package TA_Recruitment_software.ta_jobs;
 
 import TA_Recruitment_software.RecruitmentSystemContext;
 import TA_Recruitment_software.admin_system.foundation.AppException;
+import TA_Recruitment_software.admin_system.foundation.UIStyle;
 import TA_Recruitment_software.admin_system.model.Application;
 import TA_Recruitment_software.admin_system.model.Position;
 import TA_Recruitment_software.admin_system.model.Role;
@@ -99,23 +100,24 @@ public class TAJobsUI {
                 model.addRow(rowData.toArray());
             }
 
-            JTable table = new JTable(model);
-            JPanel panel = new JPanel(new BorderLayout());
+            JTable table = UIStyle.createStyledTable(model);
+            JPanel panel = new JPanel(new BorderLayout(8, 8));
+            panel.setBackground(UIStyle.BG_PAGE);
+            panel.setBorder(UIStyle.pagePadding());
             panel.add(PositionDetailUI.createDoubleClickHintLabel(
                 "Tip: Double-click a job row to view full position details."
             ), BorderLayout.NORTH);
-            JScrollPane scrollPane = new JScrollPane(table);
-            scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-            scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
+            JScrollPane scrollPane = UIStyle.wrapTableInScrollPane(table);
             panel.add(scrollPane, BorderLayout.CENTER);
 
             Container contentPane = parent.getContentPane();
             BorderLayout layout = (BorderLayout) contentPane.getLayout();
             Component previousCenter = layout.getLayoutComponent(BorderLayout.CENTER);
 
-            JPanel btnPanel = new JPanel();
-            JButton applyBtn = new JButton("Apply for Selected Job");
-            JButton backBtn = new JButton("Back");
+            JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+            btnPanel.setBackground(UIStyle.BG_PAGE);
+            JButton applyBtn = UIStyle.createPrimaryButton("Apply for Selected Job");
+            JButton backBtn = UIStyle.createSecondaryButton("Back");
 
             applyBtn.addActionListener(e -> {
                 if (token == null) {
@@ -231,19 +233,20 @@ public class TAJobsUI {
                 model.addRow(new Object[]{a.getApplicationId(), a.getPositionId(), a.getStatus(), a.getSubmissionTime()});
             }
 
-            JTable table = new JTable(model);
-            JPanel panel = new JPanel(new BorderLayout());
-            JScrollPane scrollPane = new JScrollPane(table);
-            scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-            scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
+            JTable table = UIStyle.createStyledTable(model);
+            JPanel panel = new JPanel(new BorderLayout(8, 8));
+            panel.setBackground(UIStyle.BG_PAGE);
+            panel.setBorder(UIStyle.pagePadding());
+            JScrollPane scrollPane = UIStyle.wrapTableInScrollPane(table);
             panel.add(scrollPane, BorderLayout.CENTER);
 
             Container contentPane = parent.getContentPane();
             BorderLayout layout = (BorderLayout) contentPane.getLayout();
             Component previousCenter = layout.getLayoutComponent(BorderLayout.CENTER);
 
-            JPanel btnPanel = new JPanel();
-            JButton backBtn = new JButton("Back");
+            JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+            btnPanel.setBackground(UIStyle.BG_PAGE);
+            JButton backBtn = UIStyle.createSecondaryButton("Back");
             btnPanel.add(backBtn);
             panel.add(btnPanel, BorderLayout.SOUTH);
 
@@ -279,15 +282,25 @@ public class TAJobsUI {
     ) {
         JButton btn = new JButton("AI Diagnosis");
         btn.setAlignmentX(Component.CENTER_ALIGNMENT);
-        btn.setBackground(new Color(39, 174, 96));
+        btn.setBackground(UIStyle.PRIMARY);
         btn.setForeground(Color.WHITE);
         btn.setOpaque(true);
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
-        btn.setFont(new Font("Arial", Font.BOLD, 14));
+        btn.setFont(UIStyle.FONT_BUTTON);
         btn.setMaximumSize(new Dimension(220, 45));
         btn.setPreferredSize(new Dimension(220, 45));
+        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         btn.setVisible(false);
+        // hover effect
+        btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override public void mouseEntered(java.awt.event.MouseEvent e) {
+                btn.setBackground(UIStyle.PRIMARY_DARK);
+            }
+            @Override public void mouseExited(java.awt.event.MouseEvent e) {
+                btn.setBackground(UIStyle.PRIMARY);
+            }
+        });
         btn.addActionListener(e -> {
             Role r = roleSupplier.get();
             String t = tokenSupplier.get();

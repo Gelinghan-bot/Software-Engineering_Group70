@@ -1,21 +1,17 @@
 package TA_Recruitment_software.forum;
 
 import TA_Recruitment_software.RecruitmentSystemContext;
+import TA_Recruitment_software.admin_system.foundation.UIStyle;
 import java.awt.*;
+import java.util.List;
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.border.MatteBorder;
 
-import java.util.List;
-import TA_Recruitment_software.admin_system.model.User;
-import TA_Recruitment_software.admin_system.repository.UserRepository;
-
 public class ForumPanel extends JPanel {
-    private static final String EMOJI_FONT_NAME =
-        System.getProperty("os.name", "").toLowerCase().contains("mac")
-            ? "Apple Color Emoji" : "Segoe UI Emoji";
+    private static final String EMOJI_FONT_NAME = UIStyle.EMOJI_FONT;
 
     private JFrame parent;
     private RecruitmentSystemContext context;
@@ -38,37 +34,35 @@ public class ForumPanel extends JPanel {
         this.commentRepository = new CommentRepository();
         
         setLayout(new BorderLayout());
-        setBackground(new Color(245, 245, 245));
+        setBackground(UIStyle.BG_PAGE);
 
         // Top Toolbar
         add(createToolbar(), BorderLayout.NORTH);
 
         mainAreaWrapper = new JPanel(new CardLayout());
-        mainAreaWrapper.setBackground(new Color(245, 245, 245));
+        mainAreaWrapper.setBackground(UIStyle.BG_PAGE);
 
         // Main content area wrapper to simulate max width bounds and margins
         contentWrapper = new JPanel(new BorderLayout(20, 20));
-        contentWrapper.setBackground(new Color(245, 245, 245));
+        contentWrapper.setBackground(UIStyle.BG_PAGE);
         contentWrapper.setBorder(new EmptyBorder(25, 40, 25, 40));
 
         // Left Area: Topics List
         leftPanel = new JPanel();
         leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
-        leftPanel.setBackground(new Color(245, 245, 245));
+        leftPanel.setBackground(UIStyle.BG_PAGE);
 
         loadTopics();
         
         // Wrap Left Area in JScrollPane
         JScrollPane scrollLeft = new JScrollPane(leftPanel);
-        scrollLeft.setBorder(null);
-        scrollLeft.setBackground(new Color(245, 245, 245));
-        scrollLeft.getVerticalScrollBar().setUnitIncrement(16);
+        UIStyle.styleScrollPane(scrollLeft);
         contentWrapper.add(scrollLeft, BorderLayout.CENTER);
 
         // Right Area: Sidebar
         JPanel sidebar = new JPanel();
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
-        sidebar.setBackground(new Color(245, 245, 245));
+        sidebar.setBackground(UIStyle.BG_PAGE);
         sidebar.setPreferredSize(new Dimension(300, 0)); // Fixed width for sidebar
 
         sidebar.add(Box.createVerticalStrut(10)); // Move panels down slightly
@@ -86,18 +80,18 @@ public class ForumPanel extends JPanel {
 
     private JPanel createToolbar() {
         JPanel tb = new JPanel(new BorderLayout());
-        tb.setBackground(Color.WHITE);
+        tb.setBackground(UIStyle.BG_CARD);
         tb.setBorder(new CompoundBorder(
-            new LineBorder(new Color(220, 220, 220), 1), 
-            new EmptyBorder(12, 40, 12, 40)
+            new MatteBorder(0, 0, 1, 0, UIStyle.BORDER),
+            new EmptyBorder(10, 30, 10, 30)
         ));
 
         // Left Title & New Topic Button
         JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
-        left.setBackground(Color.WHITE);
+        left.setBackground(UIStyle.BG_CARD);
         JLabel title = new JLabel("Forum Area");
-        title.setFont(new Font("Arial", Font.BOLD, 18));
-        title.setForeground(new Color(39, 174, 96));
+        title.setFont(UIStyle.FONT_TITLE);
+        title.setForeground(UIStyle.PRIMARY);
         title.setCursor(new Cursor(Cursor.HAND_CURSOR));
         title.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent e) {
@@ -120,14 +114,22 @@ public class ForumPanel extends JPanel {
         });
         
         JButton newTopicBtn = new JButton("Start New Topic");
-        newTopicBtn.setBackground(new Color(39, 174, 96));
+        newTopicBtn.setBackground(UIStyle.PRIMARY);
         newTopicBtn.setForeground(Color.WHITE);
-        newTopicBtn.setFont(new Font("Arial", Font.BOLD, 13));
+        newTopicBtn.setFont(UIStyle.FONT_BUTTON.deriveFont(13f));
         newTopicBtn.setPreferredSize(new Dimension(140, 36));
         newTopicBtn.setFocusPainted(false);
         newTopicBtn.setBorderPainted(false);
         newTopicBtn.setOpaque(true);
         newTopicBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        newTopicBtn.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override public void mouseEntered(java.awt.event.MouseEvent e) {
+                newTopicBtn.setBackground(UIStyle.PRIMARY_DARK);
+            }
+            @Override public void mouseExited(java.awt.event.MouseEvent e) {
+                newTopicBtn.setBackground(UIStyle.PRIMARY);
+            }
+        });
         newTopicBtn.addActionListener(e -> {
             if (token == null) {
                 JOptionPane.showMessageDialog(this, "Please login to post a topic.", "Wait", JOptionPane.WARNING_MESSAGE);
@@ -141,42 +143,46 @@ public class ForumPanel extends JPanel {
 
         // Right Actions (Search Box & Find Button)
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
-        right.setBackground(Color.WHITE);
+        right.setBackground(UIStyle.BG_CARD);
 
-        JTextField searchBox = new JTextField("Search Topics");
-        searchBox.setPreferredSize(new Dimension(250, 36));
-        searchBox.setFont(new Font("Arial", Font.PLAIN, 14));
-        searchBox.setForeground(Color.GRAY);
-        searchBox.setBorder(new CompoundBorder(
-            new LineBorder(new Color(200, 200, 200), 1, true),
-            new EmptyBorder(0, 10, 0, 10)
-        ));
+        JTextField searchBox = UIStyle.createTextField(20);
+        searchBox.setText("Search Topics");
+        searchBox.setForeground(UIStyle.TEXT_SECONDARY);
+        searchBox.setPreferredSize(new Dimension(220, 36));
 
         // Add a focus listener to clear text like a placeholder
         searchBox.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
                 if (searchBox.getText().equals("Search Topics")) {
                     searchBox.setText("");
-                    searchBox.setForeground(Color.BLACK);
+                    searchBox.setForeground(UIStyle.TEXT_PRIMARY);
                 }
             }
             public void focusLost(java.awt.event.FocusEvent evt) {
                 if (searchBox.getText().isEmpty()) {
-                    searchBox.setForeground(Color.GRAY);
+                    searchBox.setForeground(UIStyle.TEXT_SECONDARY);
                     searchBox.setText("Search Topics");
                 }
             }
         });
 
         JButton findBtn = new JButton("Find");
-        findBtn.setBackground(new Color(52, 152, 219));
+        findBtn.setBackground(UIStyle.ACCENT_BLUE);
         findBtn.setForeground(Color.WHITE);
-        findBtn.setFont(new Font("Arial", Font.BOLD, 13));
-        findBtn.setPreferredSize(new Dimension(90, 36));
+        findBtn.setFont(UIStyle.FONT_BUTTON.deriveFont(13f));
+        findBtn.setPreferredSize(new Dimension(80, 36));
         findBtn.setFocusPainted(false);
         findBtn.setBorderPainted(false);
         findBtn.setOpaque(true);
         findBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        findBtn.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override public void mouseEntered(java.awt.event.MouseEvent e) {
+                findBtn.setBackground(UIStyle.ACCENT_BLUE_DARK);
+            }
+            @Override public void mouseExited(java.awt.event.MouseEvent e) {
+                findBtn.setBackground(UIStyle.ACCENT_BLUE);
+            }
+        });
         findBtn.addActionListener(e -> {
             String q = searchBox.getText().trim();
             if (q.equals("Search Topics") || q.isEmpty()) {
@@ -298,20 +304,28 @@ public class ForumPanel extends JPanel {
 
     private void showTopicDetail(Topic topic) {
         JPanel detailView = new JPanel(new BorderLayout(20, 20));
-        detailView.setBackground(new Color(245, 245, 245));
+        detailView.setBackground(UIStyle.BG_PAGE);
         detailView.setBorder(new EmptyBorder(25, 40, 25, 40));
 
         // Top bar for 'Back'
         JPanel topBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        topBar.setBackground(new Color(245, 245, 245));
-        JButton backBtn = new JButton("← Back to Forum");
-        backBtn.setFont(new Font("Arial", Font.BOLD, 13));
-        backBtn.setBackground(new Color(230, 230, 230));
-        backBtn.setForeground(new Color(60, 60, 60));
+        topBar.setBackground(UIStyle.BG_PAGE);
+        JButton backBtn = new JButton("< Back to Forum");
+        backBtn.setFont(UIStyle.FONT_BODY_BOLD);
+        backBtn.setBackground(new Color(236, 240, 241));
+        backBtn.setForeground(UIStyle.TEXT_PRIMARY);
         backBtn.setFocusPainted(false);
         backBtn.setOpaque(true);
         backBtn.setBorder(new EmptyBorder(8, 15, 8, 15));
         backBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        backBtn.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override public void mouseEntered(java.awt.event.MouseEvent e) {
+                backBtn.setBackground(new Color(222, 226, 230));
+            }
+            @Override public void mouseExited(java.awt.event.MouseEvent e) {
+                backBtn.setBackground(new Color(236, 240, 241));
+            }
+        });
         backBtn.addActionListener(e -> {
             ((CardLayout)mainAreaWrapper.getLayout()).show(mainAreaWrapper, "List");
             mainAreaWrapper.remove(detailView); // Fix CardLayout memory leak and hidden component crashing
@@ -335,27 +349,27 @@ public class ForumPanel extends JPanel {
 
         // Main content
         JPanel contentCard = new ScrollablePanel(new BorderLayout(15, 20));
-        contentCard.setBackground(Color.WHITE);
+        contentCard.setBackground(UIStyle.BG_CARD);
         contentCard.setBorder(new CompoundBorder(
-            new LineBorder(new Color(220, 220, 220), 1),
-            new EmptyBorder(30, 30, 30, 30)
+            new LineBorder(UIStyle.BORDER, 1, true),
+            new EmptyBorder(25, 25, 25, 25)
         ));
 
         // Header
         JPanel header = new JPanel(new BorderLayout(15, 0));
-        header.setBackground(Color.WHITE);
+        header.setBackground(UIStyle.BG_CARD);
         Color avatarColor = new Color(41, 128, 185); // simple fallback
         header.add(new AvatarIcon(topic.getAuthorName(), avatarColor), BorderLayout.WEST);
 
         JPanel headerInfo = new JPanel(new GridLayout(2, 1));
-        headerInfo.setBackground(Color.WHITE);
+        headerInfo.setBackground(UIStyle.BG_CARD);
         JLabel titleLbl = new JLabel("<html><body style='width: 400px;'>" + topic.getTitle() + "</body></html>");
-        titleLbl.setFont(new Font("Arial", Font.BOLD, 22));
-        titleLbl.setForeground(new Color(51, 51, 51));
+        titleLbl.setFont(UIStyle.FONT_HEADING.deriveFont(20f));
+        titleLbl.setForeground(UIStyle.TEXT_PRIMARY);
         
         JLabel metaLbl = new JLabel("By " + topic.getAuthorName() + "  |  " + topic.getDateStr());
-        metaLbl.setFont(new Font("Arial", Font.PLAIN, 13));
-        metaLbl.setForeground(new Color(150, 150, 150));
+        metaLbl.setFont(UIStyle.FONT_SMALL);
+        metaLbl.setForeground(UIStyle.TEXT_SECONDARY);
         
         headerInfo.add(titleLbl);
         headerInfo.add(metaLbl);
@@ -365,34 +379,35 @@ public class ForumPanel extends JPanel {
         // We will stack bodyArea, ActionFooter, and CommentsPanel together without separate scroll bars
         JPanel centerContainer = new JPanel();
         centerContainer.setLayout(new BoxLayout(centerContainer, BoxLayout.Y_AXIS));
-        centerContainer.setBackground(Color.WHITE);
+        centerContainer.setBackground(UIStyle.BG_CARD);
 
         // Body
         JTextArea bodyArea = new JTextArea(topic.getContent());
-        bodyArea.setFont(new Font("Arial", Font.PLAIN, 15));
-        bodyArea.setForeground(new Color(80, 80, 80));
+        bodyArea.setFont(UIStyle.FONT_BODY.deriveFont(15f));
+        bodyArea.setForeground(UIStyle.TEXT_PRIMARY);
         bodyArea.setLineWrap(true);
         bodyArea.setWrapStyleWord(true);
         bodyArea.setEditable(false);
+        bodyArea.setBackground(UIStyle.BG_CARD);
         bodyArea.setBorder(new EmptyBorder(10, 0, 10, 0));
         
         centerContainer.add(bodyArea);
 
         // Interaction Footer
         JPanel actionFooter = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
-        actionFooter.setBackground(Color.WHITE);
+        actionFooter.setBackground(UIStyle.BG_CARD);
         actionFooter.setBorder(new CompoundBorder(
-            new MatteBorder(1, 0, 0, 0, new Color(240, 240, 240)),
+            new MatteBorder(1, 0, 0, 0, UIStyle.BORDER),
             new EmptyBorder(15, 0, 0, 0)
         ));
 
         String loggedInUser = getLoggedInUsername();
 
-        JButton likeBtn = new JButton(topic.getLikedByUsers().contains(loggedInUser) && isLoggedIn() ? "❤️ Liked (" + topic.getLikes() + ")" : "👍 Like (" + topic.getLikes() + ")");
-        JButton commentBtn = new JButton("💬 Comment (" + topic.getComments() + ")");
-        JButton favBtn = new JButton(topic.getFavoritedByUsers().contains(loggedInUser) && isLoggedIn() ? "🌟 Favorited (" + topic.getFavorites() + ")" : "⭐ Favorite (" + topic.getFavorites() + ")");
+        JButton likeBtn = new JButton(topic.getLikedByUsers().contains(loggedInUser) && isLoggedIn() ? "[Liked] (" + topic.getLikes() + ")" : "[Like] (" + topic.getLikes() + ")");
+        JButton commentBtn = new JButton("[Comment] (" + topic.getComments() + ")");
+        JButton favBtn = new JButton(topic.getFavoritedByUsers().contains(loggedInUser) && isLoggedIn() ? "[Fav'd] (" + topic.getFavorites() + ")" : "[Fav] (" + topic.getFavorites() + ")");
 
-        Font actionFont = new Font(EMOJI_FONT_NAME, Font.PLAIN, 14);
+        Font actionFont = UIStyle.FONT_BODY_BOLD;
         likeBtn.setFont(actionFont);
         commentBtn.setFont(actionFont);
         favBtn.setFont(actionFont);
@@ -415,7 +430,7 @@ public class ForumPanel extends JPanel {
             }
             boolean isLiked = topic.toggleLike(loggedInUser);
             topicRepository.updateTopic(topic);
-            likeBtn.setText(isLiked ? "❤️ Liked (" + topic.getLikes() + ")" : "👍 Like (" + topic.getLikes() + ")");
+            likeBtn.setText(isLiked ? "[Liked] (" + topic.getLikes() + ")" : "[Like] (" + topic.getLikes() + ")");
         });
         
         commentBtn.addActionListener(e -> {
@@ -455,7 +470,7 @@ public class ForumPanel extends JPanel {
             }
             boolean isFav = topic.toggleFavorite(loggedInUser);
             topicRepository.updateTopic(topic);
-            favBtn.setText(isFav ? "🌟 Favorited (" + topic.getFavorites() + ")" : "⭐ Favorite (" + topic.getFavorites() + ")");
+            favBtn.setText(isFav ? "[Fav'd] (" + topic.getFavorites() + ")" : "[Fav] (" + topic.getFavorites() + ")");
         });
 
         actionFooter.add(likeBtn);
@@ -471,8 +486,7 @@ public class ForumPanel extends JPanel {
 
         // Add contentCard to a unifying ScrollPane
         JScrollPane masterScroll = new JScrollPane(contentCard);
-        masterScroll.setBorder(null);
-        masterScroll.getVerticalScrollBar().setUnitIncrement(16);
+        UIStyle.styleScrollPane(masterScroll);
         masterScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
         detailView.add(masterScroll, BorderLayout.CENTER);
@@ -486,34 +500,39 @@ public class ForumPanel extends JPanel {
         JDialog dialog = new JDialog(parent, "Start New Topic", true);
         dialog.setSize(600, 450);
         dialog.setLocationRelativeTo(this);
+        dialog.getContentPane().setBackground(UIStyle.BG_PAGE);
         dialog.setLayout(new BorderLayout());
         
         JPanel formPanel = new JPanel(new BorderLayout(10, 10));
         formPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
-        formPanel.setBackground(Color.WHITE);
+        formPanel.setBackground(UIStyle.BG_CARD);
 
-        JTextField titleField = new JTextField();
-        titleField.setBorder(BorderFactory.createTitledBorder("Topic Title"));
-        titleField.setFont(new Font("Arial", Font.BOLD, 14));
+        JTextField titleField = UIStyle.createTextField(30);
+        titleField.setFont(UIStyle.FONT_BODY_BOLD);
+        JPanel titleWrap = new JPanel(new BorderLayout());
+        titleWrap.setBackground(UIStyle.BG_CARD);
+        titleWrap.setBorder(BorderFactory.createTitledBorder(
+            BorderFactory.createLineBorder(UIStyle.BORDER), "Topic Title"));
+        titleWrap.add(titleField, BorderLayout.CENTER);
 
         JTextArea contentArea = new JTextArea();
         contentArea.setLineWrap(true);
         contentArea.setWrapStyleWord(true);
-        contentArea.setFont(new Font("Arial", Font.PLAIN, 14));
+        contentArea.setFont(UIStyle.FONT_BODY);
+        contentArea.setBackground(UIStyle.WHITE);
+        contentArea.setBorder(UIStyle.inputBorder());
         JScrollPane scrollPane = new JScrollPane(contentArea);
-        scrollPane.setBorder(BorderFactory.createTitledBorder("Topic Content"));
+        scrollPane.setBorder(BorderFactory.createTitledBorder(
+            BorderFactory.createLineBorder(UIStyle.BORDER), "Topic Content"));
+        UIStyle.styleScrollPane(scrollPane);
 
-        formPanel.add(titleField, BorderLayout.NORTH);
+        formPanel.add(titleWrap, BorderLayout.NORTH);
         formPanel.add(scrollPane, BorderLayout.CENTER);
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        buttonPanel.setBackground(Color.WHITE);
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 8));
+        buttonPanel.setBackground(UIStyle.BG_CARD);
 
-        JButton postBtn = new JButton("Post Topic");
-        postBtn.setBackground(new Color(39, 174, 96));
-        postBtn.setForeground(Color.WHITE);
-        postBtn.setOpaque(true);
-        postBtn.setFocusPainted(false);
+        JButton postBtn = UIStyle.createPrimaryButton("Post Topic");
         postBtn.addActionListener(e -> {
             String title = titleField.getText().trim();
             String content = contentArea.getText().trim();
@@ -542,7 +561,7 @@ public class ForumPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "Topic posted successfully!");
         });
 
-        JButton cancelBtn = new JButton("Cancel");
+        JButton cancelBtn = UIStyle.createSecondaryButton("Cancel");
         cancelBtn.addActionListener(e -> dialog.dispose());
 
         buttonPanel.add(cancelBtn);
@@ -555,10 +574,10 @@ public class ForumPanel extends JPanel {
 
     private JPanel createTopicCard(Topic topic, Color avatarColor) {
         JPanel card = new JPanel(new BorderLayout(15, 10));
-        card.setBackground(Color.WHITE);
+        card.setBackground(UIStyle.BG_CARD);
         card.setBorder(new CompoundBorder(
-            new LineBorder(new Color(230, 230, 230), 1),
-            new EmptyBorder(20, 20, 15, 20) // Top, Left, Bottom, Right Inner Padding
+            new LineBorder(UIStyle.BORDER, 1, true),
+            new EmptyBorder(18, 20, 15, 20) // Top, Left, Bottom, Right Inner Padding
         ));
         
         card.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -567,10 +586,10 @@ public class ForumPanel extends JPanel {
                 showTopicDetail(topic);
             }
             public void mouseEntered(java.awt.event.MouseEvent e) {
-                card.setBackground(new Color(250, 250, 250));
+                card.setBackground(UIStyle.BG_HOVER);
             }
             public void mouseExited(java.awt.event.MouseEvent e) {
-                card.setBackground(Color.WHITE);
+                card.setBackground(UIStyle.BG_CARD);
             }
         });
 
@@ -587,8 +606,8 @@ public class ForumPanel extends JPanel {
         contentArea.setOpaque(false);
 
         JLabel title = new JLabel(topic.getTitle());
-        title.setFont(new Font("Arial", Font.BOLD, 16));
-        title.setForeground(new Color(51, 51, 51));
+        title.setFont(UIStyle.FONT_BODY_BOLD.deriveFont(16f));
+        title.setForeground(UIStyle.TEXT_PRIMARY);
         
         String bodyText = topic.getContent();
         if (bodyText.length() > 200) {
@@ -615,24 +634,24 @@ public class ForumPanel extends JPanel {
         
         String loggedInUser = getLoggedInUsername();
 
-        JLabel likesLbl = new JLabel(topic.getLikedByUsers().contains(loggedInUser) && isLoggedIn() ? "❤️ " + topic.getLikes() : "👍 " + topic.getLikes());
-        likesLbl.setFont(new Font(EMOJI_FONT_NAME, Font.PLAIN, 13));
-        likesLbl.setForeground(new Color(39, 174, 96));
+        JLabel likesLbl = new JLabel(topic.getLikedByUsers().contains(loggedInUser) && isLoggedIn() ? "[Liked] " + topic.getLikes() : "[Like] " + topic.getLikes());
+        likesLbl.setFont(UIStyle.FONT_SMALL);
+        likesLbl.setForeground(UIStyle.PRIMARY);
         likesLbl.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        JLabel commentsLbl = new JLabel("💬 " + topic.getComments());
-        commentsLbl.setFont(new Font(EMOJI_FONT_NAME, Font.PLAIN, 13));
-        commentsLbl.setForeground(new Color(150, 150, 150));
+        JLabel commentsLbl = new JLabel("[Comment] " + topic.getComments());
+        commentsLbl.setFont(UIStyle.FONT_SMALL);
+        commentsLbl.setForeground(UIStyle.TEXT_SECONDARY);
         commentsLbl.setCursor(new Cursor(Cursor.HAND_CURSOR));
         
-        JLabel favLbl = new JLabel(topic.getFavoritedByUsers().contains(loggedInUser) && isLoggedIn() ? "🌟 " + topic.getFavorites() : "⭐ " + topic.getFavorites());
-        favLbl.setFont(new Font(EMOJI_FONT_NAME, Font.PLAIN, 13));
-        favLbl.setForeground(new Color(243, 156, 18));
+        JLabel favLbl = new JLabel(topic.getFavoritedByUsers().contains(loggedInUser) && isLoggedIn() ? "[Fav'd] " + topic.getFavorites() : "[Fav] " + topic.getFavorites());
+        favLbl.setFont(UIStyle.FONT_SMALL);
+        favLbl.setForeground(UIStyle.WARNING);
         favLbl.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        JLabel dateLbl = new JLabel("🕒 Posted on: " + topic.getDateStr());
-        dateLbl.setFont(new Font("Arial", Font.PLAIN, 12));
-        dateLbl.setForeground(new Color(170, 170, 170));
+        JLabel dateLbl = new JLabel("Posted: " + topic.getDateStr());
+        dateLbl.setFont(UIStyle.FONT_SMALL);
+        dateLbl.setForeground(UIStyle.TEXT_SECONDARY);
         
         // Fast interactions on list view
         likesLbl.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -640,7 +659,7 @@ public class ForumPanel extends JPanel {
                 if (!isLoggedIn()) { JOptionPane.showMessageDialog(ForumPanel.this, "Please login to interact."); return; }
                 boolean isLiked = topic.toggleLike(loggedInUser);
                 topicRepository.updateTopic(topic);
-                likesLbl.setText(isLiked ? "❤️ " + topic.getLikes() : "👍 " + topic.getLikes());
+                likesLbl.setText(isLiked ? "[Liked] " + topic.getLikes() : "[Like] " + topic.getLikes());
                 e.consume(); // stops bubbling to detail view
             }
         });
@@ -650,7 +669,7 @@ public class ForumPanel extends JPanel {
                 if (!isLoggedIn()) { JOptionPane.showMessageDialog(ForumPanel.this, "Please login to interact."); return; }
                 boolean isFav = topic.toggleFavorite(loggedInUser);
                 topicRepository.updateTopic(topic);
-                favLbl.setText(isFav ? "🌟 " + topic.getFavorites() : "⭐ " + topic.getFavorites());
+                favLbl.setText(isFav ? "[Fav'd] " + topic.getFavorites() : "[Fav] " + topic.getFavorites());
                 e.consume(); 
             }
         });
@@ -809,10 +828,10 @@ public class ForumPanel extends JPanel {
                     new EmptyBorder(15, 15, 15, 15)
                 ));
                 
-                String icon = n.type.equals("Like") ? "❤️ " : "💬 ";
+                String icon = n.type.equals("Like") ? "[Like] " : "[Comment] ";
                 JLabel topLbl = new JLabel("<html><b>" + icon + n.byUser + "</b> " + 
                                          (n.type.equals("Like") ? "liked your topic:" : "commented on your topic:") + "</html>");
-                topLbl.setFont(new Font(EMOJI_FONT_NAME, Font.PLAIN, 14));
+                topLbl.setFont(UIStyle.FONT_BODY);
                 
                 JLabel topicLbl = new JLabel("Topic: " + n.topicTitle);
                 topicLbl.setFont(new Font("Arial", Font.ITALIC, 12));
