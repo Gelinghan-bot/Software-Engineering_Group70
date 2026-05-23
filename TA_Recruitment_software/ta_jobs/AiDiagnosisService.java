@@ -71,7 +71,7 @@ public class AiDiagnosisService {
             String prefix =
                 "Note: CV file not found on disk at \"" + storedCv + "\". "
                     + "Typical causes: the file was never uploaded on this PC, it was deleted, or it is not tracked in Git "
-                    + "(local uploads stay under data/cv/). Re-upload via Personal → My Resume. "
+                    + "(local uploads stay under data/cv/). Re-upload via Personal → My Profile. "
                     + "Scores below use your profile (major/skills) only.\n\n";
             results.set(0, new JobMatchResult(top.getPosition(), top.getScorePercent(), prefix + top.getReason()));
         }

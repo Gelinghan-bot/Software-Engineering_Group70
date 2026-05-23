@@ -310,7 +310,7 @@ public class ForumPanel extends JPanel {
         // Top bar for 'Back'
         JPanel topBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         topBar.setBackground(UIStyle.BG_PAGE);
-        JButton backBtn = new JButton("< Back to Forum");
+        JButton backBtn = new JButton("\u2190 Back to Forum");
         backBtn.setFont(UIStyle.FONT_BODY_BOLD);
         backBtn.setBackground(new Color(236, 240, 241));
         backBtn.setForeground(UIStyle.TEXT_PRIMARY);
@@ -403,14 +403,13 @@ public class ForumPanel extends JPanel {
 
         String loggedInUser = getLoggedInUsername();
 
-        JButton likeBtn = new JButton(topic.getLikedByUsers().contains(loggedInUser) && isLoggedIn() ? "[Liked] (" + topic.getLikes() + ")" : "[Like] (" + topic.getLikes() + ")");
-        JButton commentBtn = new JButton("[Comment] (" + topic.getComments() + ")");
-        JButton favBtn = new JButton(topic.getFavoritedByUsers().contains(loggedInUser) && isLoggedIn() ? "[Fav'd] (" + topic.getFavorites() + ")" : "[Fav] (" + topic.getFavorites() + ")");
+        JButton likeBtn = new JButton(topic.getLikedByUsers().contains(loggedInUser) && isLoggedIn() ? "\u2764\uFE0F Liked (" + topic.getLikes() + ")" : "\uD83D\uDC4D Like (" + topic.getLikes() + ")");
+        JButton commentBtn = new JButton("\uD83D\uDCAC Comment (" + topic.getComments() + ")");
+        JButton favBtn = new JButton(topic.getFavoritedByUsers().contains(loggedInUser) && isLoggedIn() ? "\uD83C\uDF1F Favorited (" + topic.getFavorites() + ")" : "\u2B50 Favorite (" + topic.getFavorites() + ")");
 
-        Font actionFont = UIStyle.FONT_BODY_BOLD;
-        likeBtn.setFont(actionFont);
-        commentBtn.setFont(actionFont);
-        favBtn.setFont(actionFont);
+        likeBtn.setFont(UIStyle.FONT_EMOJI);
+        commentBtn.setFont(UIStyle.FONT_EMOJI);
+        favBtn.setFont(UIStyle.FONT_EMOJI);
 
         likeBtn.setBackground(new Color(240,250,240)); likeBtn.setForeground(new Color(39, 174, 96));
         commentBtn.setBackground(new Color(240,245,250)); commentBtn.setForeground(new Color(52, 152, 219));
@@ -430,7 +429,7 @@ public class ForumPanel extends JPanel {
             }
             boolean isLiked = topic.toggleLike(loggedInUser);
             topicRepository.updateTopic(topic);
-            likeBtn.setText(isLiked ? "[Liked] (" + topic.getLikes() + ")" : "[Like] (" + topic.getLikes() + ")");
+            likeBtn.setText(isLiked ? "\u2764\uFE0F Liked (" + topic.getLikes() + ")" : "\uD83D\uDC4D Like (" + topic.getLikes() + ")");
         });
         
         commentBtn.addActionListener(e -> {
@@ -470,7 +469,7 @@ public class ForumPanel extends JPanel {
             }
             boolean isFav = topic.toggleFavorite(loggedInUser);
             topicRepository.updateTopic(topic);
-            favBtn.setText(isFav ? "[Fav'd] (" + topic.getFavorites() + ")" : "[Fav] (" + topic.getFavorites() + ")");
+            favBtn.setText(isFav ? "\uD83C\uDF1F Favorited (" + topic.getFavorites() + ")" : "\u2B50 Favorite (" + topic.getFavorites() + ")");
         });
 
         actionFooter.add(likeBtn);
@@ -634,22 +633,22 @@ public class ForumPanel extends JPanel {
         
         String loggedInUser = getLoggedInUsername();
 
-        JLabel likesLbl = new JLabel(topic.getLikedByUsers().contains(loggedInUser) && isLoggedIn() ? "[Liked] " + topic.getLikes() : "[Like] " + topic.getLikes());
-        likesLbl.setFont(UIStyle.FONT_SMALL);
+        JLabel likesLbl = new JLabel(topic.getLikedByUsers().contains(loggedInUser) && isLoggedIn() ? "\u2764\uFE0F " + topic.getLikes() : "\uD83D\uDC4D " + topic.getLikes());
+        likesLbl.setFont(UIStyle.FONT_EMOJI.deriveFont(13f));
         likesLbl.setForeground(UIStyle.PRIMARY);
         likesLbl.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        JLabel commentsLbl = new JLabel("[Comment] " + topic.getComments());
-        commentsLbl.setFont(UIStyle.FONT_SMALL);
+        JLabel commentsLbl = new JLabel("\uD83D\uDCAC " + topic.getComments());
+        commentsLbl.setFont(UIStyle.FONT_EMOJI.deriveFont(13f));
         commentsLbl.setForeground(UIStyle.TEXT_SECONDARY);
         commentsLbl.setCursor(new Cursor(Cursor.HAND_CURSOR));
         
-        JLabel favLbl = new JLabel(topic.getFavoritedByUsers().contains(loggedInUser) && isLoggedIn() ? "[Fav'd] " + topic.getFavorites() : "[Fav] " + topic.getFavorites());
-        favLbl.setFont(UIStyle.FONT_SMALL);
+        JLabel favLbl = new JLabel(topic.getFavoritedByUsers().contains(loggedInUser) && isLoggedIn() ? "\uD83C\uDF1F " + topic.getFavorites() : "\u2B50 " + topic.getFavorites());
+        favLbl.setFont(UIStyle.FONT_EMOJI.deriveFont(13f));
         favLbl.setForeground(UIStyle.WARNING);
         favLbl.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        JLabel dateLbl = new JLabel("Posted: " + topic.getDateStr());
+        JLabel dateLbl = new JLabel("\uD83D\uDD52 Posted: " + topic.getDateStr());
         dateLbl.setFont(UIStyle.FONT_SMALL);
         dateLbl.setForeground(UIStyle.TEXT_SECONDARY);
         
@@ -659,7 +658,7 @@ public class ForumPanel extends JPanel {
                 if (!isLoggedIn()) { JOptionPane.showMessageDialog(ForumPanel.this, "Please login to interact."); return; }
                 boolean isLiked = topic.toggleLike(loggedInUser);
                 topicRepository.updateTopic(topic);
-                likesLbl.setText(isLiked ? "[Liked] " + topic.getLikes() : "[Like] " + topic.getLikes());
+                likesLbl.setText(isLiked ? "\u2764\uFE0F " + topic.getLikes() : "\uD83D\uDC4D " + topic.getLikes());
                 e.consume(); // stops bubbling to detail view
             }
         });
@@ -669,7 +668,7 @@ public class ForumPanel extends JPanel {
                 if (!isLoggedIn()) { JOptionPane.showMessageDialog(ForumPanel.this, "Please login to interact."); return; }
                 boolean isFav = topic.toggleFavorite(loggedInUser);
                 topicRepository.updateTopic(topic);
-                favLbl.setText(isFav ? "[Fav'd] " + topic.getFavorites() : "[Fav] " + topic.getFavorites());
+                favLbl.setText(isFav ? "\uD83C\uDF1F " + topic.getFavorites() : "\u2B50 " + topic.getFavorites());
                 e.consume(); 
             }
         });
