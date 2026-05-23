@@ -148,7 +148,7 @@ public class AdminService {
         }
         if (u.getRole() == Role.TA) {
             int count = 0;
-            Set<ApplicationStatus> accepted = EnumSet.of(ApplicationStatus.APPROVED, ApplicationStatus.HIRED);
+            Set<ApplicationStatus> accepted = EnumSet.of(ApplicationStatus.APPROVED, ApplicationStatus.HIRED, ApplicationStatus.OFFERED);
             for (Application app : applicationRepository.findByApplicant(userId)) {
                 if (accepted.contains(app.getStatus())) count++;
             }
@@ -161,7 +161,7 @@ public class AdminService {
         sessionManager.requireRole(adminToken, Role.ADMIN);
 
         List<TaWorkloadSummary> workloadSummaries = new ArrayList<>();
-        Set<ApplicationStatus> acceptedStatuses = EnumSet.of(ApplicationStatus.APPROVED, ApplicationStatus.HIRED);
+        Set<ApplicationStatus> acceptedStatuses = EnumSet.of(ApplicationStatus.APPROVED, ApplicationStatus.HIRED, ApplicationStatus.OFFERED);
 
         for (User ta : userRepository.findAll()) {
             if (ta.getRole() != Role.TA) {
@@ -206,7 +206,7 @@ public class AdminService {
         }
 
         List<String[]> result = new ArrayList<>();
-        Set<ApplicationStatus> acceptedStatuses = EnumSet.of(ApplicationStatus.APPROVED, ApplicationStatus.HIRED);
+        Set<ApplicationStatus> acceptedStatuses = EnumSet.of(ApplicationStatus.APPROVED, ApplicationStatus.HIRED, ApplicationStatus.OFFERED);
 
         for (Application app : applicationRepository.findByApplicant(userId)) {
             if (!acceptedStatuses.contains(app.getStatus())) {
