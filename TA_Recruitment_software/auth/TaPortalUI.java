@@ -2,6 +2,7 @@ package TA_Recruitment_software.auth;
 
 import TA_Recruitment_software.RecruitmentSystemContext;
 import TA_Recruitment_software.admin_system.foundation.AppException;
+import TA_Recruitment_software.admin_system.foundation.UIStyle;
 import TA_Recruitment_software.admin_system.model.Application;
 import TA_Recruitment_software.admin_system.model.Role;
 import java.awt.*;
@@ -15,10 +16,10 @@ import javax.swing.table.DefaultTableModel;
  * TA portal UI: notifications, compliance summary, application history, PDF export.
  */
 public final class TaPortalUI {
-    private static final Color PRIMARY_GREEN = new Color(39, 174, 96);
-    private static final Color ERROR_RED = new Color(220, 53, 69);
-    private static final Font TITLE_FONT = new Font("Arial", Font.BOLD, 18);
-    private static final Font LABEL_FONT = new Font("Arial", Font.PLAIN, 13);
+    private static final Color PRIMARY_GREEN = UIStyle.PRIMARY;
+    private static final Color ERROR_RED = UIStyle.DANGER;
+    private static final Font TITLE_FONT = UIStyle.FONT_TITLE;
+    private static final Font LABEL_FONT = UIStyle.FONT_BODY;
 
     private TaPortalUI() {
     }
@@ -98,17 +99,18 @@ public final class TaPortalUI {
             });
         }
 
-        JTable table = new JTable(model);
-        table.setFont(LABEL_FONT);
+        JTable table = UIStyle.createStyledTable(model);
         table.getColumnModel().getColumn(0).setPreferredWidth(80);
         table.getColumnModel().getColumn(1).setPreferredWidth(420);
 
         JDialog dialog = new JDialog(parent, "Application Notifications", true);
         dialog.setSize(720, 420);
         dialog.setLocationRelativeTo(parent);
+        dialog.getContentPane().setBackground(UIStyle.BG_PAGE);
 
         JPanel panel = new JPanel(new BorderLayout(8, 8));
         panel.setBorder(new EmptyBorder(12, 12, 12, 12));
+        panel.setBackground(UIStyle.BG_PAGE);
 
         JLabel title = new JLabel("Application Status Notifications", SwingConstants.CENTER);
         title.setFont(TITLE_FONT);
@@ -116,11 +118,12 @@ public final class TaPortalUI {
         panel.add(title, BorderLayout.NORTH);
         panel.add(new JScrollPane(table), BorderLayout.CENTER);
 
-        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
-        JButton markReadBtn = new JButton("Mark Selected Read");
-        JButton markAllBtn = new JButton("Mark All Read");
-        JButton refreshBtn = new JButton("Refresh");
-        JButton closeBtn = new JButton("Close");
+        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 8));
+        buttons.setBackground(UIStyle.BG_PAGE);
+        JButton markReadBtn = UIStyle.createPrimaryButton("Mark Selected Read");
+        JButton markAllBtn = UIStyle.createAccentButton("Mark All Read");
+        JButton refreshBtn = UIStyle.createSecondaryButton("Refresh");
+        JButton closeBtn = UIStyle.createSecondaryButton("Close");
 
         markReadBtn.addActionListener(e -> {
             int row = table.getSelectedRow();

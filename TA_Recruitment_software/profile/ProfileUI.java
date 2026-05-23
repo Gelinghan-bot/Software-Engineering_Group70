@@ -2,6 +2,7 @@ package TA_Recruitment_software.profile;
 
 import TA_Recruitment_software.RecruitmentSystemContext;
 import TA_Recruitment_software.admin_system.foundation.AppException;
+import TA_Recruitment_software.admin_system.foundation.UIStyle;
 import TA_Recruitment_software.admin_system.model.User;
 import java.awt.*;
 import java.io.File;
@@ -18,13 +19,28 @@ public class ProfileUI {
         try {
             User user = context.getAuthService().getUserByToken(token);
 
-            JPanel formPanel = new JPanel(new GridLayout(5, 2, 8, 8));
-            JTextField majorField = new JTextField(user.getMajor(), 20);
-            JTextField emailField = new JTextField(user.getEmail(), 20);
-            JTextField phoneField = new JTextField(user.getPhone(), 20);
+            JPanel formPanel = new JPanel(new GridBagLayout());
+            formPanel.setBackground(UIStyle.BG_CARD);
+            formPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.insets = new Insets(6, 6, 6, 6);
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+            gbc.anchor = GridBagConstraints.WEST;
+
+            JTextField majorField = UIStyle.createTextField(20);
+            majorField.setText(user.getMajor());
+            JTextField emailField = UIStyle.createTextField(20);
+            emailField.setText(user.getEmail());
+            JTextField phoneField = UIStyle.createTextField(20);
+            phoneField.setText(user.getPhone());
             JTextArea skillsArea = new JTextArea(user.getSkills() == null ? "" : user.getSkills(), 3, 20);
-            JTextField cvField = new JTextField(user.getCvFilePath(), 20);
-            JButton chooseCvButton = new JButton("Choose...");
+            skillsArea.setFont(UIStyle.FONT_BODY);
+            skillsArea.setLineWrap(true);
+            skillsArea.setWrapStyleWord(true);
+            JTextField cvField = UIStyle.createTextField(20);
+            cvField.setText(user.getCvFilePath());
+
+            JButton chooseCvButton = UIStyle.createSecondaryButton("Choose...");
             chooseCvButton.addActionListener(e -> {
                 JFileChooser chooser = new JFileChooser();
                 chooser.setDialogTitle("Select CV (.pdf/.doc/.docx)");
@@ -37,17 +53,30 @@ public class ProfileUI {
                 }
             });
 
-            formPanel.add(new JLabel("Major:")); formPanel.add(majorField);
-            formPanel.add(new JLabel("Email:")); formPanel.add(emailField);
-            formPanel.add(new JLabel("Phone:")); formPanel.add(phoneField);
+            int row = 0;
+            addFieldRow(formPanel, gbc, row++, "Major:", majorField);
+            addFieldRow(formPanel, gbc, row++, "Email:", emailField);
+            addFieldRow(formPanel, gbc, row++, "Phone:", phoneField);
+
+            gbc.gridx = 0; gbc.gridy = row; gbc.gridwidth = 1;
+            JLabel skillsLbl = UIStyle.createFieldLabel("Skills:");
+            formPanel.add(skillsLbl, gbc);
+            gbc.gridx = 1; gbc.weightx = 1.0;
             JScrollPane skillsScroll = new JScrollPane(skillsArea);
-            skillsScroll.getVerticalScrollBar().setUnitIncrement(16);
-            skillsScroll.getHorizontalScrollBar().setUnitIncrement(16);
-            formPanel.add(new JLabel("Skills:")); formPanel.add(skillsScroll);
+            skillsScroll.setPreferredSize(new Dimension(200, 60));
+            UIStyle.styleScrollPane(skillsScroll);
+            formPanel.add(skillsScroll, gbc);
+            row++;
+
+            gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0.0;
+            JLabel cvLbl = UIStyle.createFieldLabel("CV File:");
+            formPanel.add(cvLbl, gbc);
+            gbc.gridx = 1; gbc.weightx = 1.0;
             JPanel cvPanel = new JPanel(new BorderLayout(8, 0));
+            cvPanel.setBackground(UIStyle.BG_CARD);
             cvPanel.add(cvField, BorderLayout.CENTER);
             cvPanel.add(chooseCvButton, BorderLayout.EAST);
-            formPanel.add(new JLabel("CV File:")); formPanel.add(cvPanel);
+            formPanel.add(cvPanel, gbc);
 
             int result = JOptionPane.showConfirmDialog(parent, formPanel, "Update Profile", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
             if (result == JOptionPane.OK_OPTION) {
@@ -73,5 +102,13 @@ public class ProfileUI {
         } catch (AppException ex) {
             JOptionPane.showMessageDialog(parent, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    private static void addFieldRow(JPanel panel, GridBagConstraints gbc, int row, String label, JTextField field) {
+        gbc.gridx = 0; gbc.gridy = row; gbc.gridwidth = 1; gbc.weightx = 0.0;
+        JLabel lbl = UIStyle.createFieldLabel(label.replace(":", ""));
+        panel.add(lbl, gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0;
+        panel.add(field, gbc);
     }
 }

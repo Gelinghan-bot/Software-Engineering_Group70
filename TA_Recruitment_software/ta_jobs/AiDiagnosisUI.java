@@ -2,17 +2,16 @@ package TA_Recruitment_software.ta_jobs;
 
 import TA_Recruitment_software.RecruitmentSystemContext;
 import TA_Recruitment_software.admin_system.foundation.AppException;
+import TA_Recruitment_software.admin_system.foundation.UIStyle;
 import TA_Recruitment_software.admin_system.model.Position;
 import java.awt.BorderLayout;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.util.List;
-import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -71,6 +70,7 @@ public final class AiDiagnosisUI {
         }
 
         JDialog dlg = new JDialog(parent, "AI Diagnosis — Recommended Positions", true);
+        dlg.getContentPane().setBackground(UIStyle.BG_PAGE);
         dlg.setLayout(new BorderLayout(8, 8));
 
         DefaultTableModel model = new DefaultTableModel(
@@ -90,21 +90,20 @@ public final class AiDiagnosisUI {
             });
         }
 
-        JTable table = new JTable(model);
+        JTable table = UIStyle.createStyledTable(model);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.setRowHeight(22);
         table.getColumnModel().getColumn(0).setPreferredWidth(55);
         table.getColumnModel().getColumn(1).setPreferredWidth(90);
         table.getColumnModel().getColumn(2).setPreferredWidth(160);
         table.getColumnModel().getColumn(3).setPreferredWidth(360);
-        JScrollPane scroll = new JScrollPane(table);
+        JScrollPane scroll = UIStyle.wrapTableInScrollPane(table);
         scroll.setPreferredSize(new Dimension(880, 320));
-        scroll.getVerticalScrollBar().setUnitIncrement(16);
         dlg.add(scroll, BorderLayout.CENTER);
 
-        JPanel south = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 8));
-        JButton detailBtn = new JButton("View details & Apply");
-        JButton closeBtn = new JButton("Close");
+        JPanel south = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 10));
+        south.setBackground(UIStyle.BG_PAGE);
+        JButton detailBtn = UIStyle.createPrimaryButton("View details & Apply");
+        JButton closeBtn = UIStyle.createSecondaryButton("Close");
         south.add(detailBtn);
         south.add(closeBtn);
         dlg.add(south, BorderLayout.SOUTH);

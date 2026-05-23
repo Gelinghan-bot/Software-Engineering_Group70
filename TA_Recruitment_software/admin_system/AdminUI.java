@@ -2,6 +2,7 @@ package TA_Recruitment_software.admin_system;
 
 import TA_Recruitment_software.RecruitmentSystemContext;
 import TA_Recruitment_software.admin_system.foundation.AppException;
+import TA_Recruitment_software.admin_system.foundation.UIStyle;
 import TA_Recruitment_software.admin_system.model.TaWorkloadSummary;
 import TA_Recruitment_software.admin_system.model.User;
 import java.awt.*;
@@ -31,17 +32,17 @@ public class AdminUI {
                 model.addRow(new Object[]{u.getUserId(), u.getAccountId(), u.getFullName(), u.getRole()});
             }
 
-            JTable table = new JTable(model);
-            JPanel panel = new JPanel(new BorderLayout());
-            JScrollPane scrollPane = new JScrollPane(table);
-            scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-            scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
+            JTable table = UIStyle.createStyledTable(model);
+            JPanel panel = new JPanel(new BorderLayout(8, 8));
+            panel.setBackground(UIStyle.BG_PAGE);
+            JScrollPane scrollPane = UIStyle.wrapTableInScrollPane(table);
             panel.add(scrollPane, BorderLayout.CENTER);
             panel.setPreferredSize(new Dimension(500, 300));
 
-            JPanel btnPanel = new JPanel();
-            JButton approveBtn = new JButton("Approve Selected");
-            JButton rejectBtn = new JButton("Reject Selected");
+            JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+            btnPanel.setBackground(UIStyle.BG_PAGE);
+            JButton approveBtn = UIStyle.createPrimaryButton("Approve Selected");
+            JButton rejectBtn = UIStyle.createDangerButton("Reject Selected");
 
             approveBtn.addActionListener(e -> {
                 int row = table.getSelectedRow();
@@ -89,19 +90,18 @@ public class AdminUI {
                 model.addRow(new Object[]{u.getUserId(), u.getAccountId(), u.getFullName(), u.getRole(), u.isEnabled()});
             }
 
-            JTable table = new JTable(model);
-            table.setRowHeight(25);
-            JPanel panel = new JPanel(new BorderLayout());
-            JScrollPane scrollPane = new JScrollPane(table);
-            scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-            scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
+            JTable table = UIStyle.createStyledTable(model);
+            JPanel panel = new JPanel(new BorderLayout(8, 8));
+            panel.setBackground(UIStyle.BG_PAGE);
+            JScrollPane scrollPane = UIStyle.wrapTableInScrollPane(table);
             panel.add(scrollPane, BorderLayout.CENTER);
             panel.setPreferredSize(new Dimension(700, 350));
 
             JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
-            JButton editBtn = new JButton("Edit Selected");
-            JButton toggleBtn = new JButton("Toggle Enable/Disable");
-            JButton workloadBtn = new JButton("Show TA Workload");
+            btnPanel.setBackground(UIStyle.BG_PAGE);
+            JButton editBtn = UIStyle.createPrimaryButton("Edit Selected");
+            JButton toggleBtn = UIStyle.createSecondaryButton("Toggle Enable/Disable");
+            JButton workloadBtn = UIStyle.createAccentButton("Show TA Workload");
 
             editBtn.addActionListener(e -> {
                 int row = table.getSelectedRow();
@@ -150,20 +150,21 @@ public class AdminUI {
         dialog.setSize(500, 600);
         dialog.setLocationRelativeTo(parent);
         dialog.setResizable(false);
+        dialog.getContentPane().setBackground(UIStyle.BG_PAGE);
 
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
         mainPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
-        mainPanel.setBackground(Color.WHITE);
+        mainPanel.setBackground(UIStyle.BG_CARD);
 
         // Title
         JLabel titleLabel = new JLabel("Edit User Information", SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        titleLabel.setForeground(new Color(39, 174, 96));
+        titleLabel.setFont(UIStyle.FONT_TITLE);
+        titleLabel.setForeground(UIStyle.PRIMARY);
         mainPanel.add(titleLabel, BorderLayout.NORTH);
 
         // Form
         JPanel formPanel = new JPanel(new GridBagLayout());
-        formPanel.setBackground(Color.WHITE);
+        formPanel.setBackground(UIStyle.BG_CARD);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(8, 8, 8, 8);

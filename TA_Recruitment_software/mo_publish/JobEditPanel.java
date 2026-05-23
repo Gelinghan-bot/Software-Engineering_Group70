@@ -2,6 +2,7 @@ package TA_Recruitment_software.mo_publish;
 
 import TA_Recruitment_software.RecruitmentSystemContext;
 import TA_Recruitment_software.admin_system.foundation.AppException;
+import TA_Recruitment_software.admin_system.foundation.UIStyle;
 import TA_Recruitment_software.admin_system.model.Position;
 import java.awt.*;
 import javax.swing.*;
@@ -25,42 +26,16 @@ public class JobEditPanel extends JPanel {
         this.onSaved = onSaved;
 
         setLayout(new BorderLayout());
-        setBackground(Color.WHITE);
+        setBackground(UIStyle.BG_PAGE);
 
-        // Header
-        JPanel headerPanel = new JPanel();
-        headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
-        headerPanel.setBackground(Color.WHITE);
-        headerPanel.setBorder(new EmptyBorder(40, 100, 0, 100));
-
-        JLabel titleLabel = new JLabel("Modify Job Details (Editing: " + position.getPositionId() + ")");
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 22));
-        titleLabel.setForeground(new Color(60, 60, 60));
-        titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JPanel titleLine = new JPanel();
-        titleLine.setBackground(new Color(52, 152, 219)); // Blue underline to differentiate from green publish
-        titleLine.setPreferredSize(new Dimension(150, 3));
-        titleLine.setMaximumSize(new Dimension(150, 3));
-        titleLine.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JPanel fullLine = new JPanel();
-        fullLine.setBackground(new Color(224, 224, 224));
-        fullLine.setPreferredSize(new Dimension(3000, 1));
-        fullLine.setMaximumSize(new Dimension(3000, 1));
-        fullLine.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        headerPanel.add(titleLabel);
-        headerPanel.add(Box.createVerticalStrut(10));
-        headerPanel.add(titleLine);
-        headerPanel.add(fullLine);
-
+        // Header using UIStyle
+        JPanel headerPanel = UIStyle.createPageHeader("Modify Job Details (Editing: " + position.getPositionId() + ")", UIStyle.ACCENT_BLUE);
         add(headerPanel, BorderLayout.NORTH);
 
         // Form Area
         JPanel formCenter = new JPanel(new GridBagLayout());
-        formCenter.setBackground(Color.WHITE);
-        formCenter.setBorder(new EmptyBorder(20, 100, 40, 100));
+        formCenter.setBackground(UIStyle.BG_CARD);
+        formCenter.setBorder(UIStyle.pagePadding());
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.anchor = GridBagConstraints.WEST;
@@ -70,15 +45,11 @@ public class JobEditPanel extends JPanel {
         
         JComboBox<String> gradeCombo = new JComboBox<>(new String[]{"Year1", "Year2", "Year3", "Year4"});
         gradeCombo.setSelectedItem(position.getGrade() != null ? position.getGrade() : "Year1");
-        gradeCombo.setPreferredSize(new Dimension(800, 40));
-        gradeCombo.setFont(new Font("Arial", Font.PLAIN, 14));
-        gradeCombo.setBackground(Color.WHITE);
+        styleCombo(gradeCombo);
         
         JComboBox<String> majorCombo = new JComboBox<>(new String[]{"IOT", "EE", "IST", "TEM"});
         majorCombo.setSelectedItem(position.getMajor() != null ? position.getMajor() : "IOT");
-        majorCombo.setPreferredSize(new Dimension(800, 40));
-        majorCombo.setFont(new Font("Arial", Font.PLAIN, 14));
-        majorCombo.setBackground(Color.WHITE);
+        styleCombo(majorCombo);
         
         JComboBox<String> jobTypeCombo = new JComboBox<>(new String[]{
             "Daily attendance", "grading", "invigilation", "Assess", "and other tasks"
@@ -91,10 +62,7 @@ public class JobEditPanel extends JPanel {
             }
         }
         if(!foundType) jobTypeCombo.setSelectedItem("grading");
-
-        jobTypeCombo.setPreferredSize(new Dimension(800, 40));
-        jobTypeCombo.setFont(new Font("Arial", Font.PLAIN, 14));
-        jobTypeCombo.setBackground(Color.WHITE);
+        styleCombo(jobTypeCombo);
 
         JTextArea jobDescArea = new JTextArea();
         JScrollPane jobDescScroll = createTextAreaScroll(position.getJobDescription(), jobDescArea);
@@ -115,21 +83,28 @@ public class JobEditPanel extends JPanel {
         addFormField(formCenter, "CLOSING DATE", closingDateField, gbc, row++);        addFormField(formCenter, "HEADCOUNT", headcountField, gbc, row++);
         // Submit Button & Cancel Button
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
-        buttonPanel.setBackground(Color.WHITE);
+        buttonPanel.setBackground(UIStyle.BG_CARD);
         
-        JButton cancelBtn = new JButton("Cancel");
-        cancelBtn.setPreferredSize(new Dimension(100, 40));
-        cancelBtn.setBackground(new Color(224, 224, 224));
-        cancelBtn.setOpaque(true);
-        cancelBtn.setFocusPainted(false);
+        JButton cancelBtn = UIStyle.createSecondaryButton("Cancel");
         cancelBtn.addActionListener(e -> goBack());
 
         JButton submitBtn = new JButton("Save Changes");
-        submitBtn.setPreferredSize(new Dimension(130, 40));
-        submitBtn.setBackground(new Color(52, 152, 219));
+        submitBtn.setPreferredSize(new Dimension(130, 38));
+        submitBtn.setBackground(UIStyle.ACCENT_BLUE);
         submitBtn.setForeground(Color.WHITE);
         submitBtn.setOpaque(true);
         submitBtn.setFocusPainted(false);
+        submitBtn.setBorderPainted(false);
+        submitBtn.setFont(UIStyle.FONT_BUTTON);
+        submitBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        submitBtn.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override public void mouseEntered(java.awt.event.MouseEvent e) {
+                submitBtn.setBackground(UIStyle.ACCENT_BLUE_DARK);
+            }
+            @Override public void mouseExited(java.awt.event.MouseEvent e) {
+                submitBtn.setBackground(UIStyle.ACCENT_BLUE);
+            }
+        });
         submitBtn.addActionListener(e -> {
             try {
                 String safeDesc = jobDescArea.getText().trim().replaceAll("[\\r\\n]+", "  ");
@@ -182,10 +157,21 @@ public class JobEditPanel extends JPanel {
         formCenter.add(buttonPanel, gbc);
 
         JScrollPane scrollPane = new JScrollPane(formCenter);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-        scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
+        UIStyle.styleScrollPane(scrollPane);
         scrollPane.setBorder(null);
         add(scrollPane, BorderLayout.CENTER);
+    }
+
+    private void styleCombo(JComboBox<?> combo) {
+        combo.setPreferredSize(new Dimension(800, 38));
+        combo.setFont(UIStyle.FONT_BODY);
+        combo.setBackground(UIStyle.BG_CARD);
+    }
+
+    private JTextField createTextField(String text) {
+        JTextField field = UIStyle.createTextField(30);
+        if (text != null) field.setText(text);
+        return field;
     }
 
     private void goBack() {
@@ -208,9 +194,7 @@ public class JobEditPanel extends JPanel {
         gbc.weightx = 0.0;
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.WEST;
-        JLabel label = new JLabel(labelText);
-        label.setFont(new Font("Arial", Font.BOLD, 14));
-        label.setForeground(new Color(80, 80, 80));
+        JLabel label = UIStyle.createFieldLabel(labelText);
         panel.add(label, gbc);
 
         gbc.gridx = 1;
@@ -225,9 +209,7 @@ public class JobEditPanel extends JPanel {
         gbc.weightx = 0.0;
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.NORTHWEST;
-        JLabel label = new JLabel(labelText);
-        label.setFont(new Font("Arial", Font.BOLD, 14));
-        label.setForeground(new Color(80, 80, 80));
+        JLabel label = UIStyle.createFieldLabel(labelText);
         panel.add(label, gbc);
 
         gbc.gridx = 1;
@@ -236,32 +218,20 @@ public class JobEditPanel extends JPanel {
         panel.add(scrollPane, gbc);
     }
 
-    private JTextField createTextField(String value) {
-        JTextField field = new JTextField();
-        field.setPreferredSize(new Dimension(800, 40));
-        field.setBorder(BorderFactory.createCompoundBorder(
-            new LineBorder(new Color(220, 220, 220), 1, true),
-            new EmptyBorder(5, 15, 5, 15)
-        ));
-        field.setFont(new Font("Arial", Font.PLAIN, 14));
-        field.setForeground(new Color(60, 60, 60));
-        field.setText(value);
-        return field;
-    }
-
     private JScrollPane createTextAreaScroll(String value, JTextArea area) {
         area.setLineWrap(true);
         area.setWrapStyleWord(true);
-        area.setFont(new Font("Arial", Font.PLAIN, 14));
-        area.setForeground(new Color(60, 60, 60));
+        area.setFont(UIStyle.FONT_BODY);
+        area.setForeground(UIStyle.TEXT_PRIMARY);
         area.setText(value != null ? value : "");
         
         JScrollPane scroll = new JScrollPane(area);
         scroll.setPreferredSize(new Dimension(800, 120));
         scroll.setBorder(BorderFactory.createCompoundBorder(
-            new LineBorder(new Color(220, 220, 220), 1, true),
+            new LineBorder(UIStyle.BORDER, 1, true),
             new EmptyBorder(5, 15, 5, 15)
         ));
+        UIStyle.styleScrollPane(scroll);
         return scroll;
     }
 }
