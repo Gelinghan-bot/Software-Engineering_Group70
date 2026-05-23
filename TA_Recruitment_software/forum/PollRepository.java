@@ -6,9 +6,9 @@ import java.util.*;
 public class PollRepository {
     private static final String DATA_FILE = "data/poll_votes.csv";
 
-    // Returns a map of username -> voted subject
-    public Map<String, String> loadVotes() {
-        Map<String, String> votes = new HashMap<>();
+    // Returns a list of all voted subjects
+    public List<String> loadVotes() {
+        List<String> votes = new ArrayList<>();
         File dataDir = new File("data");
         if (!dataDir.exists()) {
             dataDir.mkdirs();
@@ -28,7 +28,7 @@ public class PollRepository {
             while ((line = br.readLine()) != null) {
                 String[] parts = line.split(",", 2);
                 if (parts.length == 2) {
-                    votes.put(parts[0], parts[1]);
+                    votes.add(parts[1]);
                 }
             }
         } catch (IOException e) {

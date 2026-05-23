@@ -600,14 +600,14 @@ public class AdminUI {
 
     public static void showPollResultsDialog(JFrame parent) {
         TA_Recruitment_software.forum.PollRepository pollRepo = new TA_Recruitment_software.forum.PollRepository();
-        java.util.Map<String, String> votes = pollRepo.loadVotes();
+        java.util.List<String> votes = pollRepo.loadVotes();
         if (votes.isEmpty()) {
             JOptionPane.showMessageDialog(parent, "No votes have been cast yet for the Poll of the Week.");
             return;
         }
 
         java.util.Map<String, Integer> counts = new java.util.HashMap<>();
-        for (String subject : votes.values()) {
+        for (String subject : votes) {
             counts.put(subject, counts.getOrDefault(subject, 0) + 1);
         }
 
