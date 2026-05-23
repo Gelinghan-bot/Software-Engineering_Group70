@@ -100,38 +100,26 @@ public final class UIStyle {
         }
     }
 
-    // ==================== Font System (中文兼容) ====================
-    public static String getChineseFontFamily() {
-        String os = System.getProperty("os.name", "").toLowerCase();
-        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-        if (os.contains("win")) {
-            for (String f : new String[]{"Microsoft YaHei","微软雅黑","SimHei","SimSun"})
-                for (String a : ge.getAvailableFontFamilyNames())
-                    if (a.equals(f)) return f;
-            return "Arial";
-        }
-        if (os.contains("mac")) return "PingFang SC";
-        return "Noto Sans CJK SC";
-    }
-
+    // ==================== Font System (SANS_SERIF = universal CJK+Emoji) ====================
     public static final Font FONT_BODY;
     public static final Font FONT_BODY_BOLD;
     public static final Font FONT_SMALL;
     public static final Font FONT_TITLE;
     public static final Font FONT_HEADING;
     public static final Font FONT_BUTTON;
+    public static final Font FONT_EMOJI;
     public static final String EMOJI_FONT;
 
     static {
-        String cjk = getChineseFontFamily();
-        FONT_BODY       = new Font(cjk, Font.PLAIN, 14);
-        FONT_BODY_BOLD  = new Font(cjk, Font.BOLD, 14);
-        FONT_SMALL      = new Font(cjk, Font.PLAIN, 12);
-        FONT_TITLE      = new Font(cjk, Font.BOLD, 20);
-        FONT_HEADING    = new Font(cjk, Font.BOLD, 24);
-        FONT_BUTTON     = new Font(cjk, Font.BOLD, 14);
-        EMOJI_FONT      = System.getProperty("os.name","").toLowerCase().contains("mac")
-                            ? "Apple Color Emoji" : "Segoe UI Emoji";
+        // Font.SANS_SERIF triggers OS font-fallback: CJK + emoji + Latin all work
+        FONT_BODY       = new Font(Font.SANS_SERIF, Font.PLAIN, 14);
+        FONT_BODY_BOLD  = new Font(Font.SANS_SERIF, Font.BOLD, 14);
+        FONT_SMALL      = new Font(Font.SANS_SERIF, Font.PLAIN, 12);
+        FONT_TITLE      = new Font(Font.SANS_SERIF, Font.BOLD, 20);
+        FONT_HEADING    = new Font(Font.SANS_SERIF, Font.BOLD, 24);
+        FONT_BUTTON     = new Font(Font.SANS_SERIF, Font.BOLD, 14);
+        FONT_EMOJI      = new Font(Font.SANS_SERIF, Font.PLAIN, 14);
+        EMOJI_FONT      = Font.SANS_SERIF;
     }
 
     // ==================== Global Setup ====================
@@ -165,6 +153,10 @@ public final class UIStyle {
         // Labels
         UIManager.put("Label.font", FONT_BODY);
         UIManager.put("Label.foreground", TEXT);
+
+        // Menu items — ensure emoji-capable font
+        UIManager.put("MenuItem.font", FONT_BODY);
+        UIManager.put("Menu.font", FONT_BODY);
 
         // Text components — ALL white background
         UIManager.put("TextField.background", WHITE);
@@ -325,7 +317,6 @@ public final class UIStyle {
     public static void styleScrollPane(JScrollPane scroll) {
         scroll.getVerticalScrollBar().setUnitIncrement(16);
         scroll.getHorizontalScrollBar().setUnitIncrement(16);
-        scroll.setBorder(null);
         scroll.setBackground(SURFACE);
         scroll.getViewport().setBackground(WHITE);
     }
@@ -374,6 +365,14 @@ public final class UIStyle {
         JLabel l = new JLabel(text);
         l.setFont(FONT_SMALL);
         l.setForeground(TEXT_HINT);
+        return l;
+    }
+
+    /** Create a label that safely renders emoji characters (📬🎓✅ etc.) */
+    public static JLabel createEmojiLabel(String text) {
+        JLabel l = new JLabel(text);
+        l.setFont(FONT_BODY);  // Segoe UI on Win supports emoji
+        l.setForeground(TEXT);
         return l;
     }
 

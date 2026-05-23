@@ -96,20 +96,22 @@ public class Home2 extends JFrame {
             }
         });
         
-        courseNameField = new JTextField("Course Name (e.g. Intro to Java)");
+        courseNameField = UIStyle.createTextField(20);
+        courseNameField.setText("Course Name (e.g. Intro to Java)");
         courseNameField.setPreferredSize(new Dimension(200, 45));
-        courseNameField.setFont(new Font("Arial", Font.PLAIN, 14));
-        courseNameField.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(200, 200, 200)), 
-            BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+        courseNameField.setForeground(UIStyle.TEXT_HINT);
         courseNameField.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
             public void focusGained(java.awt.event.FocusEvent e) {
                 if (courseNameField.getText().equals("Course Name (e.g. Intro to Java)")) {
                     courseNameField.setText("");
+                    courseNameField.setForeground(UIStyle.TEXT);
                 }
             }
+            @Override
             public void focusLost(java.awt.event.FocusEvent e) {
                 if (courseNameField.getText().isEmpty()) {
+                    courseNameField.setForeground(UIStyle.TEXT_HINT);
                     courseNameField.setText("Course Name (e.g. Intro to Java)");
                 }
             }
@@ -304,7 +306,6 @@ public class Home2 extends JFrame {
             } else if (link.equals("WORKLOAD")) {
                 subItems.put("TA Workload", () -> TA_Recruitment_software.admin_system.AdminUI.showTaWorkloadDialog(this, context, currentToken));
             } else if (link.equals("SETTINGS")) {
-                subItems.put("Settings", () -> JOptionPane.showMessageDialog(this, "Settings feature coming soon."));
                 subItems.put("EXIT (Logout)", () -> logout());
             } else if (link.equals("JOBS")) {
                 if (currentRole == TA_Recruitment_software.admin_system.model.Role.TA || currentRole == null) {
@@ -336,14 +337,11 @@ public class Home2 extends JFrame {
                     mainAction = () -> JOptionPane.showMessageDialog(this, "Please login first to use personal features.", "Not Logged In", JOptionPane.WARNING_MESSAGE);
                 } else if (currentRole == TA_Recruitment_software.admin_system.model.Role.MO) {
                     subItems.put("My Profile", () -> TA_Recruitment_software.profile.ProfileUI.showUpdateProfileDialog(this, context, currentToken));
-                    subItems.put("Settings", () -> JOptionPane.showMessageDialog(this, "Settings feature coming soon."));
                     subItems.put("EXIT (Logout)", () -> logout());
                 } else {
                     subItems.put("TA Portal (Notifications / Limits / History / PDF)", () -> TA_Recruitment_software.auth.AuthUI.showTaPortal(this, context, currentToken));
-                    subItems.put("My Resume (Update Profile)", () -> TA_Recruitment_software.profile.ProfileUI.showUpdateProfileDialog(this, context, currentToken));
+                    subItems.put("My Profile", () -> TA_Recruitment_software.profile.ProfileUI.showUpdateProfileDialog(this, context, currentToken));
                     subItems.put("My Applications", () -> TA_Recruitment_software.ta_jobs.TAJobsUI.showMyApplications(this, context, currentToken));
-                    subItems.put("AI Recommendation", () -> JOptionPane.showMessageDialog(this, "Recommendation records feature coming soon."));
-                    subItems.put("Settings", () -> JOptionPane.showMessageDialog(this, "Settings feature coming soon."));
                     subItems.put("EXIT (Logout)", () -> logout());
                 }
             }

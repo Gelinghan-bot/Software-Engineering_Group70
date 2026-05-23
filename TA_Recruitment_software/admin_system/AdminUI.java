@@ -189,35 +189,40 @@ public class AdminUI {
         gbc.gridy = 3;
         JLabel fullNameLbl = new JLabel("Full Name:");
         formPanel.add(fullNameLbl, gbc);
-        JTextField fullNameField = new JTextField(user.getFullName() != null ? user.getFullName() : "");
+        JTextField fullNameField = UIStyle.createTextField(20);
+        fullNameField.setText(user.getFullName() != null ? user.getFullName() : "");
         gbc.gridx = 1;
         formPanel.add(fullNameField, gbc);
 
         gbc.gridx = 0; gbc.gridy = 4;
         JLabel emailLbl = new JLabel("Email:");
         formPanel.add(emailLbl, gbc);
-        JTextField emailField = new JTextField(user.getEmail() != null ? user.getEmail() : "");
+        JTextField emailField = UIStyle.createTextField(20);
+        emailField.setText(user.getEmail() != null ? user.getEmail() : "");
         gbc.gridx = 1;
         formPanel.add(emailField, gbc);
 
         gbc.gridx = 0; gbc.gridy = 5;
         JLabel phoneLbl = new JLabel("Phone:");
         formPanel.add(phoneLbl, gbc);
-        JTextField phoneField = new JTextField(user.getPhone() != null ? user.getPhone() : "");
+        JTextField phoneField = UIStyle.createTextField(20);
+        phoneField.setText(user.getPhone() != null ? user.getPhone() : "");
         gbc.gridx = 1;
         formPanel.add(phoneField, gbc);
 
         gbc.gridx = 0; gbc.gridy = 6;
         JLabel majorLbl = new JLabel("Major/Dept:");
         formPanel.add(majorLbl, gbc);
-        JTextField majorField = new JTextField(user.getMajor() != null ? user.getMajor() : (user.getDepartment() != null ? user.getDepartment() : ""));
+        JTextField majorField = UIStyle.createTextField(20);
+        majorField.setText(user.getMajor() != null ? user.getMajor() : (user.getDepartment() != null ? user.getDepartment() : ""));
         gbc.gridx = 1;
         formPanel.add(majorField, gbc);
 
         gbc.gridx = 0; gbc.gridy = 7;
         JLabel skillsLbl = new JLabel("Skills:");
         formPanel.add(skillsLbl, gbc);
-        JTextField skillsField = new JTextField(user.getSkills() != null ? user.getSkills() : "");
+        JTextField skillsField = UIStyle.createTextField(20);
+        skillsField.setText(user.getSkills() != null ? user.getSkills() : "");
         gbc.gridx = 1;
         formPanel.add(skillsField, gbc);
 
@@ -232,7 +237,7 @@ public class AdminUI {
         formPanel.add(pwdLbl, gbc);
 
         gbc.gridx = 0; gbc.gridy = 10; gbc.gridwidth = 2;
-        JPasswordField passwordField = new JPasswordField();
+        JPasswordField passwordField = UIStyle.createPasswordField(20);
         formPanel.add(passwordField, gbc);
 
         gbc.gridx = 0; gbc.gridy = 11; gbc.gridwidth = 2;

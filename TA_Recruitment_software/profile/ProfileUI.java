@@ -43,7 +43,7 @@ public class ProfileUI {
             JButton chooseCvButton = UIStyle.createSecondaryButton("Choose...");
             chooseCvButton.addActionListener(e -> {
                 JFileChooser chooser = new JFileChooser();
-                chooser.setDialogTitle("Select CV (.pdf/.doc/.docx)");
+                chooser.setDialogTitle("\u9009\u62E9\u7B80\u5386 (.pdf/.doc/.docx)");
                 int choice = chooser.showOpenDialog(parent);
                 if (choice == JFileChooser.APPROVE_OPTION) {
                     File file = chooser.getSelectedFile();
@@ -54,12 +54,12 @@ public class ProfileUI {
             });
 
             int row = 0;
-            addFieldRow(formPanel, gbc, row++, "Major:", majorField);
-            addFieldRow(formPanel, gbc, row++, "Email:", emailField);
-            addFieldRow(formPanel, gbc, row++, "Phone:", phoneField);
+            addFieldRow(formPanel, gbc, row++, "\u4E13\u4E1A:", majorField);
+            addFieldRow(formPanel, gbc, row++, "\u90AE\u7BB1:", emailField);
+            addFieldRow(formPanel, gbc, row++, "\u7535\u8BDD:", phoneField);
 
             gbc.gridx = 0; gbc.gridy = row; gbc.gridwidth = 1;
-            JLabel skillsLbl = UIStyle.createFieldLabel("Skills:");
+            JLabel skillsLbl = UIStyle.createFieldLabel("\u6280\u80FD\u4E13\u957F");
             formPanel.add(skillsLbl, gbc);
             gbc.gridx = 1; gbc.weightx = 1.0;
             JScrollPane skillsScroll = new JScrollPane(skillsArea);
@@ -69,7 +69,7 @@ public class ProfileUI {
             row++;
 
             gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0.0;
-            JLabel cvLbl = UIStyle.createFieldLabel("CV File:");
+            JLabel cvLbl = UIStyle.createFieldLabel("\u7B80\u5386\u6587\u4EF6");
             formPanel.add(cvLbl, gbc);
             gbc.gridx = 1; gbc.weightx = 1.0;
             JPanel cvPanel = new JPanel(new BorderLayout(8, 0));
@@ -78,7 +78,7 @@ public class ProfileUI {
             cvPanel.add(chooseCvButton, BorderLayout.EAST);
             formPanel.add(cvPanel, gbc);
 
-            int result = JOptionPane.showConfirmDialog(parent, formPanel, "Update Profile", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            int result = JOptionPane.showConfirmDialog(parent, formPanel, "\u66F4\u65B0\u4E2A\u4EBA\u8D44\u6599", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
             if (result == JOptionPane.OK_OPTION) {
                 context.getProfileService().updateProfile(
                     token,
@@ -93,9 +93,9 @@ public class ProfileUI {
                     User updated = context.getProfileService().uploadCV(token, cvPath);
                     storedPath = updated.getCvFilePath();
                 }
-                String message = "Profile updated successfully!";
+                String message = "\u4E2A\u4EBA\u8D44\u6599\u66F4\u65B0\u6210\u529F!";
                 if (storedPath != null && !storedPath.trim().isEmpty()) {
-                    message += "\nCV stored at: " + storedPath;
+                    message += "\n\u7B80\u5386\u5B58\u50A8\u4F4D\u7F6E: " + storedPath;
                 }
                 JOptionPane.showMessageDialog(parent, message, "Success", JOptionPane.INFORMATION_MESSAGE);
             }
