@@ -2,6 +2,7 @@ package TA_Recruitment_software.mo_publish;
 
 import TA_Recruitment_software.RecruitmentSystemContext;
 import TA_Recruitment_software.admin_system.foundation.AppException;
+import TA_Recruitment_software.admin_system.foundation.UIStyle;
 import TA_Recruitment_software.admin_system.model.Position;
 import java.awt.*;
 import java.util.List;
@@ -69,21 +70,22 @@ public class MoPublishUI {
                 model.addRow(new Object[]{p.getPositionId(), p.getJobTitle(), p.getDeadline(), p.getStatus(), headcountDisplay});
             }
 
-            JTable table = new JTable(model);
-            JPanel panel = new JPanel(new BorderLayout());
-            JScrollPane scrollPane = new JScrollPane(table);
-            scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-            scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
+            JTable table = UIStyle.createStyledTable(model);
+            JPanel panel = new JPanel(new BorderLayout(8, 8));
+            panel.setBackground(UIStyle.BG_PAGE);
+            panel.setBorder(UIStyle.pagePadding());
+            JScrollPane scrollPane = UIStyle.wrapTableInScrollPane(table);
             panel.add(scrollPane, BorderLayout.CENTER);
 
             Container contentPane = parent.getContentPane();
             BorderLayout layout = (BorderLayout) contentPane.getLayout();
             Component previousCenter = layout.getLayoutComponent(BorderLayout.CENTER);
 
-            JPanel btnPanel = new JPanel();
-            JButton updateTBtn = new JButton("Modify Job Details");
-            JButton closeBtn = new JButton("Close Position");
-            JButton backBtn = new JButton("Back");
+            JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+            btnPanel.setBackground(UIStyle.BG_PAGE);
+            JButton updateTBtn = UIStyle.createAccentButton("Modify Job Details");
+            JButton closeBtn = UIStyle.createDangerButton("Close Position");
+            JButton backBtn = UIStyle.createSecondaryButton("Back");
 
             updateTBtn.addActionListener(e -> {
                 int row = table.getSelectedRow();

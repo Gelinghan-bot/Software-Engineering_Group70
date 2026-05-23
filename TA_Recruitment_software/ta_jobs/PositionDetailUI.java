@@ -2,13 +2,12 @@ package TA_Recruitment_software.ta_jobs;
 
 import TA_Recruitment_software.RecruitmentSystemContext;
 import TA_Recruitment_software.admin_system.foundation.AppException;
+import TA_Recruitment_software.admin_system.foundation.UIStyle;
 import TA_Recruitment_software.admin_system.model.Position;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.FlowLayout;
-import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -31,11 +30,7 @@ public final class PositionDetailUI {
 
     /** Hint label for job tables: double-click opens the detail page. */
     public static JLabel createDoubleClickHintLabel(String message) {
-        JLabel hint = new JLabel(message);
-        hint.setFont(new Font("Arial", Font.BOLD, 13));
-        hint.setForeground(new Color(39, 174, 96));
-        hint.setBorder(BorderFactory.createEmptyBorder(10, 12, 6, 12));
-        return hint;
+        return UIStyle.createTipLabel(message);
     }
 
     public static void show(
@@ -58,13 +53,16 @@ public final class PositionDetailUI {
         Component currentCenter = ((BorderLayout) contentPane.getLayout()).getLayoutComponent(BorderLayout.CENTER);
 
         JPanel page = new JPanel(new BorderLayout(12, 12));
-        page.setBorder(BorderFactory.createEmptyBorder(16, 24, 16, 24));
+        page.setBackground(UIStyle.BG_CARD);
+        page.setBorder(UIStyle.pagePadding());
 
         JLabel title = new JLabel(nvl(position.getJobTitle()));
-        title.setFont(new Font("Arial", Font.BOLD, 22));
+        title.setFont(UIStyle.FONT_HEADING);
+        title.setForeground(UIStyle.TEXT_PRIMARY);
         page.add(title, BorderLayout.NORTH);
 
         JPanel body = new JPanel(new GridBagLayout());
+        body.setBackground(UIStyle.BG_CARD);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -102,16 +100,22 @@ public final class PositionDetailUI {
         addTextBlock(body, gbc, "Requirements", nvl(position.getRequirements()));
 
         JScrollPane bodyScroll = new JScrollPane(body);
-        bodyScroll.getVerticalScrollBar().setUnitIncrement(16);
+        UIStyle.styleScrollPane(bodyScroll);
         page.add(bodyScroll, BorderLayout.CENTER);
 
-        JPanel south = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
-        JButton backBtn = new JButton("Back to list");
+        JPanel south = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 10));
+        south.setBackground(UIStyle.BG_CARD);
+        JButton backBtn = UIStyle.createSecondaryButton("Back to list");
         south.add(backBtn);
 
         if (showApplyButton) {
-            JButton applyBtn = new JButton(alreadyApplied ? "Already applied" : "Apply for this position");
-            applyBtn.setEnabled(!alreadyApplied);
+            JButton applyBtn;
+            if (alreadyApplied) {
+                applyBtn = UIStyle.createSecondaryButton("Already applied");
+                applyBtn.setEnabled(false);
+            } else {
+                applyBtn = UIStyle.createPrimaryButton("Apply for this position");
+            }
             applyBtn.addActionListener(e -> {
                 if (token == null) {
                     JOptionPane.showMessageDialog(parent, "Please login as TA first.");
@@ -159,11 +163,15 @@ public final class PositionDetailUI {
         gbc.weighty = 0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         JLabel lbl = new JLabel(label + ":");
-        lbl.setFont(new Font("Arial", Font.BOLD, 13));
+        lbl.setFont(UIStyle.FONT_BODY_BOLD);
+        lbl.setForeground(UIStyle.TEXT_PRIMARY);
         body.add(lbl, gbc);
         gbc.gridx = 1;
         gbc.weightx = 1.0;
-        body.add(new JLabel(nvl(value)), gbc);
+        JLabel valLbl = new JLabel(nvl(value));
+        valLbl.setFont(UIStyle.FONT_BODY);
+        valLbl.setForeground(UIStyle.TEXT_PRIMARY);
+        body.add(valLbl, gbc);
         gbc.gridx = 0;
         gbc.weightx = 0.0;
     }
@@ -175,15 +183,18 @@ public final class PositionDetailUI {
         gbc.weighty = 0.5;
         gbc.fill = GridBagConstraints.BOTH;
         JLabel lbl = new JLabel(label + ":");
-        lbl.setFont(new Font("Arial", Font.BOLD, 13));
+        lbl.setFont(UIStyle.FONT_BODY_BOLD);
+        lbl.setForeground(UIStyle.TEXT_PRIMARY);
         body.add(lbl, gbc);
         gbc.gridy++;
         JTextArea area = new JTextArea(nvl(text), 6, 60);
         area.setLineWrap(true);
         area.setWrapStyleWord(true);
         area.setEditable(false);
-        area.setFont(new Font("Arial", Font.PLAIN, 13));
-        area.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
+        area.setFont(UIStyle.FONT_BODY);
+        area.setForeground(UIStyle.TEXT_PRIMARY);
+        area.setBackground(UIStyle.BG_PAGE);
+        area.setBorder(BorderFactory.createEmptyBorder(4, 4, 8, 4));
         body.add(area, gbc);
         gbc.gridwidth = 1;
     }

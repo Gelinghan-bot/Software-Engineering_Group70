@@ -2,6 +2,8 @@ package TA_Recruitment_software.auth;
 
 import TA_Recruitment_software.RecruitmentSystemContext;
 import TA_Recruitment_software.admin_system.foundation.AppException;
+import TA_Recruitment_software.admin_system.foundation.UIStyle;
+import TA_Recruitment_software.admin_system.model.Role;
 import TA_Recruitment_software.admin_system.model.User;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
@@ -20,18 +22,17 @@ import javax.swing.event.DocumentListener;
  */
 public class AuthUI {
 
-    // ========================= Brand Colors =========================
-    private static final Color PRIMARY_GREEN = new Color(39, 174, 96);
-    private static final Color DARK_TEXT = new Color(51, 51, 51);
-    private static final Color LIGHT_BG = new Color(245, 245, 245);
-    private static final Color ERROR_RED = new Color(220, 53, 69);
-    private static final Color SUCCESS_GREEN = new Color(40, 167, 69);
-    private static final Color WARN_ORANGE = new Color(255, 152, 0);
-    private static final Font TITLE_FONT = new Font("Arial", Font.BOLD, 20);
-    private static final Font LABEL_FONT = new Font("Arial", Font.PLAIN, 14);
-    private static final Font FIELD_FONT = new Font("Arial", Font.PLAIN, 14);
-    private static final Font BUTTON_FONT = new Font("Arial", Font.BOLD, 14);
-    private static final Font HINT_FONT = new Font("Arial", Font.ITALIC, 11);
+    // ========================= Brand Colors (using UIStyle) =========================
+    private static final Color PRIMARY_GREEN = UIStyle.PRIMARY;
+    private static final Color DARK_TEXT = UIStyle.TEXT_PRIMARY;
+    private static final Color ERROR_RED = UIStyle.DANGER;
+    private static final Color SUCCESS_GREEN = UIStyle.SUCCESS;
+    private static final Color WARN_ORANGE = UIStyle.WARNING;
+    private static final Font TITLE_FONT = UIStyle.FONT_TITLE;
+    private static final Font LABEL_FONT = UIStyle.FONT_BODY;
+    private static final Font FIELD_FONT = UIStyle.FONT_BODY;
+    private static final Font BUTTON_FONT = UIStyle.FONT_BUTTON;
+    private static final Font HINT_FONT = UIStyle.FONT_SMALL;
 
     // ========================= Login Dialog =========================
 
@@ -111,7 +112,7 @@ public class AuthUI {
         buttonPanel.setBackground(Color.WHITE);
 
         JButton loginBtn = createPrimaryButton("Login");
-        JButton loginInBtn = createSecondaryButton("resume session");
+        JButton loginInBtn = createAccentButton("Resume Session");
         JButton clearHistoryBtn = createSecondaryButton("Clear History");
         JButton cancelBtn = createSecondaryButton("Cancel");
 
@@ -128,7 +129,7 @@ public class AuthUI {
                 JOptionPane.showMessageDialog(parent,
                     "Login successful!\nWelcome, " + u.getFullName() + " (" + u.getRole().name() + ")",
                     "Success", JOptionPane.INFORMATION_MESSAGE);
-                if (u.getRole() == TA_Recruitment_software.admin_system.model.Role.TA) {
+                if (u.getRole() == Role.TA) {
                     TaPortalUI.onTaLogin(parent, context, token);
                 }
             } catch (AppException ex) {
@@ -510,6 +511,10 @@ public class AuthUI {
         TaPortalUI.showTaHub(parent, context, token);
     }
 
+    public static void showNotificationsDialog(JFrame parent, RecruitmentSystemContext context, String token) {
+        TaPortalUI.showNotificationsDialog(parent, context, token);
+    }
+
     // ========================= Logout =========================
 
     /**
@@ -551,31 +556,15 @@ public class AuthUI {
     }
 
     private static JButton createPrimaryButton(String text) {
-        JButton btn = new JButton(text);
-        btn.setOpaque(true);
-        btn.setContentAreaFilled(true);
-        btn.setBackground(PRIMARY_GREEN);
-        btn.setForeground(Color.WHITE);
-        btn.setFont(BUTTON_FONT);
-        btn.setFocusPainted(false);
-        btn.setBorderPainted(false);
-        btn.setPreferredSize(new Dimension(160, 40));
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        return btn;
+        return UIStyle.createPrimaryButton(text);
     }
 
     private static JButton createSecondaryButton(String text) {
-        JButton btn = new JButton(text);
-        btn.setOpaque(true);
-        btn.setContentAreaFilled(true);
-        btn.setBackground(new Color(224, 224, 224));
-        btn.setForeground(DARK_TEXT);
-        btn.setFont(BUTTON_FONT);
-        btn.setFocusPainted(false);
-        btn.setBorderPainted(false);
-        btn.setPreferredSize(new Dimension(180, 40));
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        return btn;
+        return UIStyle.createSecondaryButton(text);
+    }
+
+    private static JButton createAccentButton(String text) {
+        return UIStyle.createAccentButton(text);
     }
 
     private static GridBagConstraints createGBC() {
@@ -711,13 +700,8 @@ public class AuthUI {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 2));
         buttonPanel.setBackground(Color.WHITE);
 
-        JButton resumeBtn = new JButton("Resume Selected Session");
-        resumeBtn.setBackground(PRIMARY_GREEN);
-        resumeBtn.setForeground(Color.WHITE);
-        resumeBtn.setFont(BUTTON_FONT);
-
-        JButton otherAccountBtn = new JButton("Login Other Account");
-        otherAccountBtn.setFont(BUTTON_FONT);
+        JButton resumeBtn = UIStyle.createPrimaryButton("Resume Selected Session");
+        JButton otherAccountBtn = UIStyle.createSecondaryButton("Login Other Account");
 
         final String[] result = new String[2];
 

@@ -1,5 +1,6 @@
 package TA_Recruitment_software;
 
+import TA_Recruitment_software.admin_system.foundation.UIStyle;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
@@ -28,6 +29,7 @@ public class Home2 extends JFrame {
     private JLabel moInstructionLabel;
 
     public Home2() {
+        UIStyle.setupGlobalStyle();
         this.context = new RecruitmentSystemContext();
 
         setTitle("JobHere - Unified Platform");
@@ -46,13 +48,13 @@ public class Home2 extends JFrame {
 
         // Subtitle text
         JLabel subtitleLabel = new JLabel("BUPT International School");
-        subtitleLabel.setFont(new Font("Arial", Font.BOLD, 22));
+        subtitleLabel.setFont(UIStyle.FONT_TITLE);
         subtitleLabel.setForeground(Color.WHITE);
         subtitleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         
         // Main title text
         JLabel titleLabel = new JLabel("FIND OUR Teaching Assistants JOBS");
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 48));
+        titleLabel.setFont(UIStyle.FONT_HEADING.deriveFont(48f));
         titleLabel.setForeground(Color.WHITE);
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
@@ -77,28 +79,39 @@ public class Home2 extends JFrame {
         categoryCombo.setBackground(Color.WHITE);
 
         searchBtn = new JButton("SEARCH");
-        searchBtn.setBackground(new Color(39, 174, 96));
+        searchBtn.setBackground(UIStyle.PRIMARY);
         searchBtn.setForeground(Color.WHITE);
         searchBtn.setOpaque(true);
         searchBtn.setFocusPainted(false);
         searchBtn.setBorderPainted(false);
-        searchBtn.setFont(new Font("Arial", Font.BOLD, 14));
+        searchBtn.setFont(UIStyle.FONT_BUTTON);
         searchBtn.setPreferredSize(new Dimension(130, 45));
+        searchBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        searchBtn.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override public void mouseEntered(java.awt.event.MouseEvent e) {
+                searchBtn.setBackground(UIStyle.PRIMARY_DARK);
+            }
+            @Override public void mouseExited(java.awt.event.MouseEvent e) {
+                searchBtn.setBackground(UIStyle.PRIMARY);
+            }
+        });
         
-        courseNameField = new JTextField("Course Name (e.g. Intro to Java)");
+        courseNameField = UIStyle.createTextField(20);
+        courseNameField.setText("Course Name (e.g. Intro to Java)");
         courseNameField.setPreferredSize(new Dimension(200, 45));
-        courseNameField.setFont(new Font("Arial", Font.PLAIN, 14));
-        courseNameField.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(200, 200, 200)), 
-            BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+        courseNameField.setForeground(UIStyle.TEXT_HINT);
         courseNameField.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
             public void focusGained(java.awt.event.FocusEvent e) {
                 if (courseNameField.getText().equals("Course Name (e.g. Intro to Java)")) {
                     courseNameField.setText("");
+                    courseNameField.setForeground(UIStyle.TEXT);
                 }
             }
+            @Override
             public void focusLost(java.awt.event.FocusEvent e) {
                 if (courseNameField.getText().isEmpty()) {
+                    courseNameField.setForeground(UIStyle.TEXT_HINT);
                     courseNameField.setText("Course Name (e.g. Intro to Java)");
                 }
             }
@@ -159,6 +172,18 @@ public class Home2 extends JFrame {
         JPanel headerPanel = createHeaderPanel();
         getContentPane().add(headerPanel, BorderLayout.NORTH);
         TA_Recruitment_software.ta_jobs.TAJobsUI.updateAiDiagnosisHomeButton(aiDiagnosisHomeButton, currentRole, currentToken);
+        
+        // When not logged in, hide search and AI controls
+        if (currentToken == null || currentRole == null) {
+            searchPanel.setVisible(false);
+            aiPublishPanel.setVisible(false);
+            moInstructionLabel.setVisible(false);
+            aiDiagnosisHomeButton.setVisible(false);
+            revalidate();
+            repaint();
+            return;
+        }
+        searchPanel.setVisible(true);
         
         // Update Search Panel UI dynamically based on Role
         for (java.awt.event.ActionListener al : searchBtn.getActionListeners()) {
@@ -227,33 +252,39 @@ public class Home2 extends JFrame {
 
     private JPanel createHeaderPanel() {
         JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setBackground(Color.WHITE);
-        headerPanel.setPreferredSize(new Dimension(1200, 75));
-        headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 50, 10, 50));
+        headerPanel.setBackground(UIStyle.BG_CARD);
+        headerPanel.setPreferredSize(new Dimension(1200, 72));
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(8, 40, 8, 40));
+        headerPanel.setBorder(new javax.swing.border.CompoundBorder(
+            new javax.swing.border.MatteBorder(0, 0, 1, 0, UIStyle.BORDER),
+            BorderFactory.createEmptyBorder(8, 40, 8, 40)
+        ));
 
         // Logo
-        JPanel logoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 15));
-        logoPanel.setBackground(Color.WHITE);
+        JPanel logoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 12));
+        logoPanel.setBackground(UIStyle.BG_CARD);
         JLabel logoJob = new JLabel("Job");
-        logoJob.setFont(new Font("Arial", Font.BOLD, 28));
-        logoJob.setForeground(new Color(39, 174, 96));
+        logoJob.setFont(UIStyle.FONT_HEADING.deriveFont(26f));
+        logoJob.setForeground(UIStyle.PRIMARY);
         JLabel logoHere = new JLabel("Here");
-        logoHere.setFont(new Font("Arial", Font.BOLD, 28));
-        logoHere.setForeground(new Color(51, 51, 51));
+        logoHere.setFont(UIStyle.FONT_HEADING.deriveFont(26f));
+        logoHere.setForeground(UIStyle.TEXT_PRIMARY);
         logoPanel.add(logoJob);
         logoPanel.add(logoHere);
 
         // Navigation Links
-        JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 25, 20));
-        navPanel.setBackground(Color.WHITE);
+        JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 18));
+        navPanel.setBackground(UIStyle.BG_CARD);
         
         String[] links;
-        if (currentRole == TA_Recruitment_software.admin_system.model.Role.TA || currentRole == TA_Recruitment_software.admin_system.model.Role.MO || currentRole == null) {
+        // When not logged in, only show HOME
+        if (currentToken == null || currentRole == null) {
+            links = new String[]{"HOME"};
+        } else if (currentRole == TA_Recruitment_software.admin_system.model.Role.TA || currentRole == TA_Recruitment_software.admin_system.model.Role.MO) {
             links = new String[]{"HOME", "JOBS", "FORUM", "CONTACT", "PERSONAL"};
         } else if (currentRole == TA_Recruitment_software.admin_system.model.Role.ADMIN) {
             links = new String[]{"HOME", "USERS", "JOBS", "FORUM", "WORKLOAD", "SETTINGS"};
         } else {
-            // Keep default/other roles unchanged for now
             links = new String[]{"HOME", "JOBS", "FORUM", "CONTACT", "ADMIN", "PERSONAL"};
         }
 
@@ -275,7 +306,6 @@ public class Home2 extends JFrame {
             } else if (link.equals("WORKLOAD")) {
                 subItems.put("TA Workload", () -> TA_Recruitment_software.admin_system.AdminUI.showTaWorkloadDialog(this, context, currentToken));
             } else if (link.equals("SETTINGS")) {
-                subItems.put("Settings", () -> JOptionPane.showMessageDialog(this, "Settings feature coming soon."));
                 subItems.put("EXIT (Logout)", () -> logout());
             } else if (link.equals("JOBS")) {
                 if (currentRole == TA_Recruitment_software.admin_system.model.Role.TA || currentRole == null) {
@@ -306,15 +336,18 @@ public class Home2 extends JFrame {
                 if (currentRole == null) {
                     mainAction = () -> JOptionPane.showMessageDialog(this, "Please login first to use personal features.", "Not Logged In", JOptionPane.WARNING_MESSAGE);
                 } else if (currentRole == TA_Recruitment_software.admin_system.model.Role.MO) {
-                    subItems.put("My Resume", () -> TA_Recruitment_software.profile.ProfileUI.showUpdateProfileDialog(this, context, currentToken));
-                    subItems.put("Settings", () -> JOptionPane.showMessageDialog(this, "Settings feature coming soon."));
+                    subItems.put("My Profile", () -> TA_Recruitment_software.profile.ProfileUI.showUpdateProfileDialog(this, context, currentToken));
                     subItems.put("EXIT (Logout)", () -> logout());
                 } else {
-                    subItems.put("TA Portal (Notifications / Limits / History / PDF)", () -> TA_Recruitment_software.auth.AuthUI.showTaPortal(this, context, currentToken));
+                    int unreadCount = 0;
+                    try { unreadCount = context.getTaNotificationService().countUnread(currentToken); } catch (Exception ignored) {}
+                    String notifLabel = unreadCount > 0 ? "Notifications (" + unreadCount + ")" : "Notifications";
+                    final javax.swing.JFrame parentFrame = this;
+                    final String capturedToken = currentToken;
+                    subItems.put(notifLabel, () -> TA_Recruitment_software.auth.AuthUI.showNotificationsDialog(parentFrame, context, capturedToken));
+                    subItems.put("TA Portal (Limits / History / PDF)", () -> TA_Recruitment_software.auth.AuthUI.showTaPortal(this, context, currentToken));
                     subItems.put("My Resume (Update Profile)", () -> TA_Recruitment_software.profile.ProfileUI.showUpdateProfileDialog(this, context, currentToken));
                     subItems.put("My Applications", () -> TA_Recruitment_software.ta_jobs.TAJobsUI.showMyApplications(this, context, currentToken));
-                    subItems.put("AI Recommendation", () -> JOptionPane.showMessageDialog(this, "Recommendation records feature coming soon."));
-                    subItems.put("Settings", () -> JOptionPane.showMessageDialog(this, "Settings feature coming soon."));
                     subItems.put("EXIT (Logout)", () -> logout());
                 }
             }
@@ -323,8 +356,8 @@ public class Home2 extends JFrame {
         }
 
         // Buttons
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
-        buttonPanel.setBackground(Color.WHITE);
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 8));
+        buttonPanel.setBackground(UIStyle.BG_CARD);
         
         // Add Session Label
         if (currentToken != null && currentRole != null) {
@@ -333,30 +366,20 @@ public class Home2 extends JFrame {
             sessionLabel.setText("");
         }
         
-        sessionLabel.setFont(new Font("Arial", Font.BOLD, 14));
-        sessionLabel.setForeground(new Color(65, 65, 65));
-        sessionLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 15));
+        sessionLabel.setFont(UIStyle.FONT_BODY_BOLD);
+        sessionLabel.setForeground(UIStyle.TEXT_SECONDARY);
+        sessionLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 12));
         buttonPanel.add(sessionLabel);
 
-        SlideButton registerBtn = new SlideButton(
-            "Register",
-            new Color(224, 224, 224), // normal bg
-            new Color(39, 174, 96),   // hover bg (green)
-            new Color(51, 51, 51),    // normal text
-            Color.WHITE               // hover text
-        );
-        registerBtn.setPreferredSize(new Dimension(100, 40));
-        registerBtn.setFont(new Font("Arial", Font.BOLD, 15));
+        JButton registerBtn = UIStyle.createSecondaryButton("Register");
+        registerBtn.setFont(UIStyle.FONT_BUTTON.deriveFont(14f));
         registerBtn.addActionListener(e -> TA_Recruitment_software.auth.AuthUI.showRegisterDialog(this, context));
 
-        JButton loginBtn = new JButton("Login");
-        loginBtn.setBackground(new Color(39, 174, 96));
-        loginBtn.setForeground(Color.WHITE);
-        loginBtn.setOpaque(true);
-        loginBtn.setFocusPainted(false);
-        loginBtn.setBorderPainted(false);
-        loginBtn.setPreferredSize(new Dimension(95, 40));
-        loginBtn.setFont(new Font("Arial", Font.BOLD, 15));
+        // Login / Switch Account button — text changes after login
+        JButton loginBtn = UIStyle.createPrimaryButton(
+            currentToken != null ? "Switch Account" : "Login"
+        );
+        loginBtn.setFont(UIStyle.FONT_BUTTON.deriveFont(13f));
         loginBtn.addActionListener(e -> {
             String[] result = TA_Recruitment_software.auth.AuthUI.showLoginDialog(this, context);
             if (result != null && result.length == 2) {
@@ -535,8 +558,8 @@ public class Home2 extends JFrame {
 
         public NavLabel(String text, Map<String, Runnable> subItems, Runnable mainAction) {
             super(text);
-            setFont(new Font("Arial", Font.BOLD, 16));
-            setForeground(new Color(51, 51, 51));
+            setFont(UIStyle.FONT_BODY_BOLD.deriveFont(15f));
+            setForeground(UIStyle.TEXT_PRIMARY);
             setCursor(new Cursor(Cursor.HAND_CURSOR));
             // Provide bottom padding to leave visual space for the small green bar
             setBorder(BorderFactory.createEmptyBorder(5, 5, 12, 5)); 
@@ -552,33 +575,30 @@ public class Home2 extends JFrame {
 
             if (subItems != null && !subItems.isEmpty()) {
                 popup = new JPopupMenu();
-                popup.setBackground(Color.WHITE);
-                popup.setBorder(BorderFactory.createLineBorder(new Color(224, 224, 224)));
+                popup.setBackground(UIStyle.BG_CARD);
+                popup.setBorder(BorderFactory.createLineBorder(UIStyle.BORDER));
                 
                 for (Map.Entry<String, Runnable> entry : subItems.entrySet()) {
                     String sub = entry.getKey();
                     Runnable action = entry.getValue();
                     
                     JMenuItem item = new JMenuItem(sub);
-                    item.setBackground(Color.WHITE);
-                    item.setFont(new Font("Arial", Font.PLAIN, 14));
-                    
-                    // 动态计算宽度：最少150，长文本则自适应扩展宽度，同时预留左右边距
-                    int prefWidth = item.getPreferredSize().width + 30;
-                    item.setPreferredSize(new Dimension(Math.max(150, prefWidth), 40));
-                    
+                    item.setBackground(UIStyle.BG_CARD);
+                    item.setFont(UIStyle.FONT_BODY);
+                    // Tight margin — no icon-area gap, just even padding
+                    item.setMargin(new Insets(6, 12, 6, 12));
+                    item.setIconTextGap(0);
                     item.setCursor(new Cursor(Cursor.HAND_CURSOR));
-                    item.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
 
                     // Hover effect for submenu items
                     item.addMouseListener(new java.awt.event.MouseAdapter() {
                         @Override
                         public void mouseEntered(java.awt.event.MouseEvent e) {
-                            item.setForeground(new Color(39, 174, 96));
+                            item.setForeground(UIStyle.PRIMARY);
                         }
                         @Override
                         public void mouseExited(java.awt.event.MouseEvent e) {
-                            item.setForeground(Color.BLACK);
+                            item.setForeground(UIStyle.TEXT_PRIMARY);
                             // 关键修复：当鼠标离开子菜单项时，立刻触发范围检测
                             Timer timer = new Timer(150, evt -> checkMouseExit());
                             timer.setRepeats(false);

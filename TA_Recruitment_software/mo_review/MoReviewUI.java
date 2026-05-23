@@ -2,6 +2,7 @@ package TA_Recruitment_software.mo_review;
 
 import TA_Recruitment_software.RecruitmentSystemContext;
 import TA_Recruitment_software.admin_system.foundation.AppException;
+import TA_Recruitment_software.admin_system.foundation.UIStyle;
 import TA_Recruitment_software.admin_system.model.Application;
 import TA_Recruitment_software.admin_system.model.ApplicationStatus;
 import TA_Recruitment_software.admin_system.model.Position;
@@ -40,20 +41,23 @@ public class MoReviewUI {
             Component previousCenter = layout.getLayoutComponent(BorderLayout.CENTER);
 
             JPanel reviewPanel = new JPanel(new BorderLayout(5, 5));
+            reviewPanel.setBackground(UIStyle.BG_PAGE);
+            reviewPanel.setBorder(UIStyle.pagePadding());
 
             // --- Top: Sort controls + Note search ---
-            JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 5));
+            topPanel.setBackground(UIStyle.BG_PAGE);
             topPanel.add(new JLabel("Sort by:"));
-            JButton sortTimeNewBtn = new JButton("Time (Newest)");
-            JButton sortTimeOldBtn = new JButton("Time (Oldest)");
-            JButton sortMajorBtn = new JButton("Major");
-            JButton resetFilterBtn = new JButton("Show All");
+            JButton sortTimeNewBtn = UIStyle.createSecondaryButton("Time (Newest)");
+            JButton sortTimeOldBtn = UIStyle.createSecondaryButton("Time (Oldest)");
+            JButton sortMajorBtn = UIStyle.createSecondaryButton("Major");
+            JButton resetFilterBtn = UIStyle.createSecondaryButton("Show All");
             topPanel.add(sortTimeNewBtn);
             topPanel.add(sortTimeOldBtn);
             topPanel.add(sortMajorBtn);
             topPanel.add(new JSeparator(SwingConstants.VERTICAL));
             topPanel.add(new JLabel("Search Notes:"));
-            JTextField noteSearchField = new JTextField(12);
+            JTextField noteSearchField = UIStyle.createTextField(12);
             JButton searchNoteBtn = new JButton("Search");
             topPanel.add(noteSearchField);
             topPanel.add(searchNoteBtn);
@@ -73,7 +77,7 @@ public class MoReviewUI {
             final List<Application> displayedApps = new ArrayList<>(applications);
             populateTable(model, displayedApps, service);
 
-            JTable table = new JTable(model);
+            JTable table = UIStyle.createStyledTable(model);
             table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
             table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
             table.getColumnModel().getColumn(0).setPreferredWidth(120);
@@ -85,20 +89,19 @@ public class MoReviewUI {
             table.getColumnModel().getColumn(6).setPreferredWidth(100);
             table.getColumnModel().getColumn(7).setPreferredWidth(140);
 
-            JScrollPane scrollPane = new JScrollPane(table);
-            scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-            scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
+            JScrollPane scrollPane = UIStyle.wrapTableInScrollPane(table);
             reviewPanel.add(scrollPane, BorderLayout.CENTER);
 
             // --- Bottom: Action buttons ---
-            JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
-            JButton viewDetailBtn = new JButton("View Details");
-            JButton updateStatusBtn = new JButton("Update Status");
-            JButton viewHistoryBtn = new JButton("View Status History");
-            JButton notesBtn = new JButton("Interview Notes");
-            JButton inviteBtn = new JButton("Invite Candidates");
-            JButton aiCompareBtn = new JButton("AI Compare Candidates");
-            JButton closeBtn = new JButton("Back");
+            JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 10));
+            btnPanel.setBackground(UIStyle.BG_PAGE);
+            JButton viewDetailBtn = UIStyle.createPrimaryButton("View Details");
+            JButton updateStatusBtn = UIStyle.createAccentButton("Update Status");
+            JButton viewHistoryBtn = UIStyle.createSecondaryButton("View Status History");
+            JButton notesBtn = UIStyle.createSecondaryButton("Interview Notes");
+            JButton inviteBtn = UIStyle.createSecondaryButton("Invite Candidates");
+            JButton aiCompareBtn = UIStyle.createAccentButton("AI Compare Candidates");
+            JButton closeBtn = UIStyle.createSecondaryButton("Back");
 
             btnPanel.add(viewDetailBtn);
             btnPanel.add(updateStatusBtn);
