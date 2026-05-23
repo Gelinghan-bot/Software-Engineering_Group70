@@ -1,7 +1,5 @@
 package TA_Recruitment_software.forum;
 
-import TA_Recruitment_software.admin_system.foundation.FileStorageUtil;
-
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -76,5 +74,25 @@ public class TopicRepository {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    /** Delete a topic by its ID. Returns true if deleted, false if not found. */
+    public boolean deleteTopic(String topicId) {
+        List<Topic> topics = getAllTopics();
+        boolean found = false;
+        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(DATA_FILE, false), StandardCharsets.UTF_8))) {
+            for (Topic t : topics) {
+                if (t.getId().equals(topicId)) {
+                    found = true;
+                    continue;
+                }
+                writer.write(t.toCsvRow());
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+        return found;
     }
 }

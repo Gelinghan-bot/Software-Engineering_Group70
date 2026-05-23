@@ -56,6 +56,7 @@ public class Topic implements Serializable {
     public void setComments(int comments) { this.comments = comments; }
     public void setFavorites(int favorites) { this.favorites = favorites; }
     public void incrementComments() { this.comments++; }
+    public void decrementComments() { if (this.comments > 0) this.comments--; }
     
     public boolean toggleLike(String username) {
         if (likedByUsers.contains(username)) {

@@ -56,4 +56,74 @@ public class CommentRepository {
             e.printStackTrace();
         }
     }
+
+    /** Delete all comments belonging to a topic. */
+    public void deleteCommentsByTopicId(String topicId) {
+        File file = new File(DATA_FILE);
+        List<String> lines;
+        try {
+            lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            try {
+                lines = Files.readAllLines(file.toPath(), Charset.defaultCharset());
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                return;
+            }
+        }
+        List<String> remaining = new ArrayList<>();
+        for (String line : lines) {
+            Comment c = Comment.fromCsvRow(line);
+            if (c != null && c.getTopicId().equals(topicId)) {
+                continue;
+            }
+            remaining.add(line);
+        }
+        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8))) {
+            for (String line : remaining) {
+                writer.write(line);
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /** Delete a comment by its ID. Returns true if deleted, false if not found. */
+    public boolean deleteComment(String commentId) {
+        File file = new File(DATA_FILE);
+        List<String> lines;
+        try {
+            lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            try {
+                lines = Files.readAllLines(file.toPath(), Charset.defaultCharset());
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                return false;
+            }
+        }
+        boolean found = false;
+        List<String> remaining = new ArrayList<>();
+        for (String line : lines) {
+            Comment c = Comment.fromCsvRow(line);
+            if (c != null && c.getId().equals(commentId)) {
+                found = true;
+                continue; // skip this line
+            }
+            remaining.add(line);
+        }
+        if (found) {
+            try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8))) {
+                for (String line : remaining) {
+                    writer.write(line);
+                    writer.newLine();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+        return found;
+    }
 }
