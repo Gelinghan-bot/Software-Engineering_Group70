@@ -250,6 +250,13 @@ public class MOReviewService {
     public String simulateAIComparison(List<Application> selectedApps) throws Exception {
         if (selectedApps == null || selectedApps.isEmpty()) return "No candidates selected.";
         
+        String firstPositionId = selectedApps.get(0).getPositionId();
+        for (Application app : selectedApps) {
+            if (!app.getPositionId().equals(firstPositionId)) {
+                throw new AppException("Please select TAs applying for the same position");
+            }
+        }
+
         // 1. 读取 API KEY 和 模型配置
         Properties aiConfig = loadAiConfig();
         String apiKey = aiConfig.getProperty("ALIYUN_API_KEY");

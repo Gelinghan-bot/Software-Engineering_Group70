@@ -429,14 +429,58 @@ public class Home2 extends JFrame {
         
         // Add Session Label
         if (currentToken != null && currentRole != null) {
-            sessionLabel.setText("Logged in: " + currentRole.name());
+            String roleStr = currentRole.name();
+            String avatarText = roleStr.equals("ADMIN") ? "AD" : roleStr;
+            String fullName = roleStr;
+            try {
+                if (context.getSessionManager() != null) {
+                    java.util.Map<String, TA_Recruitment_software.auth.SessionContext> sessions = context.getSessionManager().getAllValidSessions();
+                    if (sessions != null && sessions.containsKey(currentToken)) {
+                        String name = sessions.get(currentToken).getFullName();
+                        if (name != null) {
+                            fullName = name.trim();
+                            // 长度大于 14 时才进行截断以防止被挡住
+                            if (fullName.length() > 14) {
+                                if (fullName.contains(" ")) {
+                                    fullName = fullName.split(" ")[0];
+                                } else {
+                                    fullName = fullName.substring(0, 12) + "..";
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (Exception e) {}
+
+            sessionLabel.setText("  " + fullName); // 加宽了名字和头像的间距
+            final String fAvatarText = avatarText;
+            sessionLabel.setIcon(new Icon() {
+                @Override
+                public void paintIcon(Component c, Graphics g, int x, int y) {
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2.setColor(new Color(108, 92, 231)); 
+                    g2.fillOval(x, y, 38, 38); // 调大头像尺寸
+                    g2.setColor(Color.WHITE);
+                    g2.setFont(new Font("Arial", Font.BOLD, 14)); // 调大头像内字体
+                    FontMetrics fm = g2.getFontMetrics();
+                    int strWidth = fm.stringWidth(fAvatarText);
+                    int strHeight = fm.getAscent();
+                    g2.drawString(fAvatarText, x + (38 - strWidth) / 2, y + (38 + strHeight) / 2 - 2);
+                    g2.dispose();
+                }
+                @Override public int getIconWidth() { return 38; }
+                @Override public int getIconHeight() { return 38; }
+            });
+            sessionLabel.setForeground(UIStyle.TEXT_PRIMARY);
         } else {
             sessionLabel.setText("");
+            sessionLabel.setIcon(null);
+            sessionLabel.setForeground(UIStyle.TEXT_SECONDARY);
         }
         
-        sessionLabel.setFont(UIStyle.FONT_BODY_BOLD);
-        sessionLabel.setForeground(UIStyle.TEXT_SECONDARY);
-        sessionLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 12));
+        sessionLabel.setFont(UIStyle.FONT_BODY_BOLD.deriveFont(16f)); // 将名字字体调大到16f
+        sessionLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 16));
         buttonPanel.add(sessionLabel);
 
         JButton registerBtn = UIStyle.createSecondaryButton("Register");
