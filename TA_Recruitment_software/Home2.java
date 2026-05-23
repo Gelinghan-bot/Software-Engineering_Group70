@@ -27,6 +27,10 @@ public class Home2 extends JFrame {
     private JPanel aiPublishPanel;
     private JButton aiPublishBtn;
     private JLabel moInstructionLabel;
+    private JTextField userSearchField;
+    private JComboBox<String> userRoleFilterCombo;
+    private JComboBox<String> userWorkFilterCombo;
+    private JComboBox<String> userEnabledFilterCombo;
 
     public Home2() {
         UIStyle.setupGlobalStyle();
@@ -78,23 +82,8 @@ public class Home2 extends JFrame {
         categoryCombo.setPreferredSize(new Dimension(180, 45));
         categoryCombo.setBackground(Color.WHITE);
 
-        searchBtn = new JButton("SEARCH");
-        searchBtn.setBackground(UIStyle.PRIMARY);
-        searchBtn.setForeground(Color.WHITE);
-        searchBtn.setOpaque(true);
-        searchBtn.setFocusPainted(false);
-        searchBtn.setBorderPainted(false);
-        searchBtn.setFont(UIStyle.FONT_BUTTON);
+        searchBtn = UIStyle.createPrimaryButton("SEARCH");
         searchBtn.setPreferredSize(new Dimension(130, 45));
-        searchBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        searchBtn.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override public void mouseEntered(java.awt.event.MouseEvent e) {
-                searchBtn.setBackground(UIStyle.PRIMARY_DARK);
-            }
-            @Override public void mouseExited(java.awt.event.MouseEvent e) {
-                searchBtn.setBackground(UIStyle.PRIMARY);
-            }
-        });
         
         courseNameField = UIStyle.createTextField(20);
         courseNameField.setText("Course Name (e.g. Intro to Java)");
@@ -122,6 +111,41 @@ public class Home2 extends JFrame {
         searchPanel.add(categoryCombo);
         searchPanel.add(searchBtn); // added conditionally later
 
+        // User search field (for ADMIN role, hidden by default)
+        userSearchField = UIStyle.createTextField(20);
+        userSearchField.setText("Name, Email, Major, Dept...");
+        userSearchField.setPreferredSize(new Dimension(200, 45));
+        userSearchField.setForeground(UIStyle.TEXT_HINT);
+        userSearchField.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusGained(java.awt.event.FocusEvent e) {
+                if (userSearchField.getText().equals("Name, Email, Major, Dept...")) {
+                    userSearchField.setText("");
+                    userSearchField.setForeground(UIStyle.TEXT);
+                }
+            }
+            @Override
+            public void focusLost(java.awt.event.FocusEvent e) {
+                if (userSearchField.getText().isEmpty()) {
+                    userSearchField.setForeground(UIStyle.TEXT_HINT);
+                    userSearchField.setText("Name, Email, Major, Dept...");
+                }
+            }
+        });
+
+        // Role filter combo for ADMIN user search
+        userRoleFilterCombo = new JComboBox<>(new String[]{"All Role", "TA", "MO", "ADMIN"});
+        userRoleFilterCombo.setPreferredSize(new Dimension(95, 45));
+        userRoleFilterCombo.setBackground(Color.WHITE);
+
+        userWorkFilterCombo = new JComboBox<>(new String[]{"All Work", "Has Work", "No Work"});
+        userWorkFilterCombo.setPreferredSize(new Dimension(105, 45));
+        userWorkFilterCombo.setBackground(Color.WHITE);
+
+        userEnabledFilterCombo = new JComboBox<>(new String[]{"All Enabled", "Yes", "No"});
+        userEnabledFilterCombo.setPreferredSize(new Dimension(110, 45));
+        userEnabledFilterCombo.setBackground(Color.WHITE);
+
         aiPublishPanel = new JPanel();
         aiPublishPanel.setOpaque(false);
         aiPublishPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 10));
@@ -129,11 +153,13 @@ public class Home2 extends JFrame {
         aiPublishBtn = new JButton("AI-Autofill Publish");
         aiPublishBtn.setBackground(new Color(108, 92, 231)); 
         aiPublishBtn.setForeground(Color.WHITE);
+        aiPublishBtn.setContentAreaFilled(true);
         aiPublishBtn.setOpaque(true);
         aiPublishBtn.setFocusPainted(false);
         aiPublishBtn.setBorderPainted(false);
         aiPublishBtn.setFont(new Font("Arial", Font.BOLD, 14));
         aiPublishBtn.setPreferredSize(new Dimension(170, 45));
+        aiPublishBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         
         aiPublishPanel.add(aiPublishBtn);
         aiPublishPanel.setVisible(false);
@@ -193,7 +219,50 @@ public class Home2 extends JFrame {
             aiPublishBtn.removeActionListener(al);
         }
 
-        if (currentRole == TA_Recruitment_software.admin_system.model.Role.MO) {
+        // Reset all search components visibility
+        gradeCombo.setVisible(true);
+        majorCombo.setVisible(true);
+        categoryCombo.setVisible(true);
+        searchPanel.remove(courseNameField);
+        searchPanel.remove(userSearchField);
+        searchPanel.remove(userRoleFilterCombo);
+        searchPanel.remove(userWorkFilterCombo);
+        searchPanel.remove(userEnabledFilterCombo);
+        searchPanel.remove(searchBtn);
+        aiPublishPanel.setVisible(false);
+        moInstructionLabel.setVisible(false);
+
+        if (currentRole == TA_Recruitment_software.admin_system.model.Role.ADMIN) {
+            // ADMIN: search users — dropdowns self-describe (All Role / All Work / All Enabled)
+            gradeCombo.setVisible(false);
+            majorCombo.setVisible(false);
+            categoryCombo.setVisible(false);
+            searchBtn.setText("SEARCH");
+            searchPanel.add(userRoleFilterCombo);
+            searchPanel.add(userWorkFilterCombo);
+            searchPanel.add(userEnabledFilterCombo);
+            searchPanel.add(userSearchField);
+            searchPanel.add(searchBtn);
+
+            Runnable doAdminSearch = () -> {
+                String roleFilter = "All Role".equals(userRoleFilterCombo.getSelectedItem()) ? null
+                    : (String) userRoleFilterCombo.getSelectedItem();
+                String workFilter = "All Work".equals(userWorkFilterCombo.getSelectedItem()) ? null
+                    : (String) userWorkFilterCombo.getSelectedItem();
+                String enabledFilter = "All Enabled".equals(userEnabledFilterCombo.getSelectedItem()) ? null
+                    : (String) userEnabledFilterCombo.getSelectedItem();
+                String kw = userSearchField.getText().trim();
+                if (kw.equals("Name, Email, Major, Dept...")) kw = "";
+                TA_Recruitment_software.admin_system.AdminUI.showManageUsersDialog(
+                    this, context, currentToken, roleFilter, kw.isEmpty() ? null : kw,
+                    workFilter, enabledFilter);
+            };
+            searchBtn.addActionListener(e -> doAdminSearch.run());
+            for (java.awt.event.ActionListener al : userSearchField.getActionListeners()) {
+                userSearchField.removeActionListener(al);
+            }
+            userSearchField.addActionListener(e -> doAdminSearch.run());
+        } else if (currentRole == TA_Recruitment_software.admin_system.model.Role.MO) {
             if ("All Categories".equals(categoryCombo.getItemAt(0))) {
                 categoryCombo.removeItemAt(0);
                 categoryCombo.insertItemAt("Job Type", 0);
@@ -229,6 +298,7 @@ public class Home2 extends JFrame {
                 categoryCombo.insertItemAt("All Categories", 0);
                 categoryCombo.setSelectedIndex(0);
             }
+            searchBtn.setText("SEARCH");
             moInstructionLabel.setVisible(false);
             searchPanel.remove(courseNameField);
             if (searchBtn.getParent() == null) {
@@ -283,7 +353,7 @@ public class Home2 extends JFrame {
         } else if (currentRole == TA_Recruitment_software.admin_system.model.Role.TA || currentRole == TA_Recruitment_software.admin_system.model.Role.MO) {
             links = new String[]{"HOME", "JOBS", "FORUM", "CONTACT", "PERSONAL"};
         } else if (currentRole == TA_Recruitment_software.admin_system.model.Role.ADMIN) {
-            links = new String[]{"HOME", "USERS", "JOBS", "FORUM", "WORKLOAD", "SETTINGS"};
+            links = new String[]{"HOME", "USERS", "FORUM", "SETTINGS"};
         } else {
             links = new String[]{"HOME", "JOBS", "FORUM", "CONTACT", "ADMIN", "PERSONAL"};
         }
@@ -303,9 +373,9 @@ public class Home2 extends JFrame {
             } else if (link.equals("USERS")) {
                 subItems.put("Approve Registration", () -> TA_Recruitment_software.admin_system.AdminUI.showPendingUsersDialog(this, context, currentToken));
                 subItems.put("Manage Users", () -> TA_Recruitment_software.admin_system.AdminUI.showManageUsersDialog(this, context, currentToken));
-            } else if (link.equals("WORKLOAD")) {
-                subItems.put("TA Workload", () -> TA_Recruitment_software.admin_system.AdminUI.showTaWorkloadDialog(this, context, currentToken));
             } else if (link.equals("SETTINGS")) {
+                subItems.put("Manage Positions", () -> TA_Recruitment_software.mo_publish.MoPublishUI.showMyPositionsDialog(this, context, currentToken));
+                subItems.put("Review Applications", () -> TA_Recruitment_software.mo_review.MoReviewUI.showReviewDialog(this, context, currentToken));
                 subItems.put("EXIT (Logout)", () -> logout());
             } else if (link.equals("JOBS")) {
                 if (currentRole == TA_Recruitment_software.admin_system.model.Role.TA || currentRole == null) {
@@ -327,9 +397,7 @@ public class Home2 extends JFrame {
             } else if (link.equals("ADMIN")) {
                 subItems.put("Approve Registration", () -> TA_Recruitment_software.admin_system.AdminUI.showPendingUsersDialog(this, context, currentToken));
                 subItems.put("Manage Users", () -> TA_Recruitment_software.admin_system.AdminUI.showManageUsersDialog(this, context, currentToken));
-                subItems.put("TA Workload", () -> TA_Recruitment_software.admin_system.AdminUI.showTaWorkloadDialog(this, context, currentToken));
                 subItems.put("View Poll Results", () -> TA_Recruitment_software.admin_system.AdminUI.showPollResultsDialog(this));
-                subItems.put("Post a Job", () -> TA_Recruitment_software.mo_publish.MoPublishUI.showPublishDialog(this, context, currentToken));
                 subItems.put("Manage Positions", () -> TA_Recruitment_software.mo_publish.MoPublishUI.showMyPositionsDialog(this, context, currentToken));
                 subItems.put("Review Applications", () -> TA_Recruitment_software.mo_review.MoReviewUI.showReviewDialog(this, context, currentToken));
             } else if (link.equals("PERSONAL")) {
@@ -386,6 +454,7 @@ public class Home2 extends JFrame {
                 this.currentToken = result[0];
                 this.currentRole = TA_Recruitment_software.admin_system.model.Role.valueOf(result[1]);
                 refreshHeaderPanel();
+                showHomeView();
             }
         });
 
@@ -568,7 +637,12 @@ public class Home2 extends JFrame {
                 addMouseListener(new java.awt.event.MouseAdapter() {
                     @Override
                     public void mouseClicked(java.awt.event.MouseEvent e) {
-                        mainAction.run();
+                        isHovered = false;
+                        repaint();
+                        SwingUtilities.invokeLater(() -> {
+                            mainAction.run();
+                            checkMouseExit();
+                        });
                     }
                 });
             }
@@ -611,7 +685,13 @@ public class Home2 extends JFrame {
                             isHovered = false;
                             popup.setVisible(false);
                             repaint();
-                            action.run();
+                            // Use invokeLater to ensure repaint completes before action runs
+                            SwingUtilities.invokeLater(() -> {
+                                action.run();
+                                // After action completes (e.g. modal dialog dismissed),
+                                // re-check mouse position to reset hover state properly
+                                checkMouseExit();
+                            });
                         });
                     }
                     popup.add(item);

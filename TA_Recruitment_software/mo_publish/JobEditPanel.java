@@ -88,23 +88,7 @@ public class JobEditPanel extends JPanel {
         JButton cancelBtn = UIStyle.createSecondaryButton("Cancel");
         cancelBtn.addActionListener(e -> goBack());
 
-        JButton submitBtn = new JButton("Save Changes");
-        submitBtn.setPreferredSize(new Dimension(130, 38));
-        submitBtn.setBackground(UIStyle.ACCENT_BLUE);
-        submitBtn.setForeground(Color.WHITE);
-        submitBtn.setOpaque(true);
-        submitBtn.setFocusPainted(false);
-        submitBtn.setBorderPainted(false);
-        submitBtn.setFont(UIStyle.FONT_BUTTON);
-        submitBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        submitBtn.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override public void mouseEntered(java.awt.event.MouseEvent e) {
-                submitBtn.setBackground(UIStyle.ACCENT_BLUE_DARK);
-            }
-            @Override public void mouseExited(java.awt.event.MouseEvent e) {
-                submitBtn.setBackground(UIStyle.ACCENT_BLUE);
-            }
-        });
+        JButton submitBtn = UIStyle.createAccentButton("Save Changes");
         submitBtn.addActionListener(e -> {
             try {
                 String safeDesc = jobDescArea.getText().trim().replaceAll("[\\r\\n]+", "  ");

@@ -113,23 +113,8 @@ public class ForumPanel extends JPanel {
             }
         });
         
-        JButton newTopicBtn = new JButton("Start New Topic");
-        newTopicBtn.setBackground(UIStyle.PRIMARY);
-        newTopicBtn.setForeground(Color.WHITE);
+        JButton newTopicBtn = UIStyle.createPrimaryButton("Start New Topic");
         newTopicBtn.setFont(UIStyle.FONT_BUTTON.deriveFont(13f));
-        newTopicBtn.setPreferredSize(new Dimension(140, 36));
-        newTopicBtn.setFocusPainted(false);
-        newTopicBtn.setBorderPainted(false);
-        newTopicBtn.setOpaque(true);
-        newTopicBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        newTopicBtn.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override public void mouseEntered(java.awt.event.MouseEvent e) {
-                newTopicBtn.setBackground(UIStyle.PRIMARY_DARK);
-            }
-            @Override public void mouseExited(java.awt.event.MouseEvent e) {
-                newTopicBtn.setBackground(UIStyle.PRIMARY);
-            }
-        });
         newTopicBtn.addActionListener(e -> {
             if (token == null) {
                 JOptionPane.showMessageDialog(this, "Please login to post a topic.", "Wait", JOptionPane.WARNING_MESSAGE);
@@ -166,23 +151,8 @@ public class ForumPanel extends JPanel {
             }
         });
 
-        JButton findBtn = new JButton("Find");
-        findBtn.setBackground(UIStyle.ACCENT_BLUE);
-        findBtn.setForeground(Color.WHITE);
+        JButton findBtn = UIStyle.createAccentButton("Find");
         findBtn.setFont(UIStyle.FONT_BUTTON.deriveFont(13f));
-        findBtn.setPreferredSize(new Dimension(80, 36));
-        findBtn.setFocusPainted(false);
-        findBtn.setBorderPainted(false);
-        findBtn.setOpaque(true);
-        findBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        findBtn.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override public void mouseEntered(java.awt.event.MouseEvent e) {
-                findBtn.setBackground(UIStyle.ACCENT_BLUE_DARK);
-            }
-            @Override public void mouseExited(java.awt.event.MouseEvent e) {
-                findBtn.setBackground(UIStyle.ACCENT_BLUE);
-            }
-        });
         findBtn.addActionListener(e -> {
             String q = searchBox.getText().trim();
             if (q.equals("Search Topics") || q.isEmpty()) {
@@ -310,22 +280,8 @@ public class ForumPanel extends JPanel {
         // Top bar for 'Back'
         JPanel topBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         topBar.setBackground(UIStyle.BG_PAGE);
-        JButton backBtn = new JButton("\u2190 Back to Forum");
+        JButton backBtn = UIStyle.createSecondaryButton("\u2190 Back to Forum");
         backBtn.setFont(UIStyle.FONT_BODY_BOLD);
-        backBtn.setBackground(new Color(236, 240, 241));
-        backBtn.setForeground(UIStyle.TEXT_PRIMARY);
-        backBtn.setFocusPainted(false);
-        backBtn.setOpaque(true);
-        backBtn.setBorder(new EmptyBorder(8, 15, 8, 15));
-        backBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        backBtn.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override public void mouseEntered(java.awt.event.MouseEvent e) {
-                backBtn.setBackground(new Color(222, 226, 230));
-            }
-            @Override public void mouseExited(java.awt.event.MouseEvent e) {
-                backBtn.setBackground(new Color(236, 240, 241));
-            }
-        });
         backBtn.addActionListener(e -> {
             ((CardLayout)mainAreaWrapper.getLayout()).show(mainAreaWrapper, "List");
             mainAreaWrapper.remove(detailView); // Fix CardLayout memory leak and hidden component crashing
@@ -417,6 +373,7 @@ public class ForumPanel extends JPanel {
         
         for (JButton b : new JButton[]{likeBtn, commentBtn, favBtn}) {
             b.setFocusPainted(false);
+            b.setContentAreaFilled(true);
             b.setOpaque(true);
             b.setCursor(new Cursor(Cursor.HAND_CURSOR));
             b.setBorder(new CompoundBorder(new LineBorder(new Color(220, 220, 220)), new EmptyBorder(8, 15, 8, 15)));
@@ -751,6 +708,8 @@ public class ForumPanel extends JPanel {
         btn.setFont(new Font("Arial", Font.PLAIN, 12));
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
+        btn.setContentAreaFilled(true);
+        btn.setOpaque(true);
         btn.setPreferredSize(new Dimension(35, 30));
         btn.setMargin(new Insets(0, 0, 0, 0));
         btn.setBackground(Color.WHITE);
@@ -1087,7 +1046,6 @@ public class ForumPanel extends JPanel {
 
     private PollRepository pollRepository = new PollRepository();
     private JPanel pollCardContainer;
-    private java.util.List<String> currentPollOptions = null;
 
     private JPanel createPollCard() {
         JPanel cardWrapper = new JPanel(new BorderLayout());
@@ -1137,86 +1095,93 @@ public class ForumPanel extends JPanel {
         qPanel.setBorder(new EmptyBorder(0, 0, 15, 0));
         pollCardContainer.add(qPanel);
 
-        if (currentPollOptions == null || currentPollOptions.isEmpty()) {
-            java.util.List<String> openCourses = new java.util.ArrayList<>();
-            try {
-                for (TA_Recruitment_software.admin_system.model.Position p : new TA_Recruitment_software.admin_system.repository.PositionRepository().findAll()) {
-                    if (p.getStatus() == TA_Recruitment_software.admin_system.model.PositionStatus.OPEN) {
-                        if (!openCourses.contains(p.getJobTitle())) {
-                            openCourses.add(p.getJobTitle());
-                        }
-                    }
-                }
-            } catch (Exception ex) {
-                // ignore
-            }
-            java.util.Collections.shuffle(openCourses);
-            currentPollOptions = new java.util.ArrayList<>();
-            for (int i = 0; i < Math.min(3, openCourses.size()); i++) {
-                currentPollOptions.add(openCourses.get(i));
-            }
-            if (currentPollOptions.isEmpty()) {
-                currentPollOptions.add("Data Structures");
-                currentPollOptions.add("Computer Networks");
-                currentPollOptions.add("Software Engineering");
-            }
-        }
-
+        String[] opts = {"Data Structures", "Computer Networks", "Software Engineering"};
+        java.util.Map<String, String> votes = pollRepository.loadVotes();
+        
         String loggedInUser = isLoggedIn() ? getLoggedInUsername() : null;
+        String userVote = (loggedInUser != null) ? votes.get(loggedInUser) : null;
+        
+        java.util.Map<String, Integer> counts = new java.util.HashMap<>();
+        for (String v : votes.values()) counts.put(v, counts.getOrDefault(v, 0) + 1);
 
         ButtonGroup bg = new ButtonGroup();
-        for(String opt : currentPollOptions) {
+        for(String opt : opts) {
             JPanel rPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
             rPanel.setBackground(Color.WHITE);
 
-            JRadioButton rb = new JRadioButton(opt);
-            rb.setBackground(Color.WHITE);
-            rb.setFont(new Font("Arial", Font.PLAIN, 13));
-            rb.setForeground(new Color(80, 80, 80));
-            rb.setFocusPainted(false);
-            bg.add(rb);
-            rPanel.add(rb);
-            
+            if (userVote != null) {
+                // User has voted, show disabled radio button and vote counts
+                JRadioButton rb = new JRadioButton(opt + " (" + counts.getOrDefault(opt, 0) + " votes)");
+                rb.setBackground(Color.WHITE);
+                rb.setFont(new Font("Arial", Font.PLAIN, 13));
+                if (opt.equals(userVote)) {
+                    rb.setSelected(true);
+                    rb.setForeground(new Color(39, 174, 96)); // highlight their choice
+                } else {
+                    rb.setForeground(new Color(150, 150, 150));
+                }
+                rb.setEnabled(false);
+                rPanel.add(rb);
+            } else {
+                JRadioButton rb = new JRadioButton(opt);
+                rb.setBackground(Color.WHITE);
+                rb.setFont(new Font("Arial", Font.PLAIN, 13));
+                rb.setForeground(new Color(80, 80, 80));
+                rb.setFocusPainted(false);
+                bg.add(rb);
+                rPanel.add(rb);
+            }
             pollCardContainer.add(rPanel);
             pollCardContainer.add(Box.createVerticalStrut(5));
         }
 
-        JButton voteBtn = new JButton("Submit Vote");
-        voteBtn.setBackground(new Color(155, 89, 182)); 
-        voteBtn.setForeground(Color.WHITE);
-        voteBtn.setFont(new Font("Arial", Font.BOLD, 12));
-        voteBtn.setFocusPainted(false);
-        voteBtn.setBorderPainted(false);
-        voteBtn.setOpaque(true);
-        
-        voteBtn.addActionListener(e -> {
-            if (!isLoggedIn()) {
-                JOptionPane.showMessageDialog(this, "Please login first to vote.", "Vote", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-            String selectedOpt = null;
-            for (java.util.Enumeration<AbstractButton> buttons = bg.getElements(); buttons.hasMoreElements();) {
-                AbstractButton button = buttons.nextElement();
-                if (button.isSelected()) {
-                    selectedOpt = button.getText();
-                    break;
-                }
-            }
-            if (selectedOpt == null) {
-                JOptionPane.showMessageDialog(this, "Please select an option.", "Vote", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
+        if (userVote == null) {
+            JButton voteBtn = new JButton("Submit Vote");
+            voteBtn.setBackground(new Color(155, 89, 182)); 
+            voteBtn.setForeground(Color.WHITE);
+            voteBtn.setFont(new Font("Arial", Font.BOLD, 12));
+            voteBtn.setFocusPainted(false);
+            voteBtn.setBorderPainted(false);
+            voteBtn.setContentAreaFilled(true);
+            voteBtn.setOpaque(true);
+            voteBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             
-            pollRepository.saveVote(loggedInUser, selectedOpt);
-            JOptionPane.showMessageDialog(this, "Vote submitted successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-            currentPollOptions = null; // force random regeneration
-            refreshPollCard();
-        });
+            voteBtn.addActionListener(e -> {
+                if (!isLoggedIn()) {
+                    JOptionPane.showMessageDialog(this, "Please login first to vote.", "Vote", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                String selectedOpt = null;
+                for (java.util.Enumeration<AbstractButton> buttons = bg.getElements(); buttons.hasMoreElements();) {
+                    AbstractButton button = buttons.nextElement();
+                    if (button.isSelected()) {
+                        selectedOpt = button.getText();
+                        break;
+                    }
+                }
+                if (selectedOpt == null) {
+                    JOptionPane.showMessageDialog(this, "Please select an option.", "Vote", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                
+                pollRepository.saveVote(loggedInUser, selectedOpt);
+                JOptionPane.showMessageDialog(this, "Vote submitted successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                refreshPollCard();
+            });
 
-        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 10));
-        btnPanel.setBackground(Color.WHITE);
-        btnPanel.add(voteBtn);
-        pollCardContainer.add(btnPanel);
+            JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 10));
+            btnPanel.setBackground(Color.WHITE);
+            btnPanel.add(voteBtn);
+            pollCardContainer.add(btnPanel);
+        } else {
+            JLabel thxLbl = new JLabel("Thanks for voting!");
+            thxLbl.setFont(new Font("Arial", Font.ITALIC, 12));
+            thxLbl.setForeground(new Color(150, 150, 150));
+            JPanel thxPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 10));
+            thxPanel.setBackground(Color.WHITE);
+            thxPanel.add(thxLbl);
+            pollCardContainer.add(thxPanel);
+        }
     }
 
     private JPanel buildCommentsPanel(Topic topic) {

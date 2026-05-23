@@ -20,7 +20,10 @@ public class ProfileService {
     }
 
     public User getMyProfile(String token) {
-        SessionContext session = sessionManager.requireRole(token, Role.TA);
+        SessionContext session = sessionManager.requireSession(token);
+        if (session.getRole() != Role.TA && session.getRole() != Role.MO) {
+            throw new AppException("Permission denied. Only TA and MO can access this feature.");
+        }
         return userRepository.findByUserId(session.getUserId())
             .orElseThrow(() -> new AppException("User not found."));
     }
@@ -34,6 +37,22 @@ public class ProfileService {
         user.setEmail(ValidationUtil.validateEmail(email, true));
         user.setPhone(ValidationUtil.validatePhone(phone, true));
         user.setSkills(ValidationUtil.sanitizeText(skills, "Skills", 200));
+        userRepository.save(user);
+        return user;
+    }
+
+    /** MO profile update — department instead of major, no skills/CV. */
+    public User updateMOProfile(String token, String fullName, String department, String email, String phone) {
+        SessionContext session = sessionManager.requireRole(token, Role.MO);
+        User user = userRepository.findByUserId(session.getUserId())
+            .orElseThrow(() -> new AppException("User not found."));
+
+        if (fullName != null && !fullName.trim().isEmpty()) {
+            user.setFullName(ValidationUtil.sanitizeText(fullName.trim(), "Full Name", 80));
+        }
+        user.setDepartment(ValidationUtil.sanitizeText(department, "Department", 80));
+        user.setEmail(ValidationUtil.validateEmail(email, true));
+        user.setPhone(ValidationUtil.validatePhone(phone, true));
         userRepository.save(user);
         return user;
     }
