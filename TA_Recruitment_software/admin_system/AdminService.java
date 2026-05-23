@@ -174,12 +174,11 @@ public class AdminService {
                 if (!acceptedStatuses.contains(app.getStatus())) {
                     continue;
                 }
-                Position position = positionRepository.findById(app.getPositionId()).orElse(null);
-                if (position == null) {
-                    continue;
-                }
                 assignedCount++;
-                totalHours += parseWorkingHours(position.getJobType());
+                Position position = positionRepository.findById(app.getPositionId()).orElse(null);
+                if (position != null) {
+                    totalHours += parseWorkingHours(position.getJobType());
+                }
             }
 
             workloadSummaries.add(new TaWorkloadSummary(
@@ -213,14 +212,11 @@ public class AdminService {
                 continue;
             }
             Position position = positionRepository.findById(app.getPositionId()).orElse(null);
-            if (position == null) {
-                continue;
-            }
             result.add(new String[]{
-                position.getPositionId(),
-                position.getJobTitle(),
-                nvl(position.getInterviewLocation(), "N/A"),
-                position.getJobType() != null ? position.getJobType() : "N/A",
+                app.getPositionId(),
+                position != null ? position.getJobTitle() : "(Deleted Position)",
+                position != null ? nvl(position.getInterviewLocation(), "N/A") : "N/A",
+                position != null && position.getJobType() != null ? position.getJobType() : "N/A",
                 app.getStatus().name()
             });
         }

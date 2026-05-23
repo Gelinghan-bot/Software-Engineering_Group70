@@ -30,3 +30,6 @@ NTF_1779548754069_1,TA_20260518_IOT_1,APP_1779441522349_8,POS_2026041100000_17,P
 NTF_1779548768466_2,TA_20260518_IOT_1,APP_1779441522349_8,POS_2026041100000_17,SHORTLISTED,OFFERED,Congratulations! You have been offered a position: General IOT Helpdesk.,2026-05-23 23:06:08,false,li hua,General IOT Helpdesk
 NTF_1779548824432_3,TA_20260518_IOT_1,APP_1779441522349_8,POS_2026041100000_17,OFFERED,HIRED,You have been hired for General IOT Helpdesk. Congratulations!,2026-05-23 23:07:04,false,123,General IOT Helpdesk
 NTF_1779548962066_4,TA_20260518_IOT_2,APP_IOT_002,POS_IOT_001,SHORTLISTED,INTERVIEWED,You have been selected for an interview for Embedded System Design.,2026-05-23 23:09:22,false,123,Embedded System Design
+NTF_1779550273934_1,TA_20260518_IOT_2,APP_IOT_002,POS_IOT_001,INTERVIEWED,OFFERED,Congratulations! You have been offered a position: Embedded System Design.,2026-05-23 23:31:13,false,,Embedded System Design
+NTF_1779550279365_2,TA_20260518_IOT_1,APP_IOT_001,POS_IOT_001,SUBMITTED,SHORTLISTED,Your application for Embedded System Design has been shortlisted.,2026-05-23 23:31:19,false,,Embedded System Design
+NTF_1779550287492_3,TA_20260518_IOT_1,APP_IOT_001,POS_IOT_001,SHORTLISTED,OFFERED,Congratulations! You have been offered a position: Embedded System Design.,2026-05-23 23:31:27,false,,Embedded System Design
