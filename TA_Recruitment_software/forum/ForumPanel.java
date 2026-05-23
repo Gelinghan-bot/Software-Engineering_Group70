@@ -188,6 +188,16 @@ public class ForumPanel extends JPanel {
         return "Guest";
     }
 
+    private boolean isLoggedInAdmin() {
+        if (token != null) {
+            try {
+                TA_Recruitment_software.auth.SessionContext sessionCtx = context.getSessionManager().requireSession(token);
+                return sessionCtx.getRole() == TA_Recruitment_software.admin_system.model.Role.ADMIN;
+            } catch (Exception ex) {}
+        }
+        return false;
+    }
+
     private enum SortStrategy { DEFAULT, LIKES, FAVORITES, COMMENTS, DATE }
     private SortStrategy currentSortStrategy = SortStrategy.DEFAULT;
 
@@ -277,19 +287,44 @@ public class ForumPanel extends JPanel {
         detailView.setBackground(UIStyle.BG_PAGE);
         detailView.setBorder(new EmptyBorder(25, 40, 25, 40));
 
-        // Top bar for 'Back'
-        JPanel topBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        // Top bar for 'Back' + Delete
+        JPanel topBar = new JPanel(new BorderLayout());
         topBar.setBackground(UIStyle.BG_PAGE);
         JButton backBtn = UIStyle.createSecondaryButton("\u2190 Back to Forum");
         backBtn.setFont(UIStyle.FONT_BODY_BOLD);
         backBtn.addActionListener(e -> {
             ((CardLayout)mainAreaWrapper.getLayout()).show(mainAreaWrapper, "List");
-            mainAreaWrapper.remove(detailView); // Fix CardLayout memory leak and hidden component crashing
+            mainAreaWrapper.remove(detailView);
             mainAreaWrapper.revalidate();
             mainAreaWrapper.repaint();
-            loadTopics(); // refresh likes/comments
+            loadTopics();
         });
-        topBar.add(backBtn);
+        topBar.add(backBtn, BorderLayout.WEST);
+
+        // Delete topic button in detail view
+        boolean canDelete = isLoggedIn() && (isLoggedInAdmin() || topic.getAuthorName().equals(getLoggedInUsername()));
+        if (canDelete) {
+            JButton delBtn = UIStyle.createDangerButton("\u2715 Delete Topic");
+            delBtn.setFont(UIStyle.FONT_BODY_BOLD);
+            delBtn.addActionListener(e -> {
+                int confirm = JOptionPane.showConfirmDialog(
+                    this, "Delete this topic and all its comments?\nThis cannot be undone.", "Confirm Delete",
+                    JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                if (confirm == JOptionPane.YES_OPTION) {
+                    commentRepository.deleteCommentsByTopicId(topic.getId());
+                    topicRepository.deleteTopic(topic.getId());
+                    ((CardLayout)mainAreaWrapper.getLayout()).show(mainAreaWrapper, "List");
+                    mainAreaWrapper.remove(detailView);
+                    mainAreaWrapper.revalidate();
+                    mainAreaWrapper.repaint();
+                    loadTopics();
+                }
+            });
+            JPanel delWrap = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+            delWrap.setBackground(UIStyle.BG_PAGE);
+            delWrap.add(delBtn);
+            topBar.add(delWrap, BorderLayout.EAST);
+        }
         
         detailView.add(topBar, BorderLayout.NORTH);
 
@@ -583,12 +618,16 @@ public class ForumPanel extends JPanel {
         contentArea.add(title, BorderLayout.NORTH);
         contentArea.add(body, BorderLayout.CENTER);
 
-        // Bottom Footer (Likes, Comments, Date)
-        JPanel footer = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 0));
+        // Bottom Footer (Likes, Comments, Date + Delete)
+        JPanel footer = new JPanel(new BorderLayout());
         footer.setOpaque(false);
         footer.setBorder(new EmptyBorder(10, 0, 0, 0));
+
+        JPanel footerLeft = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 0));
+        footerLeft.setOpaque(false);
         
         String loggedInUser = getLoggedInUsername();
+        boolean isAdmin = isLoggedInAdmin();
 
         JLabel likesLbl = new JLabel(topic.getLikedByUsers().contains(loggedInUser) && isLoggedIn() ? "\u2764\uFE0F " + topic.getLikes() : "\uD83D\uDC4D " + topic.getLikes());
         likesLbl.setFont(UIStyle.FONT_EMOJI.deriveFont(13f));
@@ -616,7 +655,7 @@ public class ForumPanel extends JPanel {
                 boolean isLiked = topic.toggleLike(loggedInUser);
                 topicRepository.updateTopic(topic);
                 likesLbl.setText(isLiked ? "\u2764\uFE0F " + topic.getLikes() : "\uD83D\uDC4D " + topic.getLikes());
-                e.consume(); // stops bubbling to detail view
+                e.consume();
             }
         });
         
@@ -632,15 +671,45 @@ public class ForumPanel extends JPanel {
         
         commentsLbl.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent e) {
-                // Clicking comment on card directly takes them to detail view essentially
-                // so we do nothing here, letting it bubble up.
             }
         });
 
-        footer.add(likesLbl);
-        footer.add(commentsLbl);
-        footer.add(favLbl);
-        footer.add(dateLbl);
+        footerLeft.add(likesLbl);
+        footerLeft.add(commentsLbl);
+        footerLeft.add(favLbl);
+        footerLeft.add(dateLbl);
+        footer.add(footerLeft, BorderLayout.WEST);
+
+        // Delete topic button: shown if user is topic author or admin
+        boolean canDeleteTopic = isLoggedIn() && (isAdmin || topic.getAuthorName().equals(loggedInUser));
+        if (canDeleteTopic) {
+            JButton delTopicBtn = new JButton("\u2715");
+            delTopicBtn.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 15));
+            delTopicBtn.setForeground(new Color(200, 60, 60));
+            delTopicBtn.setToolTipText("Delete topic");
+            delTopicBtn.setFocusPainted(false);
+            delTopicBtn.setContentAreaFilled(false);
+            delTopicBtn.setBorderPainted(false);
+            delTopicBtn.setOpaque(false);
+            delTopicBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            delTopicBtn.addMouseListener(new java.awt.event.MouseAdapter() {
+                public void mouseClicked(java.awt.event.MouseEvent e) {
+                    e.consume(); // prevent card click
+                    int confirm = JOptionPane.showConfirmDialog(
+                        ForumPanel.this, "Delete this topic and all its comments?", "Confirm Delete",
+                        JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                    if (confirm == JOptionPane.YES_OPTION) {
+                        commentRepository.deleteCommentsByTopicId(topic.getId());
+                        topicRepository.deleteTopic(topic.getId());
+                        loadTopics();
+                    }
+                }
+            });
+            JPanel delPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+            delPanel.setOpaque(false);
+            delPanel.add(delTopicBtn);
+            footer.add(delPanel, BorderLayout.EAST);
+        }
 
         contentArea.add(footer, BorderLayout.SOUTH);
 
@@ -1198,6 +1267,9 @@ public class ForumPanel extends JPanel {
         titlePanel.add(titleLbl);
         commentsContainer.add(titlePanel);
 
+        String loggedInUser = getLoggedInUsername();
+        boolean isAdmin = isLoggedInAdmin();
+
         List<Comment> comments = commentRepository.getCommentsByTopicId(topic.getId());
         if (comments.isEmpty()) {
             JLabel noComm = new JLabel("No comments yet. Be the first to comment!");
@@ -1235,8 +1307,40 @@ public class ForumPanel extends JPanel {
                 cText.setLineWrap(true);
                 cText.setWrapStyleWord(true);
 
+                // Delete button at bottom-right: shown if user is comment author or admin
+                boolean canDelete = isLoggedIn() && (isAdmin || c.getAuthorName().equals(loggedInUser));
+                JPanel bottomWrapper = new JPanel(new BorderLayout());
+                bottomWrapper.setBackground(new Color(250, 250, 250));
+                bottomWrapper.add(cText, BorderLayout.CENTER);
+                if (canDelete) {
+                    JButton delBtn = new JButton("\u2715");
+                    delBtn.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
+                    delBtn.setForeground(new Color(200, 60, 60));
+                    delBtn.setToolTipText("Delete comment");
+                    delBtn.setFocusPainted(false);
+                    delBtn.setContentAreaFilled(false);
+                    delBtn.setBorderPainted(false);
+                    delBtn.setOpaque(false);
+                    delBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                    delBtn.addActionListener(e -> {
+                        int confirm = JOptionPane.showConfirmDialog(
+                            this, "Delete this comment?", "Confirm Delete",
+                            JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                        if (confirm == JOptionPane.YES_OPTION) {
+                            commentRepository.deleteComment(c.getId());
+                            topic.decrementComments();
+                            topicRepository.updateTopic(topic);
+                            showTopicDetail(topic);
+                        }
+                    });
+                    JPanel delPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+                    delPanel.setBackground(new Color(250, 250, 250));
+                    delPanel.add(delBtn);
+                    bottomWrapper.add(delPanel, BorderLayout.SOUTH);
+                }
+
                 item.add(top, BorderLayout.NORTH);
-                item.add(cText, BorderLayout.CENTER);
+                item.add(bottomWrapper, BorderLayout.CENTER);
                 commentsContainer.add(item);
             }
         }
