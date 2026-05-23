@@ -319,57 +319,66 @@ public class MoReviewUI {
 
     private static void showApplicationDetail(Component parent, MOReviewService service, Application app) {
         Optional<User> userOpt = service.getApplicantInfo(app.getApplicantUserId());
-        Optional<Position> posOpt = service.getPositionInfo(app.getPositionId());
 
         StringBuilder sb = new StringBuilder();
-        sb.append("=== Application Details ===\n\n");
-        sb.append("Application ID: ").append(app.getApplicationId()).append("\n");
-        sb.append("Status: ").append(app.getStatus().name()).append("\n");
-        sb.append("Submit Time: ").append(nvl(app.getSubmissionTime())).append("\n");
-        sb.append("Last Updated: ").append(nvl(app.getUpdatedTime())).append("\n\n");
-
-        if (posOpt.isPresent()) {
-            Position pos = posOpt.get();
-            sb.append("=== Position Info ===\n");
-            sb.append("Job Title: ").append(nvl(pos.getJobTitle())).append("\n");
-            sb.append("Responsible MO: ").append(nvl(pos.getResponsibleMO())).append("\n");
-            sb.append("Description: ").append(nvl(pos.getJobDescription())).append("\n");
-            sb.append("Requirements: ").append(nvl(pos.getRequirements())).append("\n");
-            sb.append("Job Type: ").append(nvl(pos.getJobType())).append("\n");
-            sb.append("Deadline: ").append(nvl(pos.getDeadline())).append("\n");
-            sb.append("Status: ").append(pos.getStatus()).append("\n\n");
-        }
-
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            sb.append("=== Applicant Profile ===\n");
-            sb.append("Full Name: ").append(nvl(user.getFullName())).append("\n");
-            sb.append("Student ID: ").append(nvl(user.getStudentId())).append("\n");
-            sb.append("Major: ").append(nvl(user.getMajor())).append("\n");
-            sb.append("Email: ").append(nvl(user.getEmail())).append("\n");
-            sb.append("Phone: ").append(nvl(user.getPhone())).append("\n");
-            sb.append("Skills: ").append(nvl(user.getSkills())).append("\n");
+            sb.append("=== Applicant Profile ===\n\n");
+            sb.append("Full Name: ").append(nvl(user.getFullName())).append("\n\n");
+            sb.append("Student ID: ").append(nvl(user.getStudentId())).append("\n\n");
+            sb.append("Major: ").append(nvl(user.getMajor())).append("\n\n");
+            sb.append("Email: ").append(nvl(user.getEmail())).append("\n\n");
+            sb.append("Phone: ").append(nvl(user.getPhone())).append("\n\n");
+            sb.append("Skills: ").append(nvl(user.getSkills())).append("\n\n");
             sb.append("CV File: ").append(nvl(user.getCvFilePath())).append("\n");
         } else {
             sb.append("Applicant info not available.\n");
         }
 
-        if (app.getStatusNote() != null && !app.getStatusNote().isEmpty()) {
-            sb.append("\n=== Latest Status Note ===\n");
-            sb.append(app.getStatusNote()).append("\n");
-        }
-
         JTextArea textArea = new JTextArea(sb.toString());
         textArea.setEditable(false);
-        textArea.setFont(new Font("Monospaced", Font.PLAIN, 13));
+        textArea.setFont(new Font("Monospaced", Font.PLAIN, 15));
+        textArea.setLineWrap(true);
+        textArea.setWrapStyleWord(true);
         textArea.setCaretPosition(0);
 
         JScrollPane scrollPane = new JScrollPane(textArea);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
-        scrollPane.setPreferredSize(new Dimension(550, 450));
+        scrollPane.setPreferredSize(new Dimension(500, 350));
+        
+        JPanel panel = new JPanel(new BorderLayout(0, 10));
+        panel.add(scrollPane, BorderLayout.CENTER);
+        
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton openCvBtn = new JButton("Open CV file");
+        
+        if (userOpt.isPresent() && userOpt.get().getCvFilePath() != null && !userOpt.get().getCvFilePath().trim().isEmpty()) {
+            openCvBtn.addActionListener(e -> {
+                String stored = userOpt.get().getCvFilePath();
+                java.nio.file.Path path = java.nio.file.Paths.get(stored.trim());
+                if (!java.nio.file.Files.isRegularFile(path)) {
+                    JOptionPane.showMessageDialog(panel, "CV file not found at:\n" + path.toAbsolutePath(), "Missing file", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                if (!java.awt.Desktop.isDesktopSupported()) {
+                    JOptionPane.showMessageDialog(panel, "Desktop API not supported on this environment.");
+                    return;
+                }
+                try {
+                    java.awt.Desktop.getDesktop().open(path.toFile());
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(panel, "Could not open file: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            });
+        } else {
+            openCvBtn.setEnabled(false);
+        }
+        
+        btnPanel.add(openCvBtn);
+        panel.add(btnPanel, BorderLayout.SOUTH);
 
-        JOptionPane.showMessageDialog(parent, scrollPane, "Application Details", JOptionPane.PLAIN_MESSAGE);
+        JOptionPane.showMessageDialog(parent, panel, "Applicant Details", JOptionPane.PLAIN_MESSAGE);
     }
 
     private static void handleStatusUpdate(Component parent, RecruitmentSystemContext context,

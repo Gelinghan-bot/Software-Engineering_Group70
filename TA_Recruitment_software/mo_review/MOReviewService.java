@@ -265,7 +265,7 @@ public class MOReviewService {
         String requirements = position != null ? position.getRequirements() : "None";
         
         // 2. 构造 Prompt
-        String systemPrompt = "你是一名非常专业的高校助教招聘 HR。请帮我对比以下候选人，指出各自的优劣势，并给出一个明确的推荐排名。必须使用中文回复。";
+        String systemPrompt = "你是一名非常专业的高校助教招聘 HR。请帮我对比以下候选人，指出各自的优劣势，并给出一个明确的推荐排名。必须使用英文回复。";
         
         StringBuilder userPrompt = new StringBuilder();
         userPrompt.append("【岗位信息】\n");
