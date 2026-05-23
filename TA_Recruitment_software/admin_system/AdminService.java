@@ -135,6 +135,28 @@ public class AdminService {
         return user;
     }
 
+    /**
+     * Get work count for a user.
+     * MO → published positions count. TA → approved/hired applications count.
+     * Caller must already have admin authentication.
+     */
+    public int getUserWorkCount(String userId) {
+        User u = userRepository.findByUserId(userId).orElse(null);
+        if (u == null) return 0;
+        if (u.getRole() == Role.MO) {
+            return positionRepository.findByPublisher(userId).size();
+        }
+        if (u.getRole() == Role.TA) {
+            int count = 0;
+            Set<ApplicationStatus> accepted = EnumSet.of(ApplicationStatus.APPROVED, ApplicationStatus.HIRED);
+            for (Application app : applicationRepository.findByApplicant(userId)) {
+                if (accepted.contains(app.getStatus())) count++;
+            }
+            return count;
+        }
+        return 0;
+    }
+
     public List<TaWorkloadSummary> listTaWorkloadSummary(String adminToken) {
         sessionManager.requireRole(adminToken, Role.ADMIN);
 
@@ -170,6 +192,68 @@ public class AdminService {
         }
 
         return workloadSummaries;
+    }
+
+    /**
+     * Get TA work detail: list of positions assigned to a TA with locations and status.
+     */
+    public List<String[]> getTaWorkDetail(String adminToken, String userId) {
+        sessionManager.requireRole(adminToken, Role.ADMIN);
+        User ta = userRepository.findByUserId(userId)
+            .orElseThrow(() -> new AppException("User not found."));
+        if (ta.getRole() != Role.TA) {
+            throw new AppException("User is not a TA.");
+        }
+
+        List<String[]> result = new ArrayList<>();
+        Set<ApplicationStatus> acceptedStatuses = EnumSet.of(ApplicationStatus.APPROVED, ApplicationStatus.HIRED);
+
+        for (Application app : applicationRepository.findByApplicant(userId)) {
+            if (!acceptedStatuses.contains(app.getStatus())) {
+                continue;
+            }
+            Position position = positionRepository.findById(app.getPositionId()).orElse(null);
+            if (position == null) {
+                continue;
+            }
+            result.add(new String[]{
+                position.getPositionId(),
+                position.getJobTitle(),
+                nvl(position.getInterviewLocation(), "N/A"),
+                position.getJobType() != null ? position.getJobType() : "N/A",
+                app.getStatus().name()
+            });
+        }
+        return result;
+    }
+
+    /**
+     * Get MO work detail: list of positions published by an MO with status.
+     */
+    public List<String[]> getMoWorkDetail(String adminToken, String userId) {
+        sessionManager.requireRole(adminToken, Role.ADMIN);
+        User mo = userRepository.findByUserId(userId)
+            .orElseThrow(() -> new AppException("User not found."));
+        if (mo.getRole() != Role.MO) {
+            throw new AppException("User is not an MO.");
+        }
+
+        List<String[]> result = new ArrayList<>();
+        for (Position position : positionRepository.findByPublisher(userId)) {
+            result.add(new String[]{
+                position.getPositionId(),
+                position.getJobTitle(),
+                position.getStatus().name(),
+                String.valueOf(position.getHeadcount()),
+                nvl(position.getDeadline(), "N/A"),
+                nvl(position.getInterviewLocation(), "N/A")
+            });
+        }
+        return result;
+    }
+
+    private String nvl(String value, String defaultValue) {
+        return (value == null || value.trim().isEmpty()) ? defaultValue : value;
     }
 
     private double parseWorkingHours(String workingHours) {

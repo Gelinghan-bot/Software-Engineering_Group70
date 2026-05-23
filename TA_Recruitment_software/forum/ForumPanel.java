@@ -113,23 +113,8 @@ public class ForumPanel extends JPanel {
             }
         });
         
-        JButton newTopicBtn = new JButton("Start New Topic");
-        newTopicBtn.setBackground(UIStyle.PRIMARY);
-        newTopicBtn.setForeground(Color.WHITE);
+        JButton newTopicBtn = UIStyle.createPrimaryButton("Start New Topic");
         newTopicBtn.setFont(UIStyle.FONT_BUTTON.deriveFont(13f));
-        newTopicBtn.setPreferredSize(new Dimension(140, 36));
-        newTopicBtn.setFocusPainted(false);
-        newTopicBtn.setBorderPainted(false);
-        newTopicBtn.setOpaque(true);
-        newTopicBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        newTopicBtn.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override public void mouseEntered(java.awt.event.MouseEvent e) {
-                newTopicBtn.setBackground(UIStyle.PRIMARY_DARK);
-            }
-            @Override public void mouseExited(java.awt.event.MouseEvent e) {
-                newTopicBtn.setBackground(UIStyle.PRIMARY);
-            }
-        });
         newTopicBtn.addActionListener(e -> {
             if (token == null) {
                 JOptionPane.showMessageDialog(this, "Please login to post a topic.", "Wait", JOptionPane.WARNING_MESSAGE);
@@ -166,23 +151,8 @@ public class ForumPanel extends JPanel {
             }
         });
 
-        JButton findBtn = new JButton("Find");
-        findBtn.setBackground(UIStyle.ACCENT_BLUE);
-        findBtn.setForeground(Color.WHITE);
+        JButton findBtn = UIStyle.createAccentButton("Find");
         findBtn.setFont(UIStyle.FONT_BUTTON.deriveFont(13f));
-        findBtn.setPreferredSize(new Dimension(80, 36));
-        findBtn.setFocusPainted(false);
-        findBtn.setBorderPainted(false);
-        findBtn.setOpaque(true);
-        findBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        findBtn.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override public void mouseEntered(java.awt.event.MouseEvent e) {
-                findBtn.setBackground(UIStyle.ACCENT_BLUE_DARK);
-            }
-            @Override public void mouseExited(java.awt.event.MouseEvent e) {
-                findBtn.setBackground(UIStyle.ACCENT_BLUE);
-            }
-        });
         findBtn.addActionListener(e -> {
             String q = searchBox.getText().trim();
             if (q.equals("Search Topics") || q.isEmpty()) {
@@ -310,22 +280,8 @@ public class ForumPanel extends JPanel {
         // Top bar for 'Back'
         JPanel topBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         topBar.setBackground(UIStyle.BG_PAGE);
-        JButton backBtn = new JButton("\u2190 Back to Forum");
+        JButton backBtn = UIStyle.createSecondaryButton("\u2190 Back to Forum");
         backBtn.setFont(UIStyle.FONT_BODY_BOLD);
-        backBtn.setBackground(new Color(236, 240, 241));
-        backBtn.setForeground(UIStyle.TEXT_PRIMARY);
-        backBtn.setFocusPainted(false);
-        backBtn.setOpaque(true);
-        backBtn.setBorder(new EmptyBorder(8, 15, 8, 15));
-        backBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        backBtn.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override public void mouseEntered(java.awt.event.MouseEvent e) {
-                backBtn.setBackground(new Color(222, 226, 230));
-            }
-            @Override public void mouseExited(java.awt.event.MouseEvent e) {
-                backBtn.setBackground(new Color(236, 240, 241));
-            }
-        });
         backBtn.addActionListener(e -> {
             ((CardLayout)mainAreaWrapper.getLayout()).show(mainAreaWrapper, "List");
             mainAreaWrapper.remove(detailView); // Fix CardLayout memory leak and hidden component crashing
@@ -417,6 +373,7 @@ public class ForumPanel extends JPanel {
         
         for (JButton b : new JButton[]{likeBtn, commentBtn, favBtn}) {
             b.setFocusPainted(false);
+            b.setContentAreaFilled(true);
             b.setOpaque(true);
             b.setCursor(new Cursor(Cursor.HAND_CURSOR));
             b.setBorder(new CompoundBorder(new LineBorder(new Color(220, 220, 220)), new EmptyBorder(8, 15, 8, 15)));
@@ -751,6 +708,8 @@ public class ForumPanel extends JPanel {
         btn.setFont(new Font("Arial", Font.PLAIN, 12));
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
+        btn.setContentAreaFilled(true);
+        btn.setOpaque(true);
         btn.setPreferredSize(new Dimension(35, 30));
         btn.setMargin(new Insets(0, 0, 0, 0));
         btn.setBackground(Color.WHITE);
@@ -1183,7 +1142,9 @@ public class ForumPanel extends JPanel {
             voteBtn.setFont(new Font("Arial", Font.BOLD, 12));
             voteBtn.setFocusPainted(false);
             voteBtn.setBorderPainted(false);
+            voteBtn.setContentAreaFilled(true);
             voteBtn.setOpaque(true);
+            voteBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             
             voteBtn.addActionListener(e -> {
                 if (!isLoggedIn()) {

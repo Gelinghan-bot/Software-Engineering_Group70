@@ -58,7 +58,7 @@ public class MoReviewUI {
             topPanel.add(new JSeparator(SwingConstants.VERTICAL));
             topPanel.add(new JLabel("Search Notes:"));
             JTextField noteSearchField = UIStyle.createTextField(12);
-            JButton searchNoteBtn = new JButton("Search");
+            JButton searchNoteBtn = UIStyle.createAccentButton("Search");
             topPanel.add(noteSearchField);
             topPanel.add(searchNoteBtn);
             topPanel.add(resetFilterBtn);

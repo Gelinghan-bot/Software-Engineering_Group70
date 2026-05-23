@@ -280,27 +280,11 @@ public class TAJobsUI {
         Supplier<String> tokenSupplier,
         Supplier<Role> roleSupplier
     ) {
-        JButton btn = new JButton("AI Diagnosis");
+        JButton btn = UIStyle.createPrimaryButton("AI Diagnosis");
         btn.setAlignmentX(Component.CENTER_ALIGNMENT);
-        btn.setBackground(UIStyle.PRIMARY);
-        btn.setForeground(Color.WHITE);
-        btn.setOpaque(true);
-        btn.setFocusPainted(false);
-        btn.setBorderPainted(false);
-        btn.setFont(UIStyle.FONT_BUTTON);
         btn.setMaximumSize(new Dimension(220, 45));
         btn.setPreferredSize(new Dimension(220, 45));
-        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         btn.setVisible(false);
-        // hover effect
-        btn.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override public void mouseEntered(java.awt.event.MouseEvent e) {
-                btn.setBackground(UIStyle.PRIMARY_DARK);
-            }
-            @Override public void mouseExited(java.awt.event.MouseEvent e) {
-                btn.setBackground(UIStyle.PRIMARY);
-            }
-        });
         btn.addActionListener(e -> {
             Role r = roleSupplier.get();
             String t = tokenSupplier.get();

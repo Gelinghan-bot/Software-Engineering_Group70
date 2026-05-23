@@ -3,7 +3,7 @@ package TA_Recruitment_software.admin_system;
 import TA_Recruitment_software.RecruitmentSystemContext;
 import TA_Recruitment_software.admin_system.foundation.AppException;
 import TA_Recruitment_software.admin_system.foundation.UIStyle;
-import TA_Recruitment_software.admin_system.model.TaWorkloadSummary;
+import TA_Recruitment_software.admin_system.model.Role;
 import TA_Recruitment_software.admin_system.model.User;
 import java.awt.*;
 import java.util.List;
@@ -76,72 +76,267 @@ public class AdminUI {
     }
 
     public static void showManageUsersDialog(JFrame parent, RecruitmentSystemContext context, String token) {
+        showManageUsersDialog(parent, context, token, null, null, null, null);
+    }
+
+    public static void showManageUsersDialog(JFrame parent, RecruitmentSystemContext context, String token,
+                                             String filterRole, String filterKeyword) {
+        showManageUsersDialog(parent, context, token, filterRole, filterKeyword, null, null);
+    }
+
+    public static void showManageUsersDialog(JFrame parent, RecruitmentSystemContext context, String token,
+                                             String filterRole, String filterKeyword, String filterWorkCount,
+                                             String filterEnabled) {
         if (token == null) {
             JOptionPane.showMessageDialog(parent, "Please login as ADMIN first.");
             return;
         }
         
         try {
-            List<User> users = context.getAdminService().listAllUsers(token);
-            DefaultTableModel model = new DefaultTableModel(new Object[]{"User ID", "Account ID", "Name", "Role", "Enabled"}, 0) {
-                @Override public boolean isCellEditable(int row, int column) { return false; }
-            };
-            for (User u : users) {
-                model.addRow(new Object[]{u.getUserId(), u.getAccountId(), u.getFullName(), u.getRole(), u.isEnabled()});
+            List<User> allUsers = context.getAdminService().listAllUsers(token);
+
+            // ---- Filter toolbar (multi-row GridBagLayout) ----
+            JPanel filterPanel = new JPanel(new GridBagLayout());
+            filterPanel.setBackground(UIStyle.BG_PAGE);
+            filterPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+            GridBagConstraints g = new GridBagConstraints();
+            g.insets = new Insets(3, 5, 3, 5);
+            g.fill = GridBagConstraints.HORIZONTAL;
+
+            g.gridx = 0; g.gridy = 0;
+            filterPanel.add(new JLabel("Role:"), g);
+            g.gridx = 1;
+            JComboBox<String> roleFilterCombo = new JComboBox<>(new String[]{"All Role", "TA", "MO", "ADMIN"});
+            roleFilterCombo.setPreferredSize(new Dimension(100, 28));
+            filterPanel.add(roleFilterCombo, g);
+
+            g.gridx = 2;
+            filterPanel.add(new JLabel("  Work:"), g);
+            g.gridx = 3;
+            JComboBox<String> workCountCombo = new JComboBox<>(new String[]{"All Work", "Has Work", "No Work"});
+            workCountCombo.setPreferredSize(new Dimension(110, 28));
+            filterPanel.add(workCountCombo, g);
+
+            g.gridx = 4;
+            filterPanel.add(new JLabel("  Enabled:"), g);
+            g.gridx = 5;
+            JComboBox<String> enabledCombo = new JComboBox<>(new String[]{"All Enabled", "Yes", "No"});
+            enabledCombo.setPreferredSize(new Dimension(115, 28));
+            filterPanel.add(enabledCombo, g);
+
+            g.gridx = 0; g.gridy = 1; g.gridwidth = 1;
+            filterPanel.add(new JLabel("Keyword:"), g);
+            g.gridx = 1; g.gridwidth = 3;
+            JTextField keywordField = UIStyle.createTextField(25);
+            keywordField.setPreferredSize(new Dimension(280, 28));
+            filterPanel.add(keywordField, g);
+
+            g.gridx = 4; g.gridwidth = 1;
+            JButton applyFilterBtn = UIStyle.createAccentButton("Search");
+            applyFilterBtn.setPreferredSize(new Dimension(90, 28));
+            filterPanel.add(applyFilterBtn, g);
+            g.gridx = 5;
+            JButton clearFilterBtn = UIStyle.createSecondaryButton("Reset");
+            clearFilterBtn.setPreferredSize(new Dimension(80, 28));
+            filterPanel.add(clearFilterBtn, g);
+
+            // Summary label
+            JLabel summaryLabel = new JLabel();
+            summaryLabel.setFont(UIStyle.FONT_SMALL);
+            summaryLabel.setForeground(UIStyle.TEXT_SECONDARY);
+            g.gridx = 0; g.gridy = 2; g.gridwidth = 6;
+            filterPanel.add(summaryLabel, g);
+
+            // ---- Pre-fill filters from Home search ----
+            if (filterRole != null) roleFilterCombo.setSelectedItem(filterRole);
+            if (filterWorkCount != null) workCountCombo.setSelectedItem(filterWorkCount);
+            if (filterEnabled != null) enabledCombo.setSelectedItem(filterEnabled);
+            if (filterKeyword != null && !filterKeyword.isEmpty()) {
+                keywordField.setText(filterKeyword);
+                keywordField.setForeground(UIStyle.TEXT);
             }
 
+            // ---- Table ----
+            String[] cols = {"User ID", "Account", "Name", "Role", "Email", "Phone", "Major/Dept", "Work Count", "Enabled"};
+            DefaultTableModel model = new DefaultTableModel(cols, 0) {
+                @Override public boolean isCellEditable(int row, int column) { return false; }
+            };
+
+            java.util.function.Consumer<java.util.List<User>> rebuildTable = (userList) -> {
+                model.setRowCount(0);
+                for (User u : userList) {
+                    // MO: show Department; TA/others: show Major, fallback to Department
+                    String majorOrDept;
+                    int workCount;
+                    if (u.getRole() == Role.MO) {
+                        majorOrDept = nvl(u.getDepartment());
+                        workCount = context.getAdminService().getUserWorkCount(u.getUserId());
+                    } else if (u.getRole() == Role.TA) {
+                        majorOrDept = nvl(u.getMajor() != null && !u.getMajor().isEmpty() ? u.getMajor() : u.getDepartment());
+                        workCount = context.getAdminService().getUserWorkCount(u.getUserId());
+                    } else {
+                        majorOrDept = nvl(u.getDepartment());
+                        workCount = 0;
+                    }
+                    model.addRow(new Object[]{
+                        u.getUserId(), u.getAccountId(), nvl(u.getFullName()), u.getRole(),
+                        nvl(u.getEmail()), nvl(u.getPhone()),
+                        majorOrDept,
+                        workCount > 0 ? String.valueOf(workCount) : "-",
+                        u.isEnabled() ? "Yes" : "No"
+                    });
+                }
+                summaryLabel.setText("  Showing " + userList.size() + " of " + allUsers.size() + " users");
+            };
+
+            // Auto-apply filter if parameters were passed from Home search
+            java.util.function.Supplier<java.util.List<User>> getFiltered = () -> {
+                String selRole = (String) roleFilterCombo.getSelectedItem();
+                String selWorkCount = (String) workCountCombo.getSelectedItem();
+                String selEnabled = (String) enabledCombo.getSelectedItem();
+                String kw = keywordField.getText().trim();
+                return filterUsers(allUsers, context, selRole, selWorkCount, selEnabled, kw);
+            };
+
+            boolean hasFilter = filterRole != null || filterKeyword != null
+                || filterWorkCount != null || filterEnabled != null;
+            List<User> initialList = hasFilter ? getFiltered.get() : allUsers;
+            rebuildTable.accept(initialList);
+
             JTable table = UIStyle.createStyledTable(model);
+            JScrollPane scrollPane = UIStyle.wrapTableInScrollPane(table);
+
             JPanel panel = new JPanel(new BorderLayout(8, 8));
             panel.setBackground(UIStyle.BG_PAGE);
-            JScrollPane scrollPane = UIStyle.wrapTableInScrollPane(table);
+            panel.setBorder(UIStyle.pagePadding());
+            panel.add(filterPanel, BorderLayout.NORTH);
             panel.add(scrollPane, BorderLayout.CENTER);
-            panel.setPreferredSize(new Dimension(700, 350));
 
+            // ---- Filter actions (all combos + Enter key trigger filter) ----
+            Runnable doFilter = () -> rebuildTable.accept(getFiltered.get());
+            applyFilterBtn.addActionListener(ev -> doFilter.run());
+            keywordField.addActionListener(ev -> doFilter.run());
+            roleFilterCombo.addActionListener(ev -> doFilter.run());
+            workCountCombo.addActionListener(ev -> doFilter.run());
+            enabledCombo.addActionListener(ev -> doFilter.run());
+            clearFilterBtn.addActionListener(ev -> {
+                roleFilterCombo.setSelectedItem("All Role");
+                workCountCombo.setSelectedItem("All Work");
+                enabledCombo.setSelectedItem("All Enabled");
+                keywordField.setText("");
+                rebuildTable.accept(allUsers);
+            });
+
+            // ---- Bottom buttons ----
             JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
             btnPanel.setBackground(UIStyle.BG_PAGE);
             JButton editBtn = UIStyle.createPrimaryButton("Edit Selected");
             JButton toggleBtn = UIStyle.createSecondaryButton("Toggle Enable/Disable");
-            JButton workloadBtn = UIStyle.createAccentButton("Show TA Workload");
+            JButton workBtn = UIStyle.createAccentButton("Show Work");
+            JButton backBtn = UIStyle.createSecondaryButton("\u2190 Back");
 
             editBtn.addActionListener(e -> {
                 int row = table.getSelectedRow();
-                if (row >= 0) {
-                    String userId = (String) model.getValueAt(row, 0);
-                    User selectedUser = context.getAdminService().listAllUsers(token).stream()
-                        .filter(u -> u.getUserId().equals(userId)).findFirst().orElse(null);
-                    if (selectedUser != null) {
-                        showEditUserDialog(parent, context, token, selectedUser, model, row);
-                    }
-                } else {
-                    JOptionPane.showMessageDialog(parent, "Please select a user to edit.");
-                }
+                if (row < 0) { JOptionPane.showMessageDialog(parent, "Please select a user to edit."); return; }
+                String userId = (String) model.getValueAt(row, 0);
+                User selectedUser = allUsers.stream().filter(u -> u.getUserId().equals(userId)).findFirst().orElse(null);
+                if (selectedUser != null) showEditUserDialog(parent, context, token, selectedUser, model, row);
             });
 
             toggleBtn.addActionListener(e -> {
                 int row = table.getSelectedRow();
-                if (row >= 0) {
-                    String userId = (String) model.getValueAt(row, 0);
-                    boolean currentStatus = (Boolean) model.getValueAt(row, 4);
-                    context.getAdminService().setUserEnabled(token, userId, !currentStatus);
-                    model.setValueAt(!currentStatus, row, 4);
-                    JOptionPane.showMessageDialog(parent, "User status updated!");
-                } else {
-                    JOptionPane.showMessageDialog(parent, "Please select a user.");
-                }
+                if (row < 0) { JOptionPane.showMessageDialog(parent, "Please select a user."); return; }
+                String userId = (String) model.getValueAt(row, 0);
+                boolean currentEnabled = "Yes".equals(model.getValueAt(row, 8));
+                context.getAdminService().setUserEnabled(token, userId, !currentEnabled);
+                model.setValueAt(!currentEnabled ? "Yes" : "No", row, 8);
+                allUsers.stream().filter(u -> u.getUserId().equals(userId)).findFirst()
+                    .ifPresent(u -> u.setEnabled(!currentEnabled));
+                JOptionPane.showMessageDialog(parent, "User " + (currentEnabled ? "disabled" : "enabled") + "!");
             });
 
-            workloadBtn.addActionListener(e -> showTaWorkloadDialog(parent, context, token));
+            workBtn.addActionListener(e -> {
+                int row = table.getSelectedRow();
+                if (row < 0) { JOptionPane.showMessageDialog(parent, "Please select a user to view work."); return; }
+                String userId = (String) model.getValueAt(row, 0);
+                Role selectedRole = (Role) model.getValueAt(row, 3);
+                if (selectedRole == Role.ADMIN) {
+                    JOptionPane.showMessageDialog(parent, "Admin users have no work records.", "Show Work", JOptionPane.INFORMATION_MESSAGE);
+                    return;
+                }
+                User selectedUser = allUsers.stream().filter(u -> u.getUserId().equals(userId)).findFirst().orElse(null);
+                if (selectedUser != null) showWorkDialog(parent, context, token, selectedUser);
+            });
 
             btnPanel.add(editBtn);
             btnPanel.add(toggleBtn);
-            btnPanel.add(workloadBtn);
+            btnPanel.add(workBtn);
+            btnPanel.add(backBtn);
             panel.add(btnPanel, BorderLayout.SOUTH);
 
-            JOptionPane.showMessageDialog(parent, panel, "Manage Users", JOptionPane.PLAIN_MESSAGE);
+            // ---- Replace center content (like Manage Positions) ----
+            Container contentPane = parent.getContentPane();
+            BorderLayout layout = (BorderLayout) contentPane.getLayout();
+            Component previousCenter = layout.getLayoutComponent(BorderLayout.CENTER);
+
+            backBtn.addActionListener(e -> {
+                contentPane.remove(panel);
+                if (previousCenter != null) {
+                    contentPane.add(previousCenter, BorderLayout.CENTER);
+                }
+                parent.revalidate();
+                parent.repaint();
+            });
+
+            if (previousCenter != null) {
+                contentPane.remove(previousCenter);
+            }
+            contentPane.add(panel, BorderLayout.CENTER);
+            parent.revalidate();
+            parent.repaint();
 
         } catch (AppException ex) {
             JOptionPane.showMessageDialog(parent, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    /** Filter users by role, work count, enabled status, and keyword. */
+    private static List<User> filterUsers(List<User> users, RecruitmentSystemContext context,
+                                          String roleFilter, String workCountFilter,
+                                          String enabledFilter, String keyword) {
+        java.util.List<User> result = new java.util.ArrayList<>();
+        String kw = (keyword == null) ? "" : keyword.toLowerCase().trim();
+        for (User u : users) {
+            if (roleFilter != null && !"All Role".equals(roleFilter)) {
+                if (!u.getRole().name().equalsIgnoreCase(roleFilter)) continue;
+            }
+            if (workCountFilter != null && !"All Work".equals(workCountFilter)) {
+                int wc = context.getAdminService().getUserWorkCount(u.getUserId());
+                if ("Has Work".equals(workCountFilter) && wc == 0) continue;
+                if ("No Work".equals(workCountFilter) && wc > 0) continue;
+            }
+            if (enabledFilter != null && !"All Enabled".equals(enabledFilter)) {
+                boolean wantEnabled = "Yes".equals(enabledFilter);
+                if (u.isEnabled() != wantEnabled) continue;
+            }
+            if (!kw.isEmpty()) {
+                boolean match = false;
+                if (u.getFullName() != null && u.getFullName().toLowerCase().contains(kw)) match = true;
+                else if (u.getAccountId() != null && u.getAccountId().toLowerCase().contains(kw)) match = true;
+                else if (u.getEmail() != null && u.getEmail().toLowerCase().contains(kw)) match = true;
+                else if (u.getMajor() != null && u.getMajor().toLowerCase().contains(kw)) match = true;
+                else if (u.getDepartment() != null && u.getDepartment().toLowerCase().contains(kw)) match = true;
+                else if (u.getStudentId() != null && u.getStudentId().toLowerCase().contains(kw)) match = true;
+                else if (u.getUserId() != null && u.getUserId().toLowerCase().contains(kw)) match = true;
+                if (!match) continue;
+            }
+            result.add(u);
+        }
+        return result;
+    }
+
+    private static String nvl(String s) {
+        return (s == null || s.isEmpty()) ? "-" : s;
     }
 
     public static void showEditUserDialog(JFrame parent, RecruitmentSystemContext context, String token, 
@@ -211,36 +406,46 @@ public class AdminUI {
         formPanel.add(phoneField, gbc);
 
         gbc.gridx = 0; gbc.gridy = 6;
-        JLabel majorLbl = new JLabel("Major/Dept:");
+        boolean isMO = user.getRole() == Role.MO;
+        JLabel majorLbl = new JLabel(isMO ? "Department:" : "Major/Dept:");
         formPanel.add(majorLbl, gbc);
         JTextField majorField = UIStyle.createTextField(20);
-        majorField.setText(user.getMajor() != null ? user.getMajor() : (user.getDepartment() != null ? user.getDepartment() : ""));
+        // MO: use department; TA/others: use major, fallback to department
+        majorField.setText(isMO
+            ? (user.getDepartment() != null ? user.getDepartment() : "")
+            : (user.getMajor() != null ? user.getMajor() : (user.getDepartment() != null ? user.getDepartment() : "")));
         gbc.gridx = 1;
         formPanel.add(majorField, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 7;
-        JLabel skillsLbl = new JLabel("Skills:");
-        formPanel.add(skillsLbl, gbc);
-        JTextField skillsField = UIStyle.createTextField(20);
-        skillsField.setText(user.getSkills() != null ? user.getSkills() : "");
-        gbc.gridx = 1;
-        formPanel.add(skillsField, gbc);
+        int nextRow = 7;
+        JTextField skillsField = null;
+        if (!isMO) {
+            // Skills field only for TA (not relevant for MO)
+            gbc.gridx = 0; gbc.gridy = nextRow;
+            JLabel skillsLbl = new JLabel("Skills:");
+            formPanel.add(skillsLbl, gbc);
+            skillsField = UIStyle.createTextField(20);
+            skillsField.setText(user.getSkills() != null ? user.getSkills() : "");
+            gbc.gridx = 1;
+            formPanel.add(skillsField, gbc);
+            nextRow++;
+        }
 
         // Password reset section
-        gbc.gridx = 0; gbc.gridy = 8; gbc.gridwidth = 2;
+        gbc.gridx = 0; gbc.gridy = nextRow; gbc.gridwidth = 2;
         JSeparator sep = new JSeparator();
         formPanel.add(sep, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 9;
+        gbc.gridx = 0; gbc.gridy = nextRow + 1;
         JLabel pwdLbl = new JLabel("New Password (leave empty to keep current):");
         pwdLbl.setFont(new Font("Arial", Font.BOLD, 11));
         formPanel.add(pwdLbl, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 10; gbc.gridwidth = 2;
+        gbc.gridx = 0; gbc.gridy = nextRow + 2; gbc.gridwidth = 2;
         JPasswordField passwordField = UIStyle.createPasswordField(20);
         formPanel.add(passwordField, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 11; gbc.gridwidth = 2;
+        gbc.gridx = 0; gbc.gridy = nextRow + 3; gbc.gridwidth = 2;
         JLabel pwdHint = new JLabel("Password must contain uppercase, lowercase, digit, min 8 chars");
         pwdHint.setFont(new Font("Arial", Font.ITALIC, 10));
         pwdHint.setForeground(new Color(100, 100, 100));
@@ -255,24 +460,22 @@ public class AdminUI {
         // Buttons
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
         buttonPanel.setBackground(Color.WHITE);
-        JButton saveBtn = new JButton("Save Changes");
-        saveBtn.setBackground(new Color(39, 174, 96));
-        saveBtn.setForeground(Color.WHITE);
-        saveBtn.setOpaque(true);
-        saveBtn.setFont(new Font("Arial", Font.BOLD, 12));
-        JButton cancelBtn = new JButton("Cancel");
-        cancelBtn.setFont(new Font("Arial", Font.PLAIN, 12));
+        JButton saveBtn = UIStyle.createPrimaryButton("Save Changes");
+        JButton cancelBtn = UIStyle.createSecondaryButton("Cancel");
 
+        final JTextField finalSkillsField = skillsField;
         saveBtn.addActionListener(e -> {
             try {
                 String fullName = fullNameField.getText().trim();
                 String email = emailField.getText().trim();
                 String phone = phoneField.getText().trim();
-                String major = majorField.getText().trim();
-                String skills = skillsField.getText().trim();
+                String majorDept = majorField.getText().trim();
+                String skills = (finalSkillsField != null) ? finalSkillsField.getText().trim() : "";
                 String newPassword = new String(passwordField.getPassword());
 
-                context.getAdminService().updateUserInfo(token, user.getUserId(), fullName, email, phone, major, major, skills);
+                // MO: field goes to department; TA: field goes to major, also set department
+                context.getAdminService().updateUserInfo(token, user.getUserId(), fullName, email, phone,
+                    isMO ? "" : majorDept, isMO ? majorDept : majorDept, skills);
 
                 if (!newPassword.isEmpty()) {
                     context.getAdminService().resetPassword(token, user.getUserId(), newPassword);
@@ -301,42 +504,95 @@ public class AdminUI {
         dialog.setVisible(true);
     }
 
-    public static void showTaWorkloadDialog(JFrame parent, RecruitmentSystemContext context, String token) {
+    public static void showWorkDialog(JFrame parent, RecruitmentSystemContext context, String token, User user) {
         if (token == null) {
             JOptionPane.showMessageDialog(parent, "Please login as ADMIN first.");
             return;
         }
 
         try {
-            List<TaWorkloadSummary> workloads = context.getAdminService().listTaWorkloadSummary(token);
-            if (workloads.isEmpty()) {
-                JOptionPane.showMessageDialog(parent, "No TA workload data available.");
+            Role role = user.getRole();
+            String title;
+            DefaultTableModel model;
+            List<String[]> data;
+            Color themeColor;
+            String summaryHtml;
+
+            if (role == Role.TA) {
+                title = "TA Work Detail";
+                themeColor = new Color(39, 174, 96);
+                model = new DefaultTableModel(
+                    new Object[]{"Position ID", "Job Title", "Work Location", "Job Type", "Application Status"}, 0) {
+                    @Override public boolean isCellEditable(int row, int column) { return false; }
+                };
+                data = context.getAdminService().getTaWorkDetail(token, user.getUserId());
+                for (String[] row : data) {
+                    model.addRow(row);
+                }
+                int approvedCount = 0;
+                for (String[] row : data) {
+                    if ("APPROVED".equals(row[4]) || "HIRED".equals(row[4])) approvedCount++;
+                }
+                summaryHtml = "<html><b style='color:#27ae60'>TA</b> | "
+                    + data.size() + " assigned position(s) | "
+                    + approvedCount + " active</html>";
+            } else if (role == Role.MO) {
+                title = "MO Work Detail";
+                themeColor = new Color(52, 120, 220);
+                model = new DefaultTableModel(
+                    new Object[]{"Position ID", "Job Title", "Status", "Headcount", "Deadline", "Location"}, 0) {
+                    @Override public boolean isCellEditable(int row, int column) { return false; }
+                };
+                data = context.getAdminService().getMoWorkDetail(token, user.getUserId());
+                for (String[] row : data) {
+                    model.addRow(row);
+                }
+                int openCount = 0;
+                for (String[] row : data) {
+                    if ("OPEN".equals(row[2])) openCount++;
+                }
+                summaryHtml = "<html><b style='color:#3478DC'>MO</b> | "
+                    + data.size() + " published position(s) | "
+                    + openCount + " open</html>";
+            } else {
+                JOptionPane.showMessageDialog(parent, "No work data available for this role.", "Show Work", JOptionPane.INFORMATION_MESSAGE);
                 return;
             }
 
-            DefaultTableModel model = new DefaultTableModel(
-                new Object[]{"User ID", "Account ID", "Name", "Assigned Positions", "Total Hours"}, 0) {
-                @Override public boolean isCellEditable(int row, int column) { return false; }
-            };
-
-            for (TaWorkloadSummary workload : workloads) {
-                model.addRow(new Object[]{
-                    workload.getUserId(),
-                    workload.getAccountId(),
-                    workload.getFullName(),
-                    workload.getAssignedPositionCount(),
-                    workload.getTotalAssignedHours()
-                });
+            if (data.isEmpty()) {
+                JOptionPane.showMessageDialog(parent, "No work records found for " + user.getFullName() + ".",
+                    "Show Work", JOptionPane.INFORMATION_MESSAGE);
+                return;
             }
 
-            JTable table = new JTable(model);
-            JPanel panel = new JPanel(new BorderLayout());
-            JScrollPane workloadScrollPane = new JScrollPane(table);
-            workloadScrollPane.getVerticalScrollBar().setUnitIncrement(16);
-            workloadScrollPane.getHorizontalScrollBar().setUnitIncrement(16);
-            panel.add(workloadScrollPane, BorderLayout.CENTER);
-            panel.setPreferredSize(new Dimension(700, 350));
-            JOptionPane.showMessageDialog(parent, panel, "TA Workload Summary", JOptionPane.PLAIN_MESSAGE);
+            // ---- Build UI ----
+            JPanel panel = new JPanel(new BorderLayout(8, 8));
+            panel.setBackground(UIStyle.BG_PAGE);
+
+            // Header with user info + stats
+            JPanel headerPanel = new JPanel(new BorderLayout());
+            headerPanel.setBackground(themeColor);
+            headerPanel.setBorder(BorderFactory.createEmptyBorder(12, 16, 12, 16));
+
+            JLabel nameLabel = new JLabel(user.getFullName());
+            nameLabel.setFont(UIStyle.FONT_TITLE.deriveFont(18f));
+            nameLabel.setForeground(Color.WHITE);
+            headerPanel.add(nameLabel, BorderLayout.NORTH);
+
+            JLabel roleAndStats = new JLabel(summaryHtml);
+            roleAndStats.setFont(UIStyle.FONT_BODY);
+            roleAndStats.setForeground(new Color(255, 255, 255, 220));
+            headerPanel.add(roleAndStats, BorderLayout.SOUTH);
+
+            panel.add(headerPanel, BorderLayout.NORTH);
+
+            // Table
+            JTable table = UIStyle.createStyledTable(model);
+            JScrollPane scrollPane = UIStyle.wrapTableInScrollPane(table);
+            panel.add(scrollPane, BorderLayout.CENTER);
+            panel.setPreferredSize(new Dimension(800, 380));
+
+            JOptionPane.showMessageDialog(parent, panel, title + " - " + user.getFullName(), JOptionPane.PLAIN_MESSAGE);
         } catch (AppException ex) {
             JOptionPane.showMessageDialog(parent, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
