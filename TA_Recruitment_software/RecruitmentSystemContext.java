@@ -8,7 +8,13 @@ import TA_Recruitment_software.auth.AuthService;
 import TA_Recruitment_software.auth.SessionManager;
 import TA_Recruitment_software.mo_publish.MOPublishService;
 import TA_Recruitment_software.mo_review.MOReviewService;
+<<<<<<< Updated upstream
+=======
+import TA_Recruitment_software.ta_jobs.AiDiagnosisService;
+import TA_Recruitment_software.profile.CoverLetterService;
+>>>>>>> Stashed changes
 import TA_Recruitment_software.profile.MoTaProfileViewService;
+import TA_Recruitment_software.profile.ProfileExportFacade;
 import TA_Recruitment_software.profile.ProfileService;
 import TA_Recruitment_software.ta_jobs.TAJobService;
 
@@ -20,6 +26,8 @@ public class RecruitmentSystemContext {
 
     private final AuthService authService;
     private final ProfileService profileService;
+    private final CoverLetterService coverLetterService;
+    private final ProfileExportFacade profileExportFacade;
     private final MoTaProfileViewService moTaProfileViewService;
     private final TAJobService taJobService;
     private final MOPublishService moPublishService;
@@ -34,6 +42,8 @@ public class RecruitmentSystemContext {
 
         this.authService = new AuthService(userRepository, sessionManager);
         this.profileService = new ProfileService(userRepository, sessionManager);
+        this.coverLetterService = new CoverLetterService(sessionManager);
+        this.profileExportFacade = new ProfileExportFacade(userRepository, sessionManager, profileService);
         this.moTaProfileViewService = new MoTaProfileViewService(userRepository, sessionManager);
         this.taJobService = new TAJobService(positionRepository, applicationRepository, userRepository, sessionManager);
         this.moPublishService = new MOPublishService(positionRepository, userRepository, sessionManager);
@@ -48,6 +58,14 @@ public class RecruitmentSystemContext {
 
     public ProfileService getProfileService() {
         return profileService;
+    }
+
+    public CoverLetterService getCoverLetterService() {
+        return coverLetterService;
+    }
+
+    public ProfileExportFacade getProfileExportFacade() {
+        return profileExportFacade;
     }
 
     public MoTaProfileViewService getMoTaProfileViewService() {

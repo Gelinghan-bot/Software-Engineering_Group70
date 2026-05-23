@@ -23,17 +23,27 @@ public class CvStorageService {
             throw new AppException("CV file does not exist: " + sourceFilePath);
         }
 
+        try {
+            long size = Files.size(source);
+            if (size > ProfileConstants.MAX_CV_FILE_BYTES) {
+                throw new AppException("CV file is too large. Maximum size is 10 MB.");
+            }
+        } catch (IOException e) {
+            throw new AppException("Failed to read CV file.");
+        }
+
         String fileName = source.getFileName().toString();
+        if (!ProfileConstants.isAllowedCvExtension(fileName)) {
+            throw new AppException("CV must be .pdf, .doc or .docx");
+        }
         String lower = fileName.toLowerCase();
         String ext;
-        if (lower.endsWith(".pdf")) {
+        if (lower.endsWith(ProfileConstants.CV_EXT_PDF)) {
             ext = "pdf";
-        } else if (lower.endsWith(".doc")) {
+        } else if (lower.endsWith(ProfileConstants.CV_EXT_DOC)) {
             ext = "doc";
-        } else if (lower.endsWith(".docx")) {
-            ext = "docx";
         } else {
-            throw new AppException("CV must be .pdf, .doc or .docx");
+            ext = "docx";
         }
 
         Path userDir = DATA_DIR.resolve(Paths.get("cv", userId.trim()));
@@ -46,9 +56,14 @@ public class CvStorageService {
             throw new AppException("Failed to store CV file.");
         }
 
-        // Persist as a controlled, repo-relative path for better portability.
+        if (!Files.isRegularFile(target)) {
+            throw new AppException("Failed to store CV file.");
+        }
+
         String normalized = target.toString().replace('\\', '/');
+        if (!CvPathHelper.existsOnDisk(normalized)) {
+            throw new AppException("Failed to store CV file.");
+        }
         return normalized;
     }
 }
-

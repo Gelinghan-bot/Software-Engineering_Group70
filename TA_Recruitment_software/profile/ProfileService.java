@@ -5,7 +5,6 @@ import TA_Recruitment_software.admin_system.foundation.ValidationUtil;
 import TA_Recruitment_software.admin_system.model.Role;
 import TA_Recruitment_software.admin_system.model.User;
 import TA_Recruitment_software.admin_system.repository.UserRepository;
-import TA_Recruitment_software.auth.SessionContext;
 import TA_Recruitment_software.auth.SessionManager;
 
 public class ProfileService {
@@ -20,33 +19,40 @@ public class ProfileService {
     }
 
     public User getMyProfile(String token) {
-        SessionContext session = sessionManager.requireRole(token, Role.TA);
-        return userRepository.findByUserId(session.getUserId())
-            .orElseThrow(() -> new AppException("User not found."));
+        return requireTaUser(token);
+    }
+
+    public ProfileCompleteness getCompleteness(String token) {
+        return ProfileCompleteness.fromUser(requireTaUser(token));
     }
 
     public User updateProfile(String token, String major, String email, String phone, String skills) {
-        SessionContext session = sessionManager.requireRole(token, Role.TA);
-        User user = userRepository.findByUserId(session.getUserId())
-            .orElseThrow(() -> new AppException("User not found."));
+        User user = requireTaUser(token);
 
-        user.setMajor(ValidationUtil.sanitizeText(major, "Major", 80));
+        user.setMajor(ValidationUtil.sanitizeText(major, "Major", ProfileConstants.MAX_MAJOR_LEN));
         user.setEmail(ValidationUtil.validateEmail(email, true));
         user.setPhone(ValidationUtil.validatePhone(phone, true));
-        user.setSkills(ValidationUtil.sanitizeText(skills, "Skills", 200));
+        user.setSkills(ValidationUtil.sanitizeText(skills, "Skills", ProfileConstants.MAX_SKILLS_LEN));
         userRepository.save(user);
         return user;
     }
 
     public User uploadCV(String token, String cvFilePath) {
-        SessionContext session = sessionManager.requireRole(token, Role.TA);
-        User user = userRepository.findByUserId(session.getUserId())
-            .orElseThrow(() -> new AppException("User not found."));
+        User user = requireTaUser(token);
 
         String sourcePath = ValidationUtil.requireNotBlank(cvFilePath, "CV file path");
         String storedPath = cvStorageService.storeCvFile(user.getUserId(), sourcePath);
+        if (!CvPathHelper.existsOnDisk(storedPath)) {
+            throw new AppException("CV was stored but could not be verified on disk. Please try again.");
+        }
         user.setCvFilePath(storedPath);
         userRepository.save(user);
         return user;
+    }
+
+    private User requireTaUser(String token) {
+        String userId = sessionManager.requireRole(token, Role.TA).getUserId();
+        return userRepository.findByUserId(userId)
+            .orElseThrow(() -> new AppException("User not found."));
     }
 }

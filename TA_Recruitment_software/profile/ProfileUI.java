@@ -16,7 +16,7 @@ public class ProfileUI {
         }
         
         try {
-            User user = context.getAuthService().getUserByToken(token);
+            User user = context.getProfileService().getMyProfile(token);
 
             JPanel formPanel = new JPanel(new GridLayout(5, 2, 8, 8));
             JTextField majorField = new JTextField(user.getMajor(), 20);
