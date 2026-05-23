@@ -128,7 +128,7 @@ public class AdminUI {
             filterPanel.add(new JLabel("Keyword:"), g);
             g.gridx = 1; g.gridwidth = 3;
             JTextField keywordField = UIStyle.createTextField(25);
-            keywordField.setPreferredSize(new Dimension(280, 28));
+            keywordField.setPreferredSize(new Dimension(280, 34));
             filterPanel.add(keywordField, g);
 
             g.gridx = 4; g.gridwidth = 1;
@@ -305,7 +305,7 @@ public class AdminUI {
                                           String roleFilter, String workCountFilter,
                                           String enabledFilter, String keyword) {
         java.util.List<User> result = new java.util.ArrayList<>();
-        String kw = (keyword == null) ? "" : keyword.toLowerCase().trim();
+        String kw = (keyword == null) ? "" : keyword.toLowerCase().replace(" ", "");
         for (User u : users) {
             if (roleFilter != null && !"All Role".equals(roleFilter)) {
                 if (!u.getRole().name().equalsIgnoreCase(roleFilter)) continue;
@@ -321,18 +321,24 @@ public class AdminUI {
             }
             if (!kw.isEmpty()) {
                 boolean match = false;
-                if (u.getFullName() != null && u.getFullName().toLowerCase().contains(kw)) match = true;
-                else if (u.getAccountId() != null && u.getAccountId().toLowerCase().contains(kw)) match = true;
-                else if (u.getEmail() != null && u.getEmail().toLowerCase().contains(kw)) match = true;
-                else if (u.getMajor() != null && u.getMajor().toLowerCase().contains(kw)) match = true;
-                else if (u.getDepartment() != null && u.getDepartment().toLowerCase().contains(kw)) match = true;
-                else if (u.getStudentId() != null && u.getStudentId().toLowerCase().contains(kw)) match = true;
-                else if (u.getUserId() != null && u.getUserId().toLowerCase().contains(kw)) match = true;
+                if (matchField(u.getFullName(), kw)) match = true;
+                else if (matchField(u.getAccountId(), kw)) match = true;
+                else if (matchField(u.getEmail(), kw)) match = true;
+                else if (matchField(u.getMajor(), kw)) match = true;
+                else if (matchField(u.getDepartment(), kw)) match = true;
+                else if (matchField(u.getStudentId(), kw)) match = true;
+                else if (matchField(u.getUserId(), kw)) match = true;
                 if (!match) continue;
             }
             result.add(u);
         }
         return result;
+    }
+
+    /** Match field value against keyword, ignoring spaces in both. */
+    private static boolean matchField(String fieldValue, String keyword) {
+        if (fieldValue == null || fieldValue.isEmpty()) return false;
+        return fieldValue.toLowerCase().replace(" ", "").contains(keyword);
     }
 
     private static String nvl(String s) {
@@ -484,8 +490,24 @@ public class AdminUI {
                     JOptionPane.showMessageDialog(dialog, "User information updated successfully!");
                 }
 
+                // Update in-memory user object (same reference as in allUsers list)
+                user.setFullName(fullName);
+                user.setEmail(email);
+                user.setPhone(phone);
+                if (isMO) {
+                    user.setDepartment(majorDept);
+                } else {
+                    user.setMajor(majorDept);
+                    user.setDepartment(majorDept);
+                }
+                if (skills != null) user.setSkills(skills);
+
+                // Refresh all affected columns in the table
                 if (model != null && tableRow >= 0) {
                     model.setValueAt(fullName, tableRow, 2);
+                    model.setValueAt(email, tableRow, 4);
+                    model.setValueAt(phone, tableRow, 5);
+                    model.setValueAt(majorDept, tableRow, 6);
                 }
 
                 dialog.dispose();
@@ -600,14 +622,14 @@ public class AdminUI {
 
     public static void showPollResultsDialog(JFrame parent) {
         TA_Recruitment_software.forum.PollRepository pollRepo = new TA_Recruitment_software.forum.PollRepository();
-        java.util.List<String> votes = pollRepo.loadVotes();
+        java.util.Map<String, String> votes = pollRepo.loadVotes();
         if (votes.isEmpty()) {
             JOptionPane.showMessageDialog(parent, "No votes have been cast yet for the Poll of the Week.");
             return;
         }
 
         java.util.Map<String, Integer> counts = new java.util.HashMap<>();
-        for (String subject : votes) {
+        for (String subject : votes.values()) {
             counts.put(subject, counts.getOrDefault(subject, 0) + 1);
         }
 
