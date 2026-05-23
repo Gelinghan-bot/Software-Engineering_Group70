@@ -81,68 +81,102 @@ public final class TaPortalUI {
     public static void showNotificationsDialog(JFrame parent, RecruitmentSystemContext context, String token) {
         TaPortalService portal = TaPortalService.fromContext(context);
         portal.syncNotifications(token);
-        List<TaNotification> notifications = portal.listNotifications(token, false);
+        List<TaNotification> notifs = portal.listNotifications(token, false);
+        notifs.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
 
         DefaultTableModel model = new DefaultTableModel(
-            new Object[]{"ID", "Message", "Time", "Read"}, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
+                new Object[]{"Job", "Event", "Note", "Time", "Read"}, 0) {
+            @Override public boolean isCellEditable(int r, int c) { return false; }
         };
-        for (TaNotification n : notifications) {
+        for (TaNotification n : notifs) {
             model.addRow(new Object[]{
-                n.getNotificationId(),
+                n.getJobTitle(),
                 n.getMessage(),
+                n.getNote(),
                 n.getCreatedAt(),
-                n.isRead() ? "Yes" : "No"
+                n.isRead() ? "✓" : "●"
             });
         }
 
         JTable table = UIStyle.createStyledTable(model);
-        table.getColumnModel().getColumn(0).setPreferredWidth(80);
-        table.getColumnModel().getColumn(1).setPreferredWidth(420);
+        table.setRowHeight(22);
+        table.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        table.getColumnModel().getColumn(0).setPreferredWidth(140);
+        table.getColumnModel().getColumn(1).setPreferredWidth(260);
+        table.getColumnModel().getColumn(2).setPreferredWidth(120);
+        table.getColumnModel().getColumn(3).setPreferredWidth(130);
+        table.getColumnModel().getColumn(4).setPreferredWidth(44);
 
-        JDialog dialog = new JDialog(parent, "Application Notifications", true);
-        dialog.setSize(720, 420);
+        // Highlight unread rows
+        table.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCellRenderer() {
+            @Override
+            public java.awt.Component getTableCellRendererComponent(JTable t, Object v,
+                    boolean sel, boolean foc, int row, int col) {
+                super.getTableCellRendererComponent(t, v, sel, foc, row, col);
+                if (!sel) {
+                    boolean unread = "●".equals(model.getValueAt(row, 4));
+                    setBackground(unread ? new Color(255, 248, 220) : Color.WHITE);
+                    setForeground(unread ? new Color(40, 40, 40) : new Color(90, 90, 90));
+                    setFont(unread ? LABEL_FONT.deriveFont(java.awt.Font.BOLD) : LABEL_FONT);
+                }
+                return this;
+            }
+        });
+
+        JDialog dialog = new JDialog(parent, "Notifications", true);
+        dialog.setSize(780, 440);
         dialog.setLocationRelativeTo(parent);
         dialog.getContentPane().setBackground(UIStyle.BG_PAGE);
 
         JPanel panel = new JPanel(new BorderLayout(8, 8));
-        panel.setBorder(new EmptyBorder(12, 12, 12, 12));
+        panel.setBorder(new EmptyBorder(12, 12, 8, 12));
         panel.setBackground(UIStyle.BG_PAGE);
 
-        JLabel title = new JLabel("Application Status Notifications", SwingConstants.CENTER);
+        JLabel title = new JLabel("My Notifications  (double-click to view detail)", SwingConstants.CENTER);
         title.setFont(TITLE_FONT);
         title.setForeground(PRIMARY_GREEN);
         panel.add(title, BorderLayout.NORTH);
         panel.add(new JScrollPane(table), BorderLayout.CENTER);
 
+        // Double-click → detail dialog
+        table.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    int row = table.getSelectedRow();
+                    if (row >= 0 && row < notifs.size()) {
+                        showNotificationDetail(dialog, notifs.get(row), portal, token, model, row);
+                    }
+                }
+            }
+        });
+
         JPanel buttons = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 8));
         buttons.setBackground(UIStyle.BG_PAGE);
         JButton markReadBtn = UIStyle.createPrimaryButton("Mark Selected Read");
-        JButton markAllBtn = UIStyle.createAccentButton("Mark All Read");
-        JButton refreshBtn = UIStyle.createSecondaryButton("Refresh");
-        JButton closeBtn = UIStyle.createSecondaryButton("Close");
+        JButton markAllBtn  = UIStyle.createAccentButton("Mark All Read");
+        JButton refreshBtn  = UIStyle.createSecondaryButton("Refresh");
+        JButton closeBtn    = UIStyle.createSecondaryButton("Close");
 
         markReadBtn.addActionListener(e -> {
             int row = table.getSelectedRow();
-            if (row >= 0) {
-                String id = (String) model.getValueAt(row, 0);
-                portal.markNotificationRead(token, id);
-                model.setValueAt("Yes", row, 3);
+            if (row >= 0 && row < notifs.size()) {
+                TaNotification n = notifs.get(row);
+                portal.markNotificationRead(token, n.getNotificationId());
+                n.setRead(true);
+                model.setValueAt("✓", row, 4);
+                table.repaint();
             }
         });
         markAllBtn.addActionListener(e -> {
             portal.markAllNotificationsRead(token);
-            for (int i = 0; i < model.getRowCount(); i++) {
-                model.setValueAt("Yes", i, 3);
+            for (int i = 0; i < notifs.size(); i++) {
+                notifs.get(i).setRead(true);
+                model.setValueAt("✓", i, 4);
             }
+            table.repaint();
         });
-        refreshBtn.addActionListener(e -> {
-            dialog.dispose();
-            showNotificationsDialog(parent, context, token);
-        });
+        refreshBtn.addActionListener(e -> { dialog.dispose(); showNotificationsDialog(parent, context, token); });
         closeBtn.addActionListener(e -> dialog.dispose());
 
         buttons.add(markReadBtn);
@@ -153,6 +187,67 @@ public final class TaPortalUI {
 
         dialog.setContentPane(panel);
         dialog.setVisible(true);
+    }
+
+    private static void showNotificationDetail(java.awt.Window owner, TaNotification n,
+                                                TaPortalService portal, String token,
+                                                DefaultTableModel model, int row) {
+        JDialog detail = new JDialog(owner, "Notification Detail", java.awt.Dialog.ModalityType.APPLICATION_MODAL);
+        detail.setSize(520, 340);
+        detail.setLocationRelativeTo(owner);
+
+        JPanel panel = new JPanel(new java.awt.GridBagLayout());
+        panel.setBorder(new EmptyBorder(16, 20, 8, 20));
+        java.awt.GridBagConstraints gc = new java.awt.GridBagConstraints();
+        gc.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gc.insets = new java.awt.Insets(5, 4, 5, 8);
+
+        String statusChange = n.getOldStatus() + " → " + n.getNewStatus();
+        String[][] fields = {
+            {"Job:",           n.getJobTitle().isEmpty() ? n.getPositionId() : n.getJobTitle()},
+            {"Position ID:",   n.getPositionId()},
+            {"Event:",         n.getMessage()},
+            {"Status change:", statusChange},
+            {"Note:",          n.getNote().isEmpty() ? "(none)" : n.getNote()},
+            {"Time:",          n.getCreatedAt()},
+            {"Read:",          n.isRead() ? "Yes" : "No"},
+        };
+
+        int r = 0;
+        for (String[] pair : fields) {
+            gc.gridx = 0; gc.gridy = r; gc.weightx = 0;
+            JLabel lbl = new JLabel(pair[0]);
+            lbl.setFont(LABEL_FONT.deriveFont(java.awt.Font.BOLD));
+            panel.add(lbl, gc);
+
+            gc.gridx = 1; gc.weightx = 1; gc.fill = java.awt.GridBagConstraints.HORIZONTAL;
+            JLabel val = new JLabel("<html>" + pair[1].replace("&","&amp;").replace("<","&lt;") + "</html>");
+            val.setFont(LABEL_FONT);
+            panel.add(val, gc);
+            gc.fill = java.awt.GridBagConstraints.NONE;
+            r++;
+        }
+
+        JPanel btns = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 6));
+        JButton markReadBtn = UIStyle.createPrimaryButton("Mark as Read");
+        JButton closeBtn    = UIStyle.createSecondaryButton("Close");
+
+        markReadBtn.setEnabled(!n.isRead());
+        markReadBtn.addActionListener(e -> {
+            portal.markNotificationRead(token, n.getNotificationId());
+            n.setRead(true);
+            model.setValueAt("✓", row, 4);
+            markReadBtn.setEnabled(false);
+        });
+        closeBtn.addActionListener(e -> detail.dispose());
+
+        btns.add(markReadBtn);
+        btns.add(closeBtn);
+
+        detail.setLayout(new BorderLayout());
+        detail.add(panel, BorderLayout.CENTER);
+        detail.add(btns, BorderLayout.SOUTH);
+        detail.setVisible(true);
     }
 
     public static void showComplianceDialog(JFrame parent, RecruitmentSystemContext context, String token) {

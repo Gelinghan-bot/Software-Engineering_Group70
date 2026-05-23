@@ -339,8 +339,14 @@ public class Home2 extends JFrame {
                     subItems.put("My Profile", () -> TA_Recruitment_software.profile.ProfileUI.showUpdateProfileDialog(this, context, currentToken));
                     subItems.put("EXIT (Logout)", () -> logout());
                 } else {
-                    subItems.put("TA Portal (Notifications / Limits / History / PDF)", () -> TA_Recruitment_software.auth.AuthUI.showTaPortal(this, context, currentToken));
-                    subItems.put("My Profile", () -> TA_Recruitment_software.profile.ProfileUI.showUpdateProfileDialog(this, context, currentToken));
+                    int unreadCount = 0;
+                    try { unreadCount = context.getTaNotificationService().countUnread(currentToken); } catch (Exception ignored) {}
+                    String notifLabel = unreadCount > 0 ? "Notifications (" + unreadCount + ")" : "Notifications";
+                    final javax.swing.JFrame parentFrame = this;
+                    final String capturedToken = currentToken;
+                    subItems.put(notifLabel, () -> TA_Recruitment_software.auth.AuthUI.showNotificationsDialog(parentFrame, context, capturedToken));
+                    subItems.put("TA Portal (Limits / History / PDF)", () -> TA_Recruitment_software.auth.AuthUI.showTaPortal(this, context, currentToken));
+                    subItems.put("My Resume (Update Profile)", () -> TA_Recruitment_software.profile.ProfileUI.showUpdateProfileDialog(this, context, currentToken));
                     subItems.put("My Applications", () -> TA_Recruitment_software.ta_jobs.TAJobsUI.showMyApplications(this, context, currentToken));
                     subItems.put("EXIT (Logout)", () -> logout());
                 }
