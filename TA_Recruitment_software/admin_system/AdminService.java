@@ -15,6 +15,7 @@ import TA_Recruitment_software.admin_system.repository.ApplicationRepository;
 import TA_Recruitment_software.admin_system.repository.PositionRepository;
 import TA_Recruitment_software.admin_system.repository.UserRepository;
 import TA_Recruitment_software.auth.SessionManager;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -23,12 +24,44 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Service layer for system administrator operations.
+ * <p>
+ * This class provides business logic for system administration tasks including
+ * user management, account approval, password reset, and workload monitoring.
+ * All operations require ADMIN role authentication.
+ * </p>
+ * <p>
+ * Key features:
+ * <ul>
+ *   <li>Seed default admin account on first run</li>
+ *   <li>List and approve/reject pending user registrations</li>
+ *   <li>Enable/disable user accounts</li>
+ *   <li>Reset user passwords</li>
+ *   <li>Update user information</li>
+ *   <li>View TA/MO workload summaries and details</li>
+ * </ul>
+ * </p>
+ *
+ * @author Group70
+ * @see User
+ * @see SessionManager
+ * @see TaWorkloadSummary
+ */
 public class AdminService {
     private final UserRepository userRepository;
     private final PositionRepository positionRepository;
     private final ApplicationRepository applicationRepository;
     private final SessionManager sessionManager;
 
+    /**
+     * Constructs an AdminService with required dependencies.
+     *
+     * @param userRepository          repository for user CRUD operations
+     * @param positionRepository      repository for position queries
+     * @param applicationRepository   repository for application queries
+     * @param sessionManager          session manager for authentication
+     */
     public AdminService(UserRepository userRepository,
                         PositionRepository positionRepository,
                         ApplicationRepository applicationRepository,
@@ -39,6 +72,14 @@ public class AdminService {
         this.sessionManager = sessionManager;
     }
 
+    /**
+     * Seeds a default admin account if it does not already exist.
+     * <p>
+     * Creates an admin user with account ID "admin" and default password "Admin@123".
+     * This method is typically called during application startup to ensure at least
+     * one admin account exists.
+     * </p>
+     */
     public void seedDefaultAdmin() {
         if (userRepository.findByAccountId("admin").isPresent()) {
             return;
@@ -62,16 +103,42 @@ public class AdminService {
         userRepository.save(admin);
     }
 
+    /**
+     * Lists all users with PENDING approval status.
+     *
+     * @param adminToken  valid session token (must be ADMIN role)
+     * @return list of pending {@link User} entities awaiting approval
+     * @throws AppException if ADMIN role required
+     */
     public List<User> listPendingUsers(String adminToken) {
         sessionManager.requireRole(adminToken, Role.ADMIN);
         return userRepository.findByApprovalStatus(ApprovalStatus.PENDING);
     }
 
+    /**
+     * Lists all users in the system.
+     *
+     * @param adminToken  valid session token (must be ADMIN role)
+     * @return list of all {@link User} entities
+     * @throws AppException if ADMIN role required
+     */
     public List<User> listAllUsers(String adminToken) {
         sessionManager.requireRole(adminToken, Role.ADMIN);
         return userRepository.findAll();
     }
 
+    /**
+     * Approves or rejects a pending user registration.
+     * <p>
+     * Admin accounts cannot be approved or rejected by this method.
+     * </p>
+     *
+     * @param adminToken  valid session token (must be ADMIN role)
+     * @param userId      the user to approve or reject
+     * @param approved    true to approve, false to reject
+     * @return the updated {@link User} entity
+     * @throws AppException if ADMIN role required, user not found, or user is an admin
+     */
     public User approveUser(String adminToken, String userId, boolean approved) {
         sessionManager.requireRole(adminToken, Role.ADMIN);
         User user = userRepository.findByUserId(ValidationUtil.requireNotBlank(userId, "User ID"))
@@ -86,6 +153,18 @@ public class AdminService {
         return user;
     }
 
+    /**
+     * Enables or disables a user account.
+     * <p>
+     * Disabled users cannot log in to the system.
+     * </p>
+     *
+     * @param adminToken  valid session token (must be ADMIN role)
+     * @param userId      the user to enable or disable
+     * @param enabled     true to enable, false to disable
+     * @return the updated {@link User} entity
+     * @throws AppException if ADMIN role required or user not found
+     */
     public User setUserEnabled(String adminToken, String userId, boolean enabled) {
         sessionManager.requireRole(adminToken, Role.ADMIN);
         User user = userRepository.findByUserId(ValidationUtil.requireNotBlank(userId, "User ID"))
@@ -95,6 +174,19 @@ public class AdminService {
         return user;
     }
 
+    /**
+     * Resets a user's password to a new value provided by the admin.
+     * <p>
+     * The new password is validated against password requirements and hashed
+     * using SHA-256 before storage.
+     * </p>
+     *
+     * @param adminToken    valid session token (must be ADMIN role)
+     * @param userId        the user whose password to reset
+     * @param newPassword   the new password (must meet complexity requirements)
+     * @return the updated {@link User} entity
+     * @throws AppException if ADMIN role required, validation fails, or user not found
+     */
     public User resetPassword(String adminToken, String userId, String newPassword) {
         sessionManager.requireRole(adminToken, Role.ADMIN);
         ValidationUtil.validatePassword(newPassword);
@@ -105,12 +197,29 @@ public class AdminService {
         return user;
     }
 
-    public User updateUserInfo(String adminToken, String userId, String fullName, String email, 
+    /**
+     * Updates a user's personal information.
+     * <p>
+     * Only non-null, non-empty fields are updated. Email is validated for format.
+     * </p>
+     *
+     * @param adminToken   valid session token (must be ADMIN role)
+     * @param userId       the user to update
+     * @param fullName     new full name (optional)
+     * @param email        new email address (optional, validated)
+     * @param phone        new phone number (optional)
+     * @param major        new academic major (optional)
+     * @param department   new department (optional)
+     * @param skills       new skills description (optional)
+     * @return the updated {@link User} entity
+     * @throws AppException if ADMIN role required, validation fails, or user not found
+     */
+    public User updateUserInfo(String adminToken, String userId, String fullName, String email,
                                String phone, String major, String department, String skills) {
         sessionManager.requireRole(adminToken, Role.ADMIN);
         User user = userRepository.findByUserId(ValidationUtil.requireNotBlank(userId, "User ID"))
             .orElseThrow(() -> new AppException("User not found."));
-        
+
         if (fullName != null && !fullName.trim().isEmpty()) {
             user.setFullName(fullName.trim());
         }
@@ -130,15 +239,24 @@ public class AdminService {
         if (skills != null) {
             user.setSkills(skills.trim());
         }
-        
+
         userRepository.save(user);
         return user;
     }
 
     /**
-     * Get work count for a user.
-     * MO → published positions count. TA → approved/hired applications count.
-     * Caller must already have admin authentication.
+     * Gets the work count for a user based on their role.
+     * <p>
+     * For MO users: returns the number of published positions.
+     * For TA users: returns the number of approved/hired/offered applications.
+     * </p>
+     * <p>
+     * Note: This method does not perform admin authentication; the caller must
+     * already have admin authentication.
+     * </p>
+     *
+     * @param userId  the user ID to query
+     * @return work count (published positions for MO, accepted applications for TA)
      */
     public int getUserWorkCount(String userId) {
         User u = userRepository.findByUserId(userId).orElse(null);
@@ -157,6 +275,17 @@ public class AdminService {
         return 0;
     }
 
+    /**
+     * Generates a workload summary for all TA users in the system.
+     * <p>
+     * For each TA, calculates the number of assigned positions and total estimated
+     * working hours based on the job types of accepted applications.
+     * </p>
+     *
+     * @param adminToken  valid session token (must be ADMIN role)
+     * @return list of {@link TaWorkloadSummary} for all TAs
+     * @throws AppException if ADMIN role required
+     */
     public List<TaWorkloadSummary> listTaWorkloadSummary(String adminToken) {
         sessionManager.requireRole(adminToken, Role.ADMIN);
 
@@ -194,7 +323,16 @@ public class AdminService {
     }
 
     /**
-     * Get TA work detail: list of positions assigned to a TA with locations and status.
+     * Gets detailed work information for a specific TA user.
+     * <p>
+     * Returns a list of position details including position ID, title, location,
+     * job type, and application status for all accepted applications of the TA.
+     * </p>
+     *
+     * @param adminToken  valid session token (must be ADMIN role)
+     * @param userId      the TA user ID
+     * @return list of String arrays containing position details
+     * @throws AppException if ADMIN role required, user not found, or user is not a TA
      */
     public List<String[]> getTaWorkDetail(String adminToken, String userId) {
         sessionManager.requireRole(adminToken, Role.ADMIN);
@@ -224,7 +362,16 @@ public class AdminService {
     }
 
     /**
-     * Get MO work detail: list of positions published by an MO with status.
+     * Gets detailed work information for a specific MO user.
+     * <p>
+     * Returns a list of position details including position ID, title, status,
+     * headcount, deadline, and interview location for all positions published by the MO.
+     * </p>
+     *
+     * @param adminToken  valid session token (must be ADMIN role)
+     * @param userId      the MO user ID
+     * @return list of String arrays containing position details
+     * @throws AppException if ADMIN role required, user not found, or user is not an MO
      */
     public List<String[]> getMoWorkDetail(String adminToken, String userId) {
         sessionManager.requireRole(adminToken, Role.ADMIN);
@@ -248,10 +395,26 @@ public class AdminService {
         return result;
     }
 
+    /**
+     * Returns the value if not null or empty, otherwise returns the default value.
+     *
+     * @param value         the value to check
+     * @param defaultValue  the default value to return if value is null or empty
+     * @return the value or default value
+     */
     private String nvl(String value, String defaultValue) {
         return (value == null || value.trim().isEmpty()) ? defaultValue : value;
     }
 
+    /**
+     * Parses a numeric working hours value from a job type string.
+     * <p>
+     * Extracts the first number found in the string (e.g., "10 hours" → 10.0).
+     * </p>
+     *
+     * @param workingHours  the job type string containing hours information
+     * @return parsed hours value, or 0.0 if no number found
+     */
     private double parseWorkingHours(String workingHours) {
         if (workingHours == null || workingHours.trim().isEmpty()) {
             return 0.0;

@@ -14,6 +14,31 @@ import java.util.Optional;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
+/**
+ * UI module for Module Organizer application review and selection features.
+ * <p>
+ * Provides interactive Swing components for:
+ * <ul>
+ *   <li>Viewing all TA applications for positions owned by the MO</li>
+ *   <li>Sorting applications by submission time or major</li>
+ *   <li>Searching interview notes by keyword</li>
+ *   <li>Viewing applicant details including CV files</li>
+ *   <li>Updating application status through the review workflow</li>
+ *   <li>Viewing status change history</li>
+ *   <li>Managing private interview notes</li>
+ *   <li>Inviting eligible TAs to apply for positions</li>
+ *   <li>AI-powered candidate comparison</li>
+ * </ul>
+ * </p>
+ * <p>
+ * Access is restricted to MO and ADMIN roles only.
+ * </p>
+ *
+ * @author Group70
+ * @see MOReviewService
+ * @see MoInvitationService
+ * @see InterviewNoteService
+ */
 public class MoReviewUI {
 
     public static void showReviewDialog(JFrame parent, RecruitmentSystemContext context, String token) {

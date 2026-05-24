@@ -9,6 +9,26 @@ import java.util.List;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
+/**
+ * UI module for Module Organizer position publishing and management features.
+ * <p>
+ * Provides interactive Swing components for:
+ * <ul>
+ *   <li>Publishing new TA job positions</li>
+ *   <li>Viewing all positions published by the current MO</li>
+ *   <li>Modifying job details (title, deadline, headcount, etc.)</li>
+ *   <li>Closing positions when hiring is complete</li>
+ * </ul>
+ * </p>
+ * <p>
+ * Access is restricted to MO and ADMIN roles only.
+ * </p>
+ *
+ * @author Group70
+ * @see MOPublishService
+ * @see JobPublishPanel
+ * @see JobEditPanel
+ */
 public class MoPublishUI {
 
     public static void showPublishDialog(JFrame parent, RecruitmentSystemContext context, String token) {

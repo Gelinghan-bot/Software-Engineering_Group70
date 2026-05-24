@@ -9,6 +9,21 @@ import java.awt.*;
 import java.io.File;
 import javax.swing.*;
 
+/**
+ * UI module for user profile management features.
+ * <p>
+ * Provides interactive Swing components for:
+ * <ul>
+ *   <li>Viewing and updating personal profile information</li>
+ *   <li>MO users can update: Full Name, Department, Email, Phone</li>
+ *   <li>TA users can update: Major, Email, Phone, Skills, CV File</li>
+ *   <li>TA users can upload CV files (.pdf/.doc/.docx) via file chooser</li>
+ * </ul>
+ * </p>
+ *
+ * @author Group70
+ * @see ProfileService
+ */
 public class ProfileUI {
 
     public static void showUpdateProfileDialog(JFrame parent, RecruitmentSystemContext context, String token) {
