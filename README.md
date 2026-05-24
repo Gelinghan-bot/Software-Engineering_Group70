@@ -249,6 +249,35 @@ Software-Engineering_Group70/
 
 ---
 
+### 3.3.1 Test Coverage Overview
+
+We have developed **7 test files** covering **59 individual test cases** across **4 modules**:
+
+| Module | Test File | Test Cases | Coverage Description |
+|--------|-----------|------------|---------------------|
+| **foundation** | ValidationUtilTest.java | 14 | Input validation (email, password, phone, date, string sanitisation) |
+| **admin_system.model** | UserTest.java | 13 | User entity (13 properties: userId, role, accountId, fullName, studentId, email, phone, skills, approvalStatus, enabled, passwordHash, department, cvFilePath) |
+| **admin_system.model** | PositionTest.java | 11 | Position entity (11 properties: positionId, jobTitle, jobType, grade, major, courseName, requirements, status, postedBy, createdAt, aiGenerated) |
+| **admin_system.model** | ApplicationTest.java | 7 | Application entity (7 properties: applicationId, applicantUserId, positionId, status, appliedAt, cvFilePath, notes) |
+| **mo** | InterviewNoteTest.java | 5 | Interview note entity (5 properties: noteId, applicationId, moUserId, noteContent, lastUpdatedAt) |
+| **mo** | MoInvitationTest.java | 6 | MO invitation entity (6 properties: invitationId, moUserId, taUserId, positionId, message, createdAt) |
+| **ta_jobs** | JobMatchResultTest.java | 3 | Job matching (Position, score boundary clamping 0-100, null/empty reason handling) |
+| **Total** | | **59** | |
+
+### 3.3.2 Specific Test Case Examples
+
+#### Example 1: ValidationUtil - Email Validation
+
+**Test File:** `ValidationUtilTest.java`
+
+| Test Case | Input | Expected Result | Technique |
+|-----------|-------|-----------------|-----------|
+| Valid email | `"test@example.com"` | Returns `"test@example.com"` | Boundary value |
+| Null email | `null` | Throws `AppException` | Error condition |
+| Empty email | `""` | Throws `AppException` | Boundary value |
+| Email with spaces | `"  test@example.com  "` | Returns `"test@example.com"` (trimmed) | String sanitisation |
+| Invalid email format | `"not-an-email"` | Throws `AppException` | Error condition |
+
 ## Team
 
 This project was developed by Group 70 for the EBU6304 Software Engineering course at BUPT International School.
