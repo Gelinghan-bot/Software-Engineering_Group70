@@ -153,7 +153,53 @@ public class TAJobsUI {
                 btnPanel.add(applyBtn);
             }
             btnPanel.add(backBtn);
-            panel.add(btnPanel, BorderLayout.SOUTH);
+            
+            JPanel bottomPanel = new JPanel(new BorderLayout());
+            bottomPanel.setBackground(UIStyle.BG_PAGE);
+            bottomPanel.add(btnPanel, BorderLayout.WEST);
+
+            if (userRole == TA_Recruitment_software.admin_system.model.Role.MO) {
+                JPanel rightBtnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+                rightBtnPanel.setBackground(UIStyle.BG_PAGE);
+                JButton cloneBtn = UIStyle.createPrimaryButton("One-click Clone Position");
+                cloneBtn.setBackground(new Color(108, 92, 231)); 
+                cloneBtn.addActionListener(e -> {
+                    int r = table.getSelectedRow();
+                    if (r < 0) {
+                        JOptionPane.showMessageDialog(parent, "Please select a position to clone.", "Clone Position", JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
+                    String pId = (String) model.getValueAt(r, 0);
+                    Position pToClone = positionById.get(pId);
+                    if (pToClone != null) {
+                        try {
+                            String sem = semesterByPositionId.get(pId);
+                            context.getMoPublishService().publishPosition(
+                                token,
+                                pToClone.getJobTitle() + " (Copy)",
+                                pToClone.getGrade(),
+                                pToClone.getMajor(),
+                                pToClone.getJobType(),
+                                pToClone.getJobDescription(),
+                                pToClone.getRequirements(),
+                                pToClone.getInterviewLocation(),
+                                pToClone.getDeadline(),
+                                sem,
+                                pToClone.getHeadcount()
+                            );
+                            JOptionPane.showMessageDialog(parent, "Position cloned successfully!");
+                            backBtn.doClick(); 
+                            TAJobsUI.showFilteredJobs(parent, context, token, gradeFilter, majorFilter, categoryFilter);
+                        } catch (Exception ex) {
+                            JOptionPane.showMessageDialog(parent, "Clone failed: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                });
+                rightBtnPanel.add(cloneBtn);
+                bottomPanel.add(rightBtnPanel, BorderLayout.EAST);
+            }
+
+            panel.add(bottomPanel, BorderLayout.SOUTH);
 
             final int appliedColIndex = colNames.indexOf("Already applied");
             table.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -280,16 +326,16 @@ public class TAJobsUI {
         Supplier<String> tokenSupplier,
         Supplier<Role> roleSupplier
     ) {
-        JButton btn = UIStyle.createPrimaryButton("AI Diagnosis");
+        JButton btn = UIStyle.createPrimaryButton("Diagnosis CV & Recommendation");
         btn.setAlignmentX(Component.CENTER_ALIGNMENT);
-        btn.setMaximumSize(new Dimension(220, 45));
-        btn.setPreferredSize(new Dimension(220, 45));
+        btn.setMaximumSize(new Dimension(300, 45));
+        btn.setPreferredSize(new Dimension(300, 45));
         btn.setVisible(false);
         btn.addActionListener(e -> {
             Role r = roleSupplier.get();
             String t = tokenSupplier.get();
             if (r != Role.TA || t == null) {
-                JOptionPane.showMessageDialog(parent, "Please login as TA to use AI Diagnosis.", "AI Diagnosis", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(parent, "Please login as TA to use Diagnosis CV & Recommendation.", "Diagnosis CV & Recommendation", JOptionPane.WARNING_MESSAGE);
                 return;
             }
             AiDiagnosisUI.show(parent, context, t);
