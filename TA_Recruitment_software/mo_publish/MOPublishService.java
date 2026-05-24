@@ -30,6 +30,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+/**
+ * Service layer for Module Organizer (MO) job publishing and management operations.
+ * <p>
+ * This class provides business logic for publishing, updating, and closing job positions,
+ * as well as AI-powered job description generation. All operations require MO or ADMIN role
+ * authentication via session token validation.
+ * </p>
+ * <p>
+ * Key features:
+ * <ul>
+ *   <li>Publish new TA positions with validation and semester registration</li>
+ *   <li>Update position details, deadline, or close positions</li>
+ *   <li>Auto-close expired positions when listing</li>
+ *   <li>Generate AI-assisted job descriptions via Alibaba Cloud DashScope API</li>
+ * </ul>
+ * </p>
+ *
+ * @author Group70
+ * @see Position
+ * @see SessionManager
+ */
 public class MOPublishService {
     private final PositionRepository positionRepository;
     private final UserRepository userRepository;
@@ -37,6 +58,15 @@ public class MOPublishService {
     private final TaNotificationService taNotificationService;
     private final ApplicationRepository applicationRepository;
 
+    /**
+     * Constructs a MOPublishService with required dependencies.
+     *
+     * @param positionRepository     repository for position CRUD operations
+     * @param userRepository         repository for user queries
+     * @param sessionManager         session manager for authentication
+     * @param taNotificationService  service for sending notifications to applicants
+     * @param applicationRepository  repository for application queries
+     */
     public MOPublishService(
         PositionRepository positionRepository,
         UserRepository userRepository,
@@ -51,6 +81,27 @@ public class MOPublishService {
         this.applicationRepository = applicationRepository;
     }
 
+    /**
+     * Publishes a new TA position after validating all input fields and checking permissions.
+     * <p>
+     * The position is saved with OPEN status and registered with the specified semester.
+     * Only MO and ADMIN roles can publish positions.
+     * </p>
+     *
+     * @param token              valid session token for authentication
+     * @param jobTitle           the job title (max 200 chars)
+     * @param grade              target student grade (e.g., "Year 2", "All Grades")
+     * @param major              target major (e.g., "Computer Science", "All majors")
+     * @param jobType            job category (e.g., "Grading", "Lab Support")
+     * @param jobDescription     detailed job description (max 3000 chars)
+     * @param requirements       applicant requirements (max 3000 chars)
+     * @param interviewLocation  interview venue location
+     * @param deadline           application deadline in "yyyy-MM-dd" format
+     * @param semester           academic semester (e.g., "2025-Fall"); uses current semester if empty
+     * @param headcount          number of TAs needed (must be positive)
+     * @return the saved {@link Position} entity with generated positionId
+     * @throws AppException if permission denied, validation fails, or publisher not found
+     */
     public Position publishPosition(
         String token,
         String jobTitle,
@@ -107,6 +158,19 @@ public class MOPublishService {
         return position;
     }
 
+    /**
+     * Updates the application deadline of an existing position and notifies all applicants.
+     * <p>
+     * Only the position owner (MO) or ADMIN can update the deadline.
+     * The new deadline must be today or in the future.
+     * </p>
+     *
+     * @param token        valid session token
+     * @param positionId   the position to update
+     * @param newDeadline  new deadline in "yyyy-MM-dd" format
+     * @return the updated {@link Position} entity
+     * @throws AppException if permission denied, position not found, or date validation fails
+     */
     public Position updateDeadline(String token, String positionId, String newDeadline) {
         SessionContext session = sessionManager.requireSession(token);
         if (session.getRole() != Role.MO && session.getRole() != Role.ADMIN) {
@@ -132,6 +196,27 @@ public class MOPublishService {
         return position;
     }
 
+    /**
+     * Updates multiple fields of an existing position and notifies applicants of changes.
+     * <p>
+     * Tracks which fields changed to build a human-readable summary for notifications.
+     * Only the position owner (MO) or ADMIN can update the position.
+     * </p>
+     *
+     * @param token              valid session token
+     * @param positionId         the position to update
+     * @param jobTitle           new job title
+     * @param grade              new target grade
+     * @param major              new target major
+     * @param jobType            new job category
+     * @param jobDescription     new job description
+     * @param requirements       new applicant requirements
+     * @param interviewLocation  new interview location
+     * @param deadline           new deadline
+     * @param headcount          new headcount
+     * @return the updated {@link Position} entity
+     * @throws AppException if permission denied, position not found, or validation fails
+     */
     public Position updatePositionDetails(
         String token,
         String positionId,
@@ -204,6 +289,19 @@ public class MOPublishService {
         return position;
     }
 
+    /**
+     * Closes a position, making it no longer accept new applications.
+     * <p>
+     * Notifies all applicants with pending/shortlisted/interviewed/offered status
+     * that the position has been closed.
+     * Only the position owner (MO) or ADMIN can close positions.
+     * </p>
+     *
+     * @param token        valid session token
+     * @param positionId   the position to close
+     * @return the closed {@link Position} entity
+     * @throws AppException if permission denied or position not found
+     */
     public Position closePosition(String token, String positionId) {
         SessionContext session = sessionManager.requireSession(token);
         if (session.getRole() != Role.MO && session.getRole() != Role.ADMIN) {
@@ -230,6 +328,16 @@ public class MOPublishService {
         return position;
     }
 
+    /**
+     * Lists all positions owned by the current MO, or all positions if ADMIN.
+     * <p>
+     * Automatically checks and updates expired positions (deadline passed) to EXPIRED status.
+     * </p>
+     *
+     * @param token  valid session token
+     * @return list of positions accessible to the current user
+     * @throws AppException if permission denied
+     */
     public List<Position> listMyPositions(String token) {
         SessionContext session = sessionManager.requireSession(token);
         if (session.getRole() != Role.MO && session.getRole() != Role.ADMIN) {
@@ -260,6 +368,26 @@ public class MOPublishService {
         return positions;
     }
 
+    /**
+     * Generates a job description template using Alibaba Cloud DashScope AI API.
+     * <p>
+     * Sends a prompt to the AI model (default: qwen-plus) with the provided job context,
+     * and parses the response to extract title, description, and requirements wrapped in
+     * XML-style tags (<TITLE>, <DESC>, <REQ>).
+     * </p>
+     * <p>
+     * Requires a valid API key configured in {@code data/ai-config.properties}.
+     * </p>
+     *
+     * @param grade       target student grade
+     * @param major       target major
+     * @param jobType     job category
+     * @param courseName  course name for context
+     * @return a map with keys "title", "desc", "req" containing AI-generated content
+     * @throws Exception if API key not configured or API call fails
+     * @see #loadAiConfig()
+     * @see #callAliyunBailianAPI(String, String, String, String)
+     */
     public Map<String, String> generateAITemplate(String grade, String major, String jobType, String courseName) throws Exception {
         Properties aiConfig = loadAiConfig();
         String apiKey = aiConfig.getProperty("ALIYUN_API_KEY");
@@ -293,6 +421,11 @@ public class MOPublishService {
         return result;
     }
 
+    /**
+     * Loads AI configuration from {@code data/ai-config.properties}.
+     *
+     * @return Properties object containing API key and model settings
+     */
     private Properties loadAiConfig() {
         Properties prop = new Properties();
         try (InputStream input = new FileInputStream("data/ai-config.properties")) {
@@ -301,6 +434,16 @@ public class MOPublishService {
         return prop;
     }
 
+    /**
+     * Calls the Alibaba Cloud DashScope Chat Completions API.
+     *
+     * @param apiKey       API authentication key
+     * @param modelName    model name (e.g., "qwen-plus")
+     * @param systemPrompt system message defining AI behavior
+     * @param userPrompt   user input prompt
+     * @return the AI-generated response content
+     * @throws Exception if HTTP request fails or returns error status
+     */
     private String callAliyunBailianAPI(String apiKey, String modelName, String systemPrompt, String userPrompt) throws Exception {
         URL url = new URL("https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -338,10 +481,22 @@ public class MOPublishService {
         }
     }
 
+    /**
+     * Escapes special characters for JSON string embedding.
+     *
+     * @param s input string
+     * @return escaped string safe for JSON
+     */
     private String escapeJson(String s) {
         return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "");
     }
 
+    /**
+     * Extracts the "content" field from a JSON chat completion response.
+     *
+     * @param json raw JSON response string
+     * @return the content value, or empty string if parsing fails
+     */
     private String extractContentFromJson(String json) {
         String marker = "\"content\":\"";
         int start = json.indexOf(marker);
@@ -353,6 +508,14 @@ public class MOPublishService {
         return content.replace("\\n", "\n").replace("\\\"", "\"").replace("\\\\", "\\");
     }
 
+    /**
+     * Extracts text between XML-style start and end tags.
+     *
+     * @param source   source string containing tags
+     * @param startTag opening tag (e.g., "<TITLE>")
+     * @param endTag   closing tag (e.g., "</TITLE>")
+     * @return trimmed content between tags, or empty string if tags not found
+     */
     private String extractTag(String source, String startTag, String endTag) {
         int start = source.indexOf(startTag);
         int end = source.indexOf(endTag);

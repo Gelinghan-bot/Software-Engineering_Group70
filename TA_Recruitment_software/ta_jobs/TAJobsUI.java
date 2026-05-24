@@ -16,6 +16,25 @@ import java.util.function.Supplier;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
+/**
+ * UI module for Teaching Assistant job browsing and application features.
+ * <p>
+ * Provides interactive Swing components for:
+ * <ul>
+ *   <li>Browsing available job positions with filtering (grade, major, category)</li>
+ *   <li>Viewing detailed position information via double-click</li>
+ *   <li>Applying for selected positions</li>
+ *   <li>Viewing personal application history and status</li>
+ *   <li>MO users can clone existing positions for quick creation</li>
+ *   <li>AI-powered CV diagnosis and job recommendation</li>
+ * </ul>
+ * </p>
+ *
+ * @author Group70
+ * @see TAJobService
+ * @see PositionDetailUI
+ * @see AiDiagnosisUI
+ */
 public class TAJobsUI {
 
     public static void showAvailableJobs(JFrame parent, RecruitmentSystemContext context, String token) {

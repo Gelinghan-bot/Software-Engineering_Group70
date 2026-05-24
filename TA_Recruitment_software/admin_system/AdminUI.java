@@ -10,6 +10,27 @@ import java.util.List;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
+/**
+ * UI module for Administrator user management and system features.
+ * <p>
+ * Provides interactive Swing components for:
+ * <ul>
+ *   <li>Reviewing and approving/rejecting pending user registrations</li>
+ *   <li>Managing all users (search, filter by role/work/enabled status)</li>
+ *   <li>Editing user information and resetting passwords</li>
+ *   <li>Enabling/disabling user accounts</li>
+ *   <li>Viewing TA work details (assigned positions, active count)</li>
+ *   <li>Viewing MO work details (published positions, open count)</li>
+ *   <li>Viewing poll results from the forum</li>
+ * </ul>
+ * </p>
+ * <p>
+ * Access is restricted to ADMIN role only.
+ * </p>
+ *
+ * @author Group70
+ * @see AdminService
+ */
 public class AdminUI {
 
     public static void showPendingUsersDialog(JFrame parent, RecruitmentSystemContext context, String token) {
