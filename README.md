@@ -247,6 +247,12 @@ Software-Engineering_Group70/
 ### Q: What browsers are supported?
 **A:** This is a desktop application, not a web application. No browser required.
 
+## Team
+
+This project was developed by Group 70 for the EBU6304 Software Engineering course at BUPT International School.
+
+**Technologies**: Java SE, Swing, CSV File Storage, Alibaba Cloud AI API
+
 ---
 
 ### 3.3.1 Test Coverage Overview
@@ -278,8 +284,103 @@ We have developed **7 test files** covering **59 individual test cases** across 
 | Email with spaces | `"  test@example.com  "` | Returns `"test@example.com"` (trimmed) | String sanitisation |
 | Invalid email format | `"not-an-email"` | Throws `AppException` | Error condition |
 
-## Team
+#### Example 1: ValidationUtil - Email Validation
 
-This project was developed by Group 70 for the EBU6304 Software Engineering course at BUPT International School.
+**Test File:** `ValidationUtilTest.java`
 
-**Technologies**: Java SE, Swing, CSV File Storage, Alibaba Cloud AI API
+| Test Case | Input | Expected Result | Technique |
+|-----------|-------|-----------------|-----------|
+| Valid email | `"test@example.com"` | Returns `"test@example.com"` | Boundary value |
+| Null email | `null` | Throws `AppException` | Error condition |
+| Empty email | `""` | Throws `AppException` | Boundary value |
+| Email with spaces | `"  test@example.com  "` | Returns `"test@example.com"` (trimmed) | String sanitisation |
+| Invalid email format | `"not-an-email"` | Throws `AppException` | Error condition |
+
+**Code Snippet:**
+```java
+private static void testEmailValid() {
+    try {
+        String result = ValidationUtil.requireEmail("test@example.com");
+        assert result.equals("test@example.com") : "Should return valid email";
+        pass("testEmailValid");
+    } catch (Exception e) {
+        fail("testEmailValid", e);
+    }
+}
+```
+
+#### Example 2: User Model - Complete Property Testing
+
+**Test File:** `UserTest.java`
+
+Tests all 13 properties of the `User` entity, ensuring getter/setter pairs work correctly:
+
+```java
+private static void testRole() {
+    try {
+        User user = new User();
+        user.setRole(Role.TA);
+        assert user.getRole() == Role.TA : "Role should be TA";
+        pass("testRole");
+    } catch (Exception e) {
+        fail("testRole", e);
+    }
+}
+
+private static void testApprovalStatus() {
+    try {
+        User user = new User();
+        user.setApprovalStatus(ApprovalStatus.PENDING);
+        assert user.getApprovalStatus() == ApprovalStatus.PENDING : "ApprovalStatus should be PENDING";
+        pass("testApprovalStatus");
+    } catch (Exception e) {
+        fail("testApprovalStatus", e);
+    }
+}
+```
+
+#### Example 3: JobMatchResult - Score Boundary Clamping
+
+**Test File:** `JobMatchResultTest.java`
+
+Tests the score clamping logic that ensures match scores are always within the valid range [0, 100]:
+
+```java
+private static void testScoreClamping() {
+    try {
+        Position pos = new Position();
+        // Score > 100 should clamp to 100
+        JobMatchResult high = new JobMatchResult(pos, 150, "Over 100");
+        assert high.getScorePercent() == 100 : "Score should be clamped to 100";
+        // Score < 0 should clamp to 0
+        JobMatchResult low = new JobMatchResult(pos, -20, "Below 0");
+        assert low.getScorePercent() == 0 : "Score should be clamped to 0";
+        pass("testScoreClamping");
+    } catch (Exception e) {
+        fail("testScoreClamping", e);
+    }
+}
+```
+
+#### Example 4: ValidationUtil - Password Strength
+
+**Test File:** `ValidationUtilTest.java`
+
+Tests password strength validation with multiple criteria:
+
+| Test Case | Input | Expected |
+|-----------|-------|----------|
+| Valid password | `"StrongPass1!"` | Passes validation |
+| Too short (5 chars) | `"Abc1!"` | Fails - minimum length 6 |
+| Too short (7 chars) | `"Abc1!ef"` | Fails - minimum length 8 |
+| No uppercase | `"password1!"` | Fails - requires uppercase |
+| No digit | `"Password!"` | Fails - requires digit |
+| No special char | `"Password1"` | Fails - requires special character |
+
+### 3.3.3 Test Data Design Principles
+
+1. **Happy Path**: Normal, expected inputs that should succeed
+2. **Boundary Values**: Edge cases at the limits of valid input ranges
+3. **Error Conditions**: Invalid inputs that should trigger exceptions or rejection
+4. **Null Safety**: Explicit testing of null inputs for robustness
+5. **String Trimming**: Verification that whitespace is properly handled
